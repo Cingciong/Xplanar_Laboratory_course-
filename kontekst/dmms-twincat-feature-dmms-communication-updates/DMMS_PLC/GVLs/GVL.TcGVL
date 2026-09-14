@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <GVL Name="GVL" Id="{fa93789e-5e2a-44cb-8ad2-2e37e6c83003}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+	
+	gc_nMaxNumberMovers			: UDINT := 2;	
+	gc_nMoverCountConfigured 	: UDINT := gc_nMaxNumberMovers;
+	
+	gc_MaxNumberTiles			: UDINT := 5;
+
+	gc_NumberTracks				: UDINT := 11;		// Number of tracks controlled by the application
+	gc_NumberStations			: UINT  := 3;		// Number of stations controlled by the application
+
+
+// track numeration
+
+		TrackPuncherWellplate	: UDINT := 1;
+		TrackStradeFirstSeg		: UDINT := 2;
+		TrackStradeSecondSeg	: UDINT := 3;
+		TrackBufferPuncher		: UDINT := 4;
+		TrackPipettePreBuffer   : UDINT := 5;
+		TrackPipette			: UDINT := 6;
+		TrackPipettePostBuffer	: UDINT := 7;
+		TrackPipetteBufferCon	: UDINT := 8;
+		TrackUserInteraction	: UDINT := 9;
+		CloseLoopTrack			: UDINT := 10;
+		PuncherSeperateTrack	: UDINT	:= 11;
+		
+
+// station numeration 
+		PuncherStation			: UDINT := 1;
+		PuncherSeparateStation	: UDINT := 2;
+		PuncherBufferStation	: UDINT := 3;
+		
+// mover calibration 
+		stPayloadWellplateDown	: 	ST_TcIoPayload:=(
+									AAxisInertia:=0.00096045220,
+									BAxisInertia:=0.00110988871,
+									CAxisInertia :=0.00140891283,
+									CentreOfMassX :=0,
+									CentreOfMassY:= 0,
+									CentreOfMassZ:=25.74,
+									Mass:=0.45194 );
+		
+		stPayloadWellplateMiddle: 	ST_TcIoPayload:=(
+									AAxisInertia:=0.00098632707,
+									BAxisInertia:= 0.00113576347,
+									CAxisInertia :=0.00140891283,
+									CentreOfMassX :=0,
+									CentreOfMassY:= 0,
+									CentreOfMassZ:=33.23,
+									Mass:=0.45194 );
+									
+		stPayloadWellplateUp	: 	ST_TcIoPayload:=(
+									AAxisInertia:= 0.00117197,
+									BAxisInertia:=0.00132141,
+									CAxisInertia :=0.00140891,
+									CentreOfMassX :=0,
+									CentreOfMassY:= 0,
+									CentreOfMassZ:=0,
+									Mass:=0 );
+		
+		stPayloadGripper		: 	ST_TcIoPayload:=(
+									AAxisInertia:=0,
+									BAxisInertia:=0,
+									CAxisInertia :=0,
+									CentreOfMassX :=0,
+									CentreOfMassY:= 0,
+									CentreOfMassZ:=0,
+									Mass:=0 );
+		
+		stPayloadPipetteTips	: 	ST_TcIoPayload:=(
+									AAxisInertia:=0,
+									BAxisInertia:=0,
+									CAxisInertia :=0,
+									CentreOfMassX :=0,
+									CentreOfMassY:= 0,
+									CentreOfMassZ:=0,
+									Mass:=0 );
+
+
+
+END_VAR
+
+VAR_GLOBAL
+	g_nMoverCount : UDINT ;
+	g_Tracks : ARRAY[1..gc_NumberTracks] OF I_Track;
+	g_Stations : ARRAY[1..gc_NumberStations] OF I_Station;
+	g_Movers : ARRAY[1..gc_nMaxNumberMovers] OF I_MoverApplication;
+	
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

@@ -1,0 +1,593 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_VisStarterKitStateMachine" Id="{c85ed1e6-316e-4480-ad7e-0ca59cb23175}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VisStarterKitStateMachine
+
+VAR_IN_OUT
+
+	iq_stVisControl  : ST_VisControl;
+	iq_XTags		 : ST_XTags;
+		
+END_VAR
+
+
+
+
+
+VAR
+		
+	diStatusOld : DINT := -1;
+	
+	
+	// Operator-Control-Pad 
+	bOCStartButton			: BOOL;
+	bOCStopButton			: BOOL;
+	bOCQuitButton			: BOOL;
+	bOCEStopButton			: BOOL;
+	
+	bOCStopLamp				: BOOL;
+	bOCStartLamp			: BOOL;
+	bOCQuitLamp				: BOOL;
+	bOCEStopLamp			: BOOL;
+	
+	bOCMessageColorGreen	: BOOL;
+	bOCMessageColorRed		: BOOL;	
+	
+	sOCResultText			: STRING;
+	sDisplayText			: STRING;
+	nStringPosition			: INT;
+	nStringLength			: INT;
+	nDisplayLenght			: INT := 28;
+		
+	nOCResultNumber			: INT;
+	DisplayTimer			: TON;
+	
+	rtNoCommandTrigger		: R_TRIG;
+	
+	bInitScreenDone			: BOOL;
+	nVisArrangement			: INT;
+	nVisArrangementMem		: INT;
+	nVisArrangementSet		: INT;
+	
+END_VAR
+
+
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+
+	ScreenArrangement();
+	
+	StarterKitStateMachine();
+
+	OperatorInterface();
+	
+	
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	]]></ST>
+    </Implementation>
+    <Action Name="OperatorInterface" Id="{dfcf4f99-e1ff-42b3-b525-4587b3c7b7d0}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+	
+
+		
+		
+		bOCStartButton 	:= iq_stVisControl.stOperatorPad.bStartButtunState;
+		bOCStopButton  	:= iq_stVisControl.stOperatorPad.bStopButtonState; 
+		bOCQuitButton	:= iq_stVisControl.stOperatorPad.bQuitButtonState;
+		bOCEStopButton	:= iq_stVisControl.stOperatorPad.bEStopButtonState;
+		
+		
+		iq_stVisControl.stOperatorPad.bStartButtonLamp 		:= bOCStartLamp;
+		iq_stVisControl.stOperatorPad.bStopButtonLamp  		:= bOCStopLamp;
+		iq_stVisControl.stOperatorPad.bQuitButtonLamp  		:= bOCQuitLamp;
+		iq_stVisControl.stOperatorPad.bEStopButtonLamp 		:= bOCEStopLamp;
+		iq_stVisControl.stOperatorPad.bMessageColorGreen 	:= bOCMessageColorGreen;
+		iq_stVisControl.stOperatorPad.bMessageColorRed   	:= bOCMessageColorRed;
+		
+			
+		nStringLength := LEN(sOCResultText);	
+		IF nStringLength > nDisplayLenght THEN
+			sDisplayText := MID(sOCResultText,nDisplayLenght,nStringPosition);
+		
+			DisplayTimer(IN:=TRUE, PT:=T#500MS);
+			IF DisplayTimer.Q THEN
+				DisplayTimer(IN:=FALSE);
+				nStringPosition := nStringPosition +1;
+				
+				IF nStringPosition > (nStringLength - nDisplayLenght) THEN
+					nStringPosition := 1;
+				END_IF
+			END_IF
+		ELSE
+			sDisplayText := sOCResultText;
+		END_IF
+		iq_stVisControl.stOperatorPad.sMessage := sDisplayText;
+		
+		]]></ST>
+      </Implementation>
+    </Action>
+    <Property Name="P_OCEStopButtonState" Id="{e29285c8-c8b0-4645-81d8-c9dadda3832c}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCEStopButtonState : BOOL]]></Declaration>
+      <Get Name="Get" Id="{ada3e0a3-d613-4e65-8cb2-ad1c68ca2ff8}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_OCEStopButtonState := bOCEStopButton;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_OCEStopLampState" Id="{9933dc0c-fcf1-43d0-ae60-a5824e2074eb}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCEStopLampState : BOOL]]></Declaration>
+      <Set Name="Set" Id="{54b34458-8f47-4806-a2f3-179c634aff34}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[bOCEStopLamp := P_OCEStopLampState;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_OCQuitButtonState" Id="{9424dff7-89f2-4fe7-b977-a3a7a2bb1122}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCQuitButtonState : BOOL]]></Declaration>
+      <Get Name="Get" Id="{4afa4395-7830-4619-91a5-8c4750545942}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_OCQuitButtonState := bOCQuitButton;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_OCQuitLampState" Id="{dd533d71-4736-4330-aaa3-c9476f3e510c}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCQuitLampState : BOOL]]></Declaration>
+      <Set Name="Set" Id="{67803d7d-541e-4912-bff1-7b73a30f760a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[bOCQuitLamp := P_OCQuitLampState;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_OCResult" Id="{696d3015-f498-4219-bc1f-6e2d4a0a0f43}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCResult : int]]></Declaration>
+      <Set Name="Set" Id="{41fbe883-1e88-407b-ae23-a52fd3e87864}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[nOCResultNumber := P_OCResult;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_OCResultTextDisplay" Id="{26aee166-eac0-4955-bc59-34e53ce38979}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCResultTextDisplay : STRING]]></Declaration>
+      <Set Name="Set" Id="{936f68f7-a691-4701-8220-adb02144f915}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[sOCResultText := P_OCResultTextDisplay;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_OCStartButtonState" Id="{2921b577-3142-4bdf-98e7-8643350f3197}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCStartButtonState : BOOL]]></Declaration>
+      <Get Name="Get" Id="{3202530b-c9c3-4291-92e0-96942f309b95}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_OCStartButtonState := bOCStartButton;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_OCStartLampState" Id="{cb7e467f-f4e4-40be-acd2-3698a6a0f6a2}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCStartLampState : BOOL]]></Declaration>
+      <Set Name="Set" Id="{68c43859-dc56-405e-bf74-ba617ffeb9c8}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[bOCStartLamp := P_OCStartLampState;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_OCStopButtonState" Id="{60638b03-43b6-4cfc-8cab-da2ef3a31f3d}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCStopButtonState : BOOL]]></Declaration>
+      <Get Name="Get" Id="{95c22fe1-b4c9-4e40-9e68-5b5ff9830c8b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_OCStopButtonState := bOCStopButton;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_OCStopLampState" Id="{38b28d0f-38a9-4ec8-bf1e-597eacfd2af7}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_OCStopLampState : BOOL]]></Declaration>
+      <Set Name="Set" Id="{a9d98ef4-0674-4b3b-bcbe-df8319c15bf3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[bOCStopLamp := P_OCStopLampState;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Action Name="ScreenArrangement" Id="{a129e84c-fe2d-4c65-8bcd-def53147e247}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+
+
+
+	// Decide which Pad shall be shown at system boot:
+	IF NOT bInitScreenDone THEN
+		bInitScreenDone := TRUE;
+
+		iq_stVisControl.stControlPad.bVisInvisibleButton  := FALSE;		
+		iq_stVisControl.stOperatorPad.bVisInvisibleButton := FALSE;
+	END_IF
+
+
+	// Check which Pad shall be shown right now:
+	IF iq_stVisControl.stControlPad.bVisInvisibleButton THEN
+		iq_stVisControl.stControlPad.bVisInvisible := TRUE;
+	ELSE
+		iq_stVisControl.stControlPad.bVisInvisible := FALSE;
+	END_IF	
+
+	IF iq_stVisControl.stOperatorPad.bVisInvisibleButton THEN
+		iq_stVisControl.stOperatorPad.bVisInvisible := TRUE;
+	ELSE
+		iq_stVisControl.stOperatorPad.bVisInvisible := FALSE;
+	END_IF		
+	
+
+	// Determine current visualisation arrangement:
+	IF  iq_stVisControl.stControlPad.bVisInvisible 
+	AND iq_stVisControl.stOperatorPad.bVisInvisible
+	THEN
+		nVisArrangement := 1;
+		
+	ELSIF ( NOT iq_stVisControl.stControlPad.bVisInvisible
+			AND iq_stVisControl.stOperatorPad.bVisInvisible) 
+	THEN
+		nVisArrangement := 2;
+		
+	ELSIF ( NOT iq_stVisControl.stOperatorPad.bVisInvisible 
+			AND iq_stVisControl.stControlPad.bVisInvisible )
+	THEN
+		nVisArrangement := 3;
+	ELSIF (     NOT iq_stVisControl.stControlPad.bVisInvisible 
+			AND NOT iq_stVisControl.stOperatorPad.bVisInvisible)
+	THEN
+		nVisArrangement := 4;
+	END_IF
+	
+	
+	
+	// Arranging all frame positions according to current arrangement:
+	IF nVisArrangement <> nVisArrangementMem THEN
+		nVisArrangementMem := nVisArrangement;
+		nVisArrangementSet := nVisArrangement;
+	END_IF
+		
+	CASE nVisArrangementSet OF 	
+	
+	1:  nVisArrangementSet := 0;
+		
+		iq_stVisControl.stControlPad.nFramePositionX   :=  0;
+		iq_stVisControl.stControlPad.nFramePositionY   :=  0;
+		iq_stVisControl.stControlPad.nButtonPositionX  :=  0;
+		iq_stVisControl.stControlPad.nButtonPositionY  := 55;
+		
+		iq_stVisControl.stOperatorPad.nFramePositionX  :=  0;
+		iq_stVisControl.stOperatorPad.nFramePositionY  :=  0;
+		iq_stVisControl.stOperatorPad.nButtonPositionX :=  0;
+		iq_stVisControl.stOperatorPad.nButtonPositionY := 55;
+				
+	2: 	nVisArrangementSet := 0;
+	
+		iq_stVisControl.stControlPad.nFramePositionX   :=  0;
+		iq_stVisControl.stControlPad.nFramePositionY   := 60;	
+		iq_stVisControl.stOperatorPad.nButtonPositionX :=  0;
+		iq_stVisControl.stOperatorPad.nButtonPositionY := 55;	
+	
+	3:	nVisArrangementSet := 0;
+	
+		iq_stVisControl.stControlPad.nButtonPositionX  :=  0;
+		iq_stVisControl.stControlPad.nButtonPositionY  := -2;
+		iq_stVisControl.stOperatorPad.nFramePositionX  :=  0;
+		iq_stVisControl.stOperatorPad.nFramePositionY  :=  0;
+	
+	4:	nVisArrangementSet := 0;
+	
+		iq_stVisControl.stControlPad.nFramePositionX   :=  0;
+		iq_stVisControl.stControlPad.nFramePositionY   :=  0;
+		iq_stVisControl.stOperatorPad.nFramePositionX  :=  0;
+		iq_stVisControl.stOperatorPad.nFramePositionY  :=  0;
+	
+	END_CASE
+	
+
+	
+	
+	
+	
+	
+	
+	]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="StarterKitStateMachine" Id="{707e0fb8-ddc6-4f11-a55f-59fe2fa34c6c}">
+      <Implementation>
+        <ST><![CDATA[
+
+	// Setting XTag-Commands according to user-commands
+	IF    iq_stVisControl.stControlPad.bButtonState_Abort THEN
+				rtNoCommandTrigger(CLK:=FALSE);
+				iq_XTags.Command  := E_XMotion_Command.Abort;	
+	ELSIF iq_stVisControl.stControlPad.bButtonState_Reset THEN
+				rtNoCommandTrigger(CLK:=FALSE);
+				iq_XTags.Command  := E_XMotion_Command.Reset;	
+	ELSIF iq_stVisControl.stControlPad.bButtonState_Prepare THEN
+				rtNoCommandTrigger(CLK:=FALSE);
+				iq_XTags.Command  := E_XMotion_Command.Prepare;	
+	ELSIF iq_stVisControl.stControlPad.bButtonState_Start THEN
+				rtNoCommandTrigger(CLK:=FALSE);
+				iq_XTags.Command  := E_XMotion_Command.Start;	
+	ELSE
+			rtNoCommandTrigger(CLK:=TRUE);
+			IF rtNoCommandTrigger.Q THEN
+				iq_XTags.Command  := E_XMotion_Command.NoCommand;
+			END_IF
+	END_IF
+
+
+	
+	
+	// Setting Vis display according to current status	
+	iq_stVisControl.stControlPad.iAbortSequenceState   := iq_XTags.States.nAbortState;
+	iq_stVisControl.stControlPad.iResetSequenceState   := iq_XTags.States.nResetState;
+	iq_stVisControl.stControlPad.iPrepareSequenceState := iq_XTags.States.nPrepareState;
+	iq_stVisControl.stControlPad.iStartSequenceState   := iq_XTags.States.nStartState;
+	
+
+	IF iq_XTags.Status <> diStatusOld THEN
+		diStatusOld := iq_XTags.Status;	
+	
+		iq_stVisControl.stControlPad.bAbortSequenceStateInvisible 	:= TRUE;
+		iq_stVisControl.stControlPad.bResetSequenceStateInvisible 	:= TRUE;
+		iq_stVisControl.stControlPad.bPrepareSequenceStateInvisible := TRUE;
+		iq_stVisControl.stControlPad.bStartSequenceStateInvisible	:= TRUE;
+		
+		iq_stVisControl.stControlPad.bStateSignalAbortBlue     := FALSE;
+		iq_stVisControl.stControlPad.bStateSignalAbortYellow   := FALSE;
+		iq_stVisControl.stControlPad.bStateSignalAbortGreen    := FALSE;
+		iq_stVisControl.stControlPad.bStateSignalResetYellow   := FALSE;
+		iq_stVisControl.stControlPad.bStateSignalResetGreen    := FALSE;		
+		iq_stVisControl.stControlPad.bStateSignalResetYellow   := FALSE;
+		iq_stVisControl.stControlPad.bStateSignalResetGreen    := FALSE;		
+		iq_stVisControl.stControlPad.bStateSignalPrepareYellow := FALSE;
+		iq_stVisControl.stControlPad.bStateSignalPrepareGreen  := FALSE;		
+		iq_stVisControl.stControlPad.bStateSignalExecuteYellow := FALSE;
+		iq_stVisControl.stControlPad.bStateSignalExecuteGreen  := FALSE;	
+
+		IF 	   iq_XTags.Status = E_XMotion_Status.Aborting THEN
+					iq_stVisControl.stControlPad.bAbortSequenceStateInvisible := FALSE;
+					iq_stVisControl.stControlPad.bStateSignalAbortYellow   	  := TRUE;		
+		ELSIF iq_XTags.Status = E_XMotion_Status.Aborted THEN
+					iq_stVisControl.stControlPad.bStateSignalAbortGreen := TRUE;
+		ELSIF iq_XTags.Status = E_XMotion_Status.Resetting THEN
+					iq_stVisControl.stControlPad.bResetSequenceStateInvisible := FALSE;
+					iq_stVisControl.stControlPad.bStateSignalResetYellow      := TRUE;
+		ELSIF iq_XTags.Status = E_XMotion_Status.Stopped THEN
+					iq_stVisControl.stControlPad.bStateSignalResetGreen := TRUE;
+		ELSIF iq_XTags.Status = E_XMotion_Status.Preparing THEN
+					iq_stVisControl.stControlPad.bPrepareSequenceStateInvisible := FALSE;
+					iq_stVisControl.stControlPad.bStateSignalPrepareYellow      := TRUE;
+		ELSIF iq_XTags.Status = E_XMotion_Status.Prepared THEN
+					iq_stVisControl.stControlPad.bStateSignalPrepareGreen := TRUE;
+		ELSIF iq_XTags.Status = E_XMotion_Status.Execute THEN
+					iq_stVisControl.stControlPad.bStartSequenceStateInvisible := FALSE;
+					iq_stVisControl.stControlPad.bStateSignalExecuteGreen     := TRUE;
+		ELSIF iq_XTags.Status = E_XMotion_Status.StartUp THEN
+					iq_stVisControl.stControlPad.bStateSignalAbortBlue := TRUE;
+		END_IF	
+
+	END_IF
+	
+	]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_VisStarterKitStateMachine">
+      <LineId Id="3217" Count="2" />
+      <LineId Id="3272" Count="2" />
+      <LineId Id="3343" Count="1" />
+      <LineId Id="3346" Count="2" />
+      <LineId Id="3345" Count="0" />
+      <LineId Id="3342" Count="0" />
+      <LineId Id="3275" Count="46" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.OperatorInterface">
+      <LineId Id="2" Count="3" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="63" Count="1" />
+      <LineId Id="1" Count="0" />
+      <LineId Id="24" Count="2" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="10" Count="2" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="17" Count="1" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="52" Count="4" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="61" Count="1" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCEStopButtonState.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCEStopLampState.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCQuitButtonState.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCQuitLampState.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCResult.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCResultTextDisplay.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCStartButtonState.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCStartLampState.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCStopButtonState.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.P_OCStopLampState.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.ScreenArrangement">
+      <LineId Id="2" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="114" Count="2" />
+      <LineId Id="102" Count="2" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="9" Count="6" />
+      <LineId Id="90" Count="3" />
+      <LineId Id="16" Count="1" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="18" Count="19" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="39" Count="4" />
+      <LineId Id="46" Count="43" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_VisStarterKitStateMachine.StarterKitStateMachine">
+      <LineId Id="105" Count="0" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="9" Count="1" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="11" Count="1" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="15" Count="2" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="18" Count="1" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="77" Count="1" />
+      <LineId Id="80" Count="2" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="21" Count="4" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="26" Count="12" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="39" Count="3" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="43" Count="3" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="47" Count="3" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="51" Count="6" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

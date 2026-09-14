@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_EStationName" Id="{9c4f1a7e-2d3b-4e6a-8f01-5b6c7d8e9a01}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE ST_EStationName :
+(
+	ST01 := 1,
+	ST02 := 2,
+	ST03 := 3,
+	ST04 := 4,
+	ST05 := 5,
+	ST06 := 6
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

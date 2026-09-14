@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ManMov_MoveTrack" Id="{5100365b-543a-4bed-8095-bd39b63df1d2}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ManMov_MoveTrack :
+STRUCT
+	move_track_CMD_enable:BOOL;
+	move_track_CMD_done:BOOL;
+	// Commands
+	join_track:BOOL;
+	leave_track:BOOL;
+	move_track:BOOL; 
+	
+	//moving settings
+	move_track_no: INT;	
+	move_track_position: REAL; 
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

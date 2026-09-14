@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{8d89419c-cc08-4593-80cb-e3584dae8b2c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fbXMotionUnit : FB_MotionSystem;
+	nState : UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE nState OF
+	0: // Init
+		nState := nState + 1;
+	1: // Startup sequence
+		IF fbXMotionUnit.Startup() THEN
+			nState := nState + 29;
+		END_IF
+	30: // Preparing sequence
+		IF fbXMotionUnit.Starting(bReset:= FALSE) THEN
+			nState := nState + 10;
+		END_IF
+	40: // Executing sequence
+		fbXMotionUnit.Execute(bReset:= FALSE);
+END_CASE
+// Cyclic update
+fbXMotionUnit.Cycle();]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_MoverConfiguration" Id="{9271f1eb-a3da-40a3-a51f-506b3e0f0ce0}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_MoverConfiguration :
+STRUCT
+
+	MoverType:UINT;
+	id: STRING(13);
+	WellplateData: ST_WellplateParametrization;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

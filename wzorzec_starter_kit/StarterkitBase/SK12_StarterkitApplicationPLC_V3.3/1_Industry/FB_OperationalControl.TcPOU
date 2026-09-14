@@ -1,0 +1,595 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_OperationalControl" Id="{6e0a177c-8ed0-477a-833e-9fb4fd898362}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OperationalControl
+VAR_INPUT
+
+	bStartCommand 		: BOOL;
+	bStopCommand 		: BOOL;		
+	bQuitCommand 		: BOOL;
+	bExceptionCommand	: BOOL;
+	bResetCommand		: BOOL;
+
+END_VAR
+VAR_OUTPUT
+	bStartLamp 			: BOOL;
+	bStopLamp 			: BOOL;
+	bQuitLamp 			: BOOL;
+	bEStopLamp			: BOOL;
+	bStopping			: BOOL;
+	bStopped			: BOOL;
+	bStarting 			: BOOL;
+	bRunning			: BOOL;
+	sResult 			: STRING;
+	nResult				: INT;
+END_VAR
+
+VAR_IN_OUT
+	XTags		: ST_XTags;
+END_VAR
+
+VAR
+	nMachineState		: INT;
+	bStartUpFlag		: BOOL;
+	bStartUpDone		: BOOL;
+	bError				: BOOL;
+	bStartSequence		: BOOL;
+	bStopSequence		: BOOL;
+	bStartLampBlink		: BOOL;
+	bStopLampBlink		: BOOL;
+	nErrorSequence		: INT;
+	tBlinker			: TON;
+	bBlinker			: BOOL;
+
+	bCheckCurrentMachineState	: BOOL;
+
+	nProcessFeedback		: UDINT;
+
+	rtMoverErrordetection	: R_TRIG;
+	bMoverErrorDetected		: BOOL;
+	
+	rtReset					: R_TRIG;
+	bDoReset				: BOOL;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+	helper();
+
+	rtReset(CLK:=bResetCommand);
+	IF rtReset.Q THEN
+		IF bMoverErrorDetected THEN
+			bDoReset := TRUE;
+		END_IF
+	END_IF
+	
+
+	// Check for system start-up
+	IF NOT bStartUpDone THEN
+		IF XTags.Status = E_XMotion_Status.StartUp THEN
+			bStartUpFlag := TRUE;
+		END_IF			
+		IF bStartUpFlag AND XTags.Status = E_XMotion_Status.Aborted THEN	
+			IF NOT bStartUpDone THEN
+				bStartUpDone   := TRUE;
+			    bStartSequence := FALSE;
+		        bStopSequence  := TRUE;
+			END_IF
+		END_IF	
+		sResult := 'Machine Start-Up';
+	END_IF
+	
+
+	// Check start signal
+	IF bStartCommand 
+	AND NOT bStopCommand 
+	AND NOT bExceptionCommand
+	AND NOT bStopSequence
+	AND NOT bError
+	THEN 
+		bStartSequence := TRUE;
+		bStopSequence  := FALSE;
+	END_IF
+	
+	// Check stop signal
+	IF bStopCommand 
+	AND NOT bExceptionCommand
+	AND NOT bError
+	THEN
+		bStartSequence := FALSE;
+		bStopSequence  := TRUE;
+	END_IF 
+	
+		
+	ErrorSequence();
+	StartSequence();
+	StopSequence();
+	SyncSequence();
+	
+
+	
+
+
+	
+	
+	
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="ErrorSequence" Id="{78dcfdba-4c34-4112-9d12-4103e3669638}">
+      <Implementation>
+        <ST><![CDATA[	
+CASE nErrorSequence OF
+		
+	0:	// Checking mover error  
+		IF ipMotionSystemApplication <> 0 THEN
+			rtMoverErrordetection(CLK:=ipMotionSystemApplication.P_MoverError);
+			IF rtMoverErrordetection.Q THEN
+				bMoverErrorDetected := TRUE;
+			END_IF
+		END_IF	
+		
+		// In case of an exception e.g. E-Stop, start the error sequence
+		IF bExceptionCommand THEN    // -> Exception from extern e.g. E-Stop Button
+			XTags.Command := E_XMotion_Command.Abort;
+			nErrorSequence := 5;
+		ELSE
+			IF bMoverErrorDetected THEN	// -> Exception from a Mover e.g. FollowingError
+				XTags.Command := E_XMotion_Command.HoldOnError;
+				nErrorSequence := 5;
+			END_IF			
+		END_IF	
+
+		
+	5:	// In case of an exception e.g. E-Stop, start the error sequence
+		 bStartSequence := FALSE;
+		 bStopSequence  := FALSE;
+			 bStartLamp := FALSE;
+			  bStopLamp := FALSE;
+			  bQuitLamp := FALSE;
+		bStartLampBlink := FALSE;
+		 bStopLampBlink := FALSE;	 
+				 bError := TRUE;	
+		
+	     nErrorSequence := 10;
+		
+	
+	10:	// Waiting till the event is gone e.g. E-Stop has been pulled out.		
+		bEStopLamp := bBlinker;
+		sResult := 'Error pending';	
+		IF NOT bExceptionCommand THEN
+			    bEStopLamp := FALSE;
+			nErrorSequence := 20;
+		END_IF
+			
+		
+	20:	// Wait for error-quit	
+		bQuitLamp := bBlinker;
+		
+		IF ipMotionSystemApplication.P_MoverError THEN
+			sResult := 'Mover Error / Waiting for error-quit';
+		ELSE
+			sResult := 'Waiting for error-quit';
+		END_IF
+
+		IF bExceptionCommand THEN
+			nErrorSequence := 5;
+		ELSIF bQuitCommand THEN
+			bMoverErrorDetected := FALSE;
+			     nErrorSequence := 30;
+		ELSIF bDoReset THEN
+			           bDoReset := FALSE;
+			bMoverErrorDetected := FALSE;
+			     nErrorSequence := 40;			
+		END_IF
+		
+		
+	30: // Sending abort-command to the StarterKit-StateMachine.
+		XTags.Command := E_XMotion_Command.Abort;
+		     bQuitLamp := bBlinker;
+		       sResult := 'Error-Quit - sending abort-command';		
+		nErrorSequence := 40;
+		
+	  
+	40: // Waiting for StarterKit-StateMachine in state Aborted.
+		IF XTags.Status = E_XMotion_Status.Aborted THEN
+			bQuitLamp := FALSE;
+		    bStopLamp := TRUE;
+			   bError := FALSE;
+			  sResult := 'Error-Quit successful';	
+			  
+			nErrorSequence := 0;
+		END_IF		  
+
+	END_CASE
+	
+	]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="helper" Id="{14804608-1421-4106-9c0f-48e622649a50}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+
+	IF bStartLampBlink THEN
+		bStartLamp := bBlinker;
+	END_IF
+	
+	IF bStopLampBlink THEN
+		bStopLamp := bBlinker;
+	END_IF
+	
+
+	tBlinker(IN:=TRUE, PT:=T#500MS);
+	IF tBlinker.Q THEN
+		bBlinker := NOT bBlinker;
+		tBlinker(IN:=FALSE);
+	END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Property Name="P_ProcessFeedback" Id="{ba871bc7-abc7-4de4-a021-04066cbfa50d}">
+      <Declaration><![CDATA[PROPERTY P_ProcessFeedback : UDINT]]></Declaration>
+      <Set Name="Set" Id="{60b66d8a-b0d4-46ec-a225-001591f03723}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[nProcessFeedback := P_ProcessFeedback;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Action Name="StartSequence" Id="{620067e8-cf07-423d-b311-8d02a2ae5fad}">
+      <Implementation>
+        <ST><![CDATA[
+
+	
+	
+	
+	// Start-Sequence, will run in case of start-signal 
+	IF bStartSequence THEN
+		CASE XTags.Status OF
+			
+			E_XMotion_Status.StartUp:	// Do nothing
+										bStartSequence := FALSE;
+										sResult := 'Impossible - Machine is still in Start-Up procedure';	
+										
+			E_XMotion_Status.Aborting:	// Do nothing
+										bStartSequence := FALSE;
+										sResult := 'Impossible - Machine is in Aborting sequence';	
+		
+			E_XMotion_Status.Aborted:	// Reset-Command brings you to the next stage
+										  nMachineState := 1;
+										bStartLampBlink := TRUE;
+										      bStopLamp := FALSE;
+										  XTags.Command := E_XMotion_Command.Reset;
+										sResult := 'Starting - command reset issued';
+		
+			E_XMotion_Status.Resetting: // Wait for next stage
+			  						      nMachineState := 1;
+										bStartLampBlink := TRUE;
+										      bStopLamp := FALSE;
+										sResult := 'Starting - Machine is resetting';
+										
+			E_XMotion_Status.Stopped:	// Prepare-Command brings you to the next stage
+									      nMachineState := 2;
+										bStartLampBlink := TRUE;
+										  XTags.Command := E_XMotion_Command.Prepare;
+										sResult := 'Starting - command prepare issued';	
+		
+			E_XMotion_Status.Preparing: // Wait for next stage
+										  nMachineState := 3;
+										bStartLampBlink := TRUE;
+										      bStopLamp := FALSE;
+										sResult := 'Starting - Machine is preparing';
+		
+			E_XMotion_Status.Prepared:	// Start-Command brings you to the next stage
+										  nMachineState := 3;
+										bStartLampBlink := TRUE;
+										      bStopLamp := FALSE;
+										  XTags.Command := E_XMotion_Command.Start;
+										sResult := 'Starting - command start issued';	 
+		
+			E_XMotion_Status.Execute:	// System is running
+										 nMachineState := 4;
+									   bStartLampBlink := FALSE;
+											 bStopLamp := FALSE;
+										    bStartLamp := TRUE;
+										bStartSequence := FALSE;
+										sResult := 'Machine is running';
+		
+		END_CASE
+	END_IF
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="StopSequence" Id="{8af40223-4a76-48f8-af92-29c595ff04f2}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+
+
+	
+
+	// Stop-Sequence, will run in case of stop-signal 
+	IF bStopSequence THEN
+		     bStartLamp := FALSE;
+		bStartLampBlink := FALSE;
+		
+		CASE XTags.Status OF
+			
+			E_XMotion_Status.StartUp:	// Do nothing
+										bStopSequence := FALSE;
+										sResult := 'Impossible - Machine is still in Start-Up procedure';	
+										
+			E_XMotion_Status.Aborting:	// Do nothing
+										sResult := 'Impossible - Machine is in Aborting sequence';	
+		
+			E_XMotion_Status.Aborted:	// System is stopped
+										 nMachineState := 2;
+			                            bStopLampBlink := FALSE;
+			                                 bStopLamp := TRUE;
+										 bStopSequence := FALSE;
+										sResult := 'Machine is stopped';
+		
+			E_XMotion_Status.Resetting: // Sending abort-command
+										 nMachineState := 1;
+										bStopLampBlink := TRUE;
+										 XTags.Command := E_XMotion_Command.Abort;
+										sResult := 'Machine is resetting - sending abort-command';
+										
+			E_XMotion_Status.Stopped:	// Sending abort-command
+										 nMachineState := 1;
+										bStopLampBlink := TRUE;
+										 XTags.Command := E_XMotion_Command.Abort;
+										sResult := 'Machine is stopped - sending abort-command';
+		
+			E_XMotion_Status.Preparing: // Sending abort-command
+										 nMachineState := 1;
+										 nMachineState := 1;
+										bStopLampBlink := TRUE;
+										 XTags.Command := E_XMotion_Command.Abort;
+										sResult := 'Machine is preparing - sending abort-command';
+		
+			E_XMotion_Status.Prepared:	// Sending abort-command
+										 nMachineState := 1;
+										bStopLampBlink := TRUE;
+										 XTags.Command := E_XMotion_Command.Abort;
+										sResult := 'Machine is prepared - sending abort-command';
+		
+			E_XMotion_Status.Execute:	// Sending abort-command
+									     nMachineState := 1;
+										bStopLampBlink := TRUE;
+										    bStartLamp := FALSE;
+										 XTags.Command := E_XMotion_Command.Abort;
+										sResult := 'Machine is executing - sending abort-command';
+		
+		END_CASE
+
+	END_IF	
+
+	]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="SyncSequence" Id="{5365ef3c-0d88-4260-a9c8-c952cf166ce2}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+
+	
+
+	CASE nMachineState OF
+		
+	0:	// Machine state = undefined
+		bStopping := FALSE;
+		bStopped  := FALSE;
+		bStarting := FALSE;
+		bRunning  := FALSE;	
+				
+	1:	// Machine state = stopping	
+		bStopping := TRUE;
+		bStopped  := FALSE;
+		bStarting := FALSE;
+		bRunning  := FALSE;	
+		IF XTags.Status <> E_XMotion_Status.Aborting THEN
+			bCheckCurrentMachineState := TRUE;
+		END_IF
+		
+	2:	// Machine state = stopped	
+		bStopping := FALSE;
+		bStopped  := TRUE;
+		bStarting := FALSE;
+		bRunning  := FALSE;	
+		IF XTags.Status <> E_XMotion_Status.Stopped THEN
+			bCheckCurrentMachineState := TRUE;
+		END_IF
+	
+	3:	// Machine state = starting	
+		bStopping := FALSE;
+		bStopped  := FALSE;
+		bStarting := TRUE;
+		bRunning  := FALSE;
+		IF XTags.Status <> E_XMotion_Status.Preparing THEN
+			bCheckCurrentMachineState := TRUE;
+		END_IF					
+		
+	4:	// Machine state = running	
+		bStopping := FALSE;
+		bStopped  := FALSE;
+		bStarting := FALSE;
+		bRunning  := TRUE;		
+		IF XTags.Status <> E_XMotion_Status.Execute THEN
+			bCheckCurrentMachineState := TRUE;
+		END_IF
+		
+	END_CASE
+
+
+
+	// Syncronizing with StarterKit-StateMachine
+	IF bCheckCurrentMachineState 
+	AND NOT bError
+	THEN
+		bCheckCurrentMachineState := FALSE;
+		
+		CASE XTags.Status OF
+			
+			E_XMotion_Status.StartUp:	// Do nothing
+										sResult := 'Machine Start-Up';
+										
+										bStartSequence := FALSE;
+										 bStopSequence := FALSE;
+										 nMachineState := 0;
+											
+										
+			E_XMotion_Status.Aborting:	// Do nothing
+										        sResult := 'Machine Aborting';	
+										  nMachineState := 1;
+										bStartLampBlink := FALSE;
+										     bStartLamp := FALSE;
+										 bStopLampBlink := TRUE;
+										      bStopLamp := FALSE;
+		
+			E_XMotion_Status.Aborted:	// Reset-Command brings you to the next stage
+										        sResult := 'Machine Aborted';	
+										  nMachineState := 2;
+										bStartLampBlink := FALSE;
+										     bStartLamp := FALSE;
+										 bStopLampBlink := FALSE;
+										      bStopLamp := TRUE;
+
+		
+			E_XMotion_Status.Resetting: // Wait for next stage
+										        sResult := 'Machine Resetting';	
+			  						      nMachineState := 1;
+										bStartLampBlink := TRUE;
+										      bStopLamp := FALSE;
+
+										
+			E_XMotion_Status.Stopped:	// Prepare-Command brings you to the next stage
+									   	        sResult := 'Stopped';
+									      nMachineState := 2;
+	
+		
+			E_XMotion_Status.Preparing: // Wait for next stage
+												sResult := 'Machine Preparing';
+										  nMachineState := 3;
+										bStartLampBlink := TRUE;
+										      bStopLamp := FALSE;
+
+		
+			E_XMotion_Status.Prepared:	// Start-Command brings you to the next stage
+										        sResult := 'Prepared';
+										  nMachineState := 3;
+										bStartLampBlink := TRUE;
+										      bStopLamp := FALSE;
+	 
+		
+			E_XMotion_Status.Execute:	// System is running
+									           sResult := 'Machine is Running';
+										 nMachineState := 4;
+									   bStartLampBlink := FALSE;
+											 bStopLamp := FALSE;
+										    bStartLamp := TRUE;
+										bStartSequence := FALSE;
+		
+		END_CASE
+	END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_OperationalControl">
+      <LineId Id="695" Count="1" />
+      <LineId Id="1040" Count="0" />
+      <LineId Id="722" Count="0" />
+      <LineId Id="1047" Count="0" />
+      <LineId Id="1050" Count="0" />
+      <LineId Id="1048" Count="0" />
+      <LineId Id="1051" Count="0" />
+      <LineId Id="1049" Count="0" />
+      <LineId Id="1041" Count="0" />
+      <LineId Id="697" Count="1" />
+      <LineId Id="706" Count="0" />
+      <LineId Id="716" Count="1" />
+      <LineId Id="725" Count="0" />
+      <LineId Id="727" Count="0" />
+      <LineId Id="719" Count="1" />
+      <LineId Id="728" Count="1" />
+      <LineId Id="721" Count="0" />
+      <LineId Id="712" Count="0" />
+      <LineId Id="707" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="708" Count="1" />
+      <LineId Id="381" Count="19" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="986" Count="2" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="561" Count="1" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="467" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="816" Count="0" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="822" Count="0" />
+      <LineId Id="540" Count="5" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperationalControl.ErrorSequence">
+      <LineId Id="128" Count="84" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperationalControl.helper">
+      <LineId Id="17" Count="2" />
+      <LineId Id="2" Count="14" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperationalControl.P_ProcessFeedback.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperationalControl.StartSequence">
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="56" />
+      <LineId Id="3" Count="2" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperationalControl.StopSequence">
+      <LineId Id="2" Count="63" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperationalControl.SyncSequence">
+      <LineId Id="62" Count="2" />
+      <LineId Id="78" Count="19" />
+      <LineId Id="99" Count="28" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="2" Count="8" />
+      <LineId Id="128" Count="1" />
+      <LineId Id="11" Count="5" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="17" Count="7" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="25" Count="6" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="32" Count="6" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="39" Count="2" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="42" Count="6" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="49" Count="4" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="54" Count="7" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

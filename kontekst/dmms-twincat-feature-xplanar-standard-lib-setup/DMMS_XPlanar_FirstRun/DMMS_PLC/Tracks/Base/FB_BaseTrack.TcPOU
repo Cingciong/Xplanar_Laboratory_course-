@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_BaseTrack" Id="{e6b4635d-94ba-4ff0-8007-cd00c10d9de2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BaseTrack
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	
+	fbTrackStandard		: FB_TrackStandard;
+	fTrackLength		: LREAL;
+	
+	nStartFromTrack 	: UDINT;
+	nEndAtTrack 		: UDINT;
+	bCloseLoop			: BOOL;
+	
+	nInitState			: INT;
+	bTrackBuildError	: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Clear" Id="{25cb7975-dd54-47bb-82be-395aa67b2983}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+VAR_INPUT
+END_VAR
+
+VAR_INST
+	nStateReset		: UINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+	CASE nStateReset OF
+		
+	0:	nStateReset := 10;
+	
+	10: IF fbTrackStandard.P_State = MC_PLANAR_STATE.Error
+		OR fbTrackStandard.P_State = MC_PLANAR_STATE.ErrorPending
+		THEN
+			nStateReset := nStateReset +1;
+		ELSE
+			nStateReset := nStateReset +10;
+		END_IF
+		
+	11: IF fbTrackStandard.Reset() THEN
+			nStateReset := nStateReset +1;
+		END_IF
+	
+	12:	IF fbTrackStandard.P_Reset.Done THEN
+			nStateReset := nStateReset +8;
+		END_IF
+	
+	20:
+		  //sErrorInfoText := '';
+			bTrackBuildError := FALSE;
+			nInitState := 10;
+				   Clear := TRUE;	
+	
+		nStateReset := 0;
+	
+	END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cycle" Id="{1a5c3e6b-ae9f-4a39-8f47-d457f0279719}">
+      <Declaration><![CDATA[METHOD Cycle : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[fbTrackStandard.Cycle();]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="P_Error" Id="{cfd91edf-3bd4-4d56-adc0-794317e2efbd}">
+      <Declaration><![CDATA[PROPERTY P_Error : Bool]]></Declaration>
+      <Get Name="Get" Id="{dc73ff78-eed2-4913-a2de-8ad297342600}">
+        <Declaration><![CDATA[VAR
+END_VAR]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_TrackLength" Id="{9f1faab6-9339-4a93-bf4b-3226e0306dd2}">
+      <Declaration><![CDATA[PROPERTY P_TrackLength : LREAL]]></Declaration>
+      <Get Name="Get" Id="{b50466d5-5e8a-4121-adfa-84890013e507}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_TrackLength := fTrackLength;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="std" Id="{562e015f-fca9-4225-9466-c66536042231}">
+      <Declaration><![CDATA[PROPERTY std : I_TrackStandard]]></Declaration>
+      <Get Name="Get" Id="{a5a2e65e-487a-4edb-a096-0985d2929b48}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[std := fbTrackStandard;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+  </POU>
+</TcPlcObject>

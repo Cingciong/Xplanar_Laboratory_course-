@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ComOut_ExportMover" Id="{f6d65c40-2e98-4e99-8bc0-d78fec493549}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ComOut_ExportMover :
+STRUCT
+	Avaiable: BOOL; 
+	Error: BOOL;
+	CurrentTaskFinished:BOOL;
+	Status_Word: INT; 
+	Error_ID: INT;
+	MoverType:INT;
+	CurrentStation: UINT;
+	LastTask: UDINT; 
+	CurrentTask: UDINT; 
+	TrackID: UDINT;
+	TrackPos: LREAL;
+	Id: STRING(13);
+	Position : MoverPositionUnion;
+	PartTracking: ST_PartTrackingData;
+
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

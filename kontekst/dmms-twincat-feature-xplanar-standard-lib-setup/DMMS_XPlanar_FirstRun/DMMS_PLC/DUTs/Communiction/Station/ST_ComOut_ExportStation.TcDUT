@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ComOut_ExportStation" Id="{440a6a1e-a622-4120-9f4b-71ed55d22c06}">
+    <Declaration><![CDATA[TYPE ST_ComOut_ExportStation :
+STRUCT
+	MoverInStation : BOOL;
+	InProcess: BOOL; 
+	ProcessComplete:BOOL; 
+	OK:BOOL;
+	NOK: BOOL;
+	CmdToPC: INT;
+	StationName:	STRING(30);
+	ID_Mover: 		STRING(30);
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

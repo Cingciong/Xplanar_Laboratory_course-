@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <Itf Name="I_VisuMessage" Id="{c7fa5e2f-44b8-4fc4-8937-f550facf4207}">
+    <Declaration><![CDATA[INTERFACE I_VisuMessage
+]]></Declaration>
+    <Method Name="CheckAknowledge" Id="{7eed7428-3c25-41b8-98d4-2574a134fb38}">
+      <Declaration><![CDATA[METHOD CheckAknowledge : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="ClearAlarmMessage" Id="{7874348e-37eb-4e87-8833-3b0f8cd888ed}">
+      <Declaration><![CDATA[METHOD ClearAlarmMessage : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="ClearAllMessages" Id="{fc855211-e33d-4e48-b7ec-1d14fae18ce3}">
+      <Declaration><![CDATA[METHOD ClearAllMessages : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="ClearInfoMessage" Id="{4d665c5d-efd0-40ea-a1b2-976f6945346c}">
+      <Declaration><![CDATA[METHOD ClearInfoMessage : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="SetAlarmMessage" Id="{69fcca6f-620f-458a-b038-43ef1f67b68d}">
+      <Declaration><![CDATA[METHOD SetAlarmMessage : BOOL
+VAR_INPUT
+	sMessage	: STRING;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="SetErrorMessage" Id="{e04722bf-5f2f-4613-aea8-49886abc711f}">
+      <Declaration><![CDATA[METHOD SetErrorMessage : BOOL
+VAR_INPUT
+	sMessage	: STRING;
+	sSequence	: STRING;
+	nState		: DINT;
+	nErrorCode	: DWORD;
+END_VAR]]></Declaration>
+    </Method>
+    <Method Name="SetInfoMessage" Id="{a55141da-dbff-404a-bbd9-98a0935f44a6}">
+      <Declaration><![CDATA[METHOD SetInfoMessage : BOOL
+VAR_INPUT
+	sMessage	: STRING;
+	sSequence	: STRING;
+	nState		: DINT;
+END_VAR]]></Declaration>
+    </Method>
+    <Method Name="StateUpdate" Id="{165282fe-2038-4c6a-8ff4-2a497798b3f9}">
+      <Declaration><![CDATA[METHOD StateUpdate : BOOL
+VAR_INPUT
+	nState		: DINT;
+	sSequence	: STRING;
+END_VAR]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>

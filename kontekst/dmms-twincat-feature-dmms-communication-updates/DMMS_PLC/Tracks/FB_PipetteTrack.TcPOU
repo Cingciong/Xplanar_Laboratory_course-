@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_PipetteTrack" Id="{f85fc0e6-527e-4c53-b450-9f0132cdaf28}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PipetteTrack EXTENDS FB_BaseTrack implements I_Track;
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Initialize" Id="{b39531c0-1e58-4a74-b224-4004611d861b}">
+      <Declaration><![CDATA[METHOD Initialize : BOOL
+VAR_INPUT
+	nTrackIndex	: UDINT;
+END_VAR
+
+VAR_INST
+	TrackTable		: FB_TrackTable;
+	
+	bIsDone : BOOL;
+	bIsActive : BOOL;
+	bIsError : BOOL;
+	stRet : ST_CommandReturn;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+CASE nInitState OF
+	10:	// Starting with an empty table. 
+		IF TrackTable.ClearTrackTable() THEN
+			nInitState := nInitState + 10;
+		END_IF
+	20: 
+		// Init Track-Table
+		
+		// *************************************************************************************
+		// *** Only the code in this state must be eddited according to machine/track layout ***
+		// *************************************************************************************	
+		
+		nStartFromTrack	:= 5;		// 0 for the first track all others according to their predecessor!
+	    	nEndAtTrack := 0;		// 0 for the first track all others according to their successor! 		
+		     bCloseLoop := FALSE;	// TRUE for circular track	
+		
+		TrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 180, 299.99, 0);
+		TrackTable.AddPoint(E_PointType.Line_End, E_PointOption.none, 180, 60.01, 0);
+		
+		TrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 179.99, 60, 0);
+		TrackTable.AddPoint(E_PointType.Line_End, E_PointOption.none, 120, 60, 0);
+		nInitState := nInitState + 10;
+		
+	30:
+		// *************************************************************
+		// ***       NO Code Changes are needed from here on!        ***
+		// *************************************************************		
+			
+		// The track table contains all additional information, too.
+		IF nStartFromTrack > 0 THEN
+			TrackTable.P_StartFromTrack := GVL.g_Tracks[nStartFromTrack].std;	
+		END_IF
+		IF nEndAtTrack > 0 THEN
+			TrackTable.P_EndAtTrack := GVL.g_Tracks[nEndAtTrack].std;	
+		END_IF	
+		TrackTable.P_CloseTheLoop := bCloseLoop;	
+		nInitState := nInitState + 10;
+
+			
+		
+	40: // Checking the track table for plausibility
+		IF TrackTable.CheckTrackTable() <> 0 THEN
+			IF TrackTable.P_TrackTableCheckResult THEN
+				nInitState := 50;	// Plausibility test succeeded.
+			ELSE
+				nInitState := 41;	// Plausibility test failed!
+			END_IF
+		END_IF
+	41:	// In case of failed plausibility test check the creation of the above track table.
+		// A Line must always begin with E_PointType.Line_Start and end with E_PointType.Line_End.
+		// A Circle must always be added in the order E_PointType.Circle_Start, E_PointType.Circle_Center, E_PointType.Circle_End.
+		// Check the info text for further information:
+		bTrackBuildError := TRUE;
+							
+ 					   
+	50:	// Building the track	
+		IF fbTrackStandard.BuildTrackExt(TrackTable) THEN
+			nInitState := nInitState +1;
+		END_IF
+		
+	51:	
+		bIsDone := fbTrackStandard.P_BuildTrackExt.Done;
+		bIsActive := fbTrackStandard.P_BuildTrackExt.Active;
+		bIsError := fbTrackStandard.P_BuildTrackExt.Error;
+		stRet := fbTrackStandard.P_BuildTrackExt;
+		
+		IF fbTrackStandard.P_BuildTrackExt.Done THEN
+			nInitState := 100;	
+		ELSIF fbTrackStandard.P_BuildTrackExt.Error THEN
+	  		nInitState := nInitState +1;
+		END_IF		
+		
+	52: // In case an error occured, check the error ID and InfoText and react accordingly:
+		   bTrackBuildError := TRUE;
+		 
+	100: 	// Track build done
+			fTrackLength := fbTrackStandard.GetLength();
+			  Initialize := TRUE;
+	
+			
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="P_Error" Id="{8d74d43d-b6ef-4cb3-b99a-0998b04a6f33}">
+      <Declaration><![CDATA[PROPERTY P_Error : Bool]]></Declaration>
+      <Get Name="Get" Id="{2c994b0e-b811-407e-b95f-13530f9803cf}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_Error := bTrackBuildError;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+  </POU>
+</TcPlcObject>

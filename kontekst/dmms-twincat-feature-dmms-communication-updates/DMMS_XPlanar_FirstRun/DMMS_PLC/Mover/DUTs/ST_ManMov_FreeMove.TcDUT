@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ManMov_FreeMove" Id="{e999d679-fde2-4260-917e-710d19ca26ab}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ManMov_FreeMove :
+STRUCT
+	move_position_CMD_enable:BOOL;
+	move_position_CMD_done: BOOL;
+	move_position :MoverVector;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

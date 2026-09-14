@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ProductData" Id="{bdd20773-de6a-4c9e-8898-66bcede34983}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ProductData :
+STRUCT
+	
+	OK_ToProcess		:BOOL;
+	NOK_ToProcess		:BOOL; 
+	bInitRun			:BOOL;
+	WellplateStatus		:INT;
+	WellplateNOK_Reason	:INT;
+	nDestinationProcess	:UINT;
+	nPriority			:UINT;
+	nSerial				:UDINT;
+	PuncherProcessResults 	: ARRAY[1..96] OF ST_ProcessResult;
+	PipeteProcesResults		: ARRAY [1..96] OF ST_ProcessResult;
+	
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

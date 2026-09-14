@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_EMoverLoadType" Id="{b001b95b-474a-4457-938f-12956e7181f7}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE ST_EMoverLoadType :
+(
+	Wellplate := 1,
+	PipetteTips:=2,
+	Gripper:=3
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

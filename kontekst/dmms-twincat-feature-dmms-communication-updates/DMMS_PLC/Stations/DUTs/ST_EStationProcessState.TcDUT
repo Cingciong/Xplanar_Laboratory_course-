@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_EStationProcessState" Id="{7d828aa6-8370-4588-b430-fe33d616db1c}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE ST_EStationProcessState :
+(	
+	Empty := 1,
+	InProcess:=2,
+	Finished:=3
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ManualMovements" Id="{c7515c34-9f1f-45a6-bc32-2af27b674ee6}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ManualMovements :
+STRUCT
+	
+	MoveTrack: ST_ManMov_MoveTrack;
+	FreeMove: ST_ManMov_FreeMove;
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

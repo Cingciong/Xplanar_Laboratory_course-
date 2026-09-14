@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ComOut_GlobalStatus" Id="{90e4e45c-d4f2-4526-bd5e-89c9f3b8128a}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}
+TYPE ST_ComOut_GlobalStatus :
+STRUCT
+	InCycle:BOOL; 
+	ProgramType: INT; 
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,503 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_Station_01_Process" Id="{9c3aeef2-ef6f-4f25-8d06-5c249fe52471}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Station_01_Process EXTENDS FB_StationBase
+VAR
+	nStationIndex				: UINT;
+	nNextStationIndex			: UINT;
+	nStationTrackIndex			: UINT;
+	
+	fStationPosition_X 			: LREAL;
+	fStationPosition_Y 			: LREAL;		  
+    fSendAwayDistance			: LREAL;	
+	fInRangeDistance			: LREAL;	
+	fSendAwayPosition			: LREAL;
+	
+	position					: PositionXYC;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Clear" Id="{7df6d171-bdd0-4375-a8d0-e3a664808a98}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+VAR_INPUT
+END_VAR
+
+
+
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+
+	CASE nStateClear OF
+		
+	0:	// Enter
+		Clear := FALSE;
+		nStateClear := nStateClear +10;
+		
+	10: // Clearing all Station-Lists 
+		IF SUPER^.Clear() THEN
+			nStateClear := nStateClear +10;
+		END_IF	
+	
+	20:	// Add aditional Data to be cleared here...
+		nStateClear := 100;
+		
+		
+	100: // Done
+		      Clear := TRUE;
+		nStateClear := 0;
+
+	END_CASE
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Init" Id="{5c3c5827-eeeb-45ef-94e7-ff9e2f075668}">
+      <Declaration><![CDATA[METHOD Init : BOOL
+
+
+
+VAR_INST
+	nTestCounter	: INT;	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nTestCounter := nTestCounter +1;
+
+CASE nStateInit OF
+
+	0:		// Enter 
+			bStationInitDone := FALSE;
+			   nStateProcess := 0;
+			      nStateInit := 10;
+				 
+			
+	10:		// Init Station-Parameters				
+				  nStationIndex := 1;				// Each station needs an unique index	
+			 nStationTrackIndex := 1;	 			// Track on which the station resides
+			  nNextStationIndex := 4;				// Index of the following station 
+							  
+			 fStationPosition_X := 120.0;			// Position of the station in X/Y coordinates
+			 fStationPosition_Y := 360.0;			// Position of the station in X/Y coordinates
+			  
+			  fSendAwayDistance := 300.0;			// Position on track a mover will be send to after processing 
+			  fInRangeDistance  := 300.0;			// Position in front of a station from where a mover will be taken over
+			  
+			  nStateInit := 11;
+				   
+				  
+	11: // Fail-safe check, just to make sure all variables have been assigned after doing copy&paste from the template
+			IF        nStationIndex > 0
+			AND  nStationTrackIndex > 0
+			AND   nNextStationIndex > 0
+			AND  fStationPosition_X > 0
+			AND  fStationPosition_Y > 0
+			AND   fSendAwayDistance > 0
+			THEN   
+				nStateInit := 20;
+			END_IF
+			
+				   
+	20:		// Calculating positions
+	
+			// 1. Calculating station position on track
+			position.SetValuesXYC(fStationPosition_X, fStationPosition_Y, 0.0);
+			fStationPositionOnTrack := ipTrack[nStationTrackIndex].std.GetTrackPositionAt(position);
+							
+			// 2. Calculating send-away position on track
+			fSendAwayPosition := fStationPositionOnTrack + fSendAwayDistance; 
+			
+			// The send away position must not exceed the lenght of the track!
+			IF fSendAwayPosition > ipTrack[nStationTrackIndex].P_TrackLength THEN
+				fSendAwayPosition := ipTrack[nStationTrackIndex].P_TrackLength;
+			END_IF
+			
+			// 3. Calculating the station position in X/Y coordinates determined by the track	
+            //    This is to make sure the center of the station is always located directly on the track.
+			//    This value can differ from the initial fStationPosition_X, fStationPosition_Y in case they were not matching the track
+			ipTrack[nStationTrackIndex].std.GetMoverPositionAt(fStationPositionOnTrack, StationPosition);
+			
+			// Providing the station position to e.g. visualization	
+			stStationPosition.bInit            := TRUE;
+			stStationPosition.fPositionOnTrack := fStationPositionOnTrack;
+			stStationPosition.nTrackId         := nStationTrackIndex;
+			stStationPosition.fPosition_X	   := StationPosition.x;
+			stStationPosition.fPosition_Y	   := StationPosition.y;
+
+			nStateInit := 30;
+			
+			
+	30:		// Clear Lists
+			IF THIS^.Clear() THEN
+				nStateInit := 90;	
+			END_IF
+
+			
+		
+	90:		// Creating a little history of what happened in the station for debugging purpose
+			fbHistoryInfo.AddEntry('Init');
+	
+			nStateInit := 100;
+			
+						
+	100:	// Init done
+			IF SUPER^.Init() THEN
+				bStationInitDone := TRUE;	
+				           Init := TRUE;
+			END_IF
+				
+	
+END_CASE
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Process" Id="{b7c1a266-afc8-44c8-b87e-1207752ea976}">
+      <Declaration><![CDATA[METHOD Process : BOOL
+
+VAR_INST
+		
+	nMoverIndex				: UINT;
+	
+	fMoverToTrackPosition	: LREAL;
+	nTrackIndex				: UINT;
+	fMoverVelocity			: LREAL;
+	fMoverAcceleration		: LREAL;
+	fMoverJerk				: LREAL;
+	
+	
+	nErrorId					: UDINT;
+	nObjectID					: UDINT;
+	nObjectType					: UDINT;		
+	
+	// Process
+	Timer01						: TON;
+	fRotationAngle				: LREAL;
+	fRotationVelocity			: LREAL;	
+	fRotationAcceleration		: LREAL;
+	fRotationJerk				: LREAL;
+	stRotationOptions			: ST_MoveCOptions;
+	
+	nLastMoverDestination		: UINT;
+	nNextMoverDestination		: UINT;
+	
+END_VAR
+
+
+
+
+VAR_INST
+
+
+
+//	bToggleSwitch				: BOOL;
+//	bStationActive				: BOOL;
+
+
+//	fPositionOnTrack			: LREAL;
+//	nCurrentTrackIndex			: UDINT;
+	
+
+
+//	fInRangePosition			: LREAL;
+//	fOutOfRangePosition			: LREAL;
+	
+
+
+	
+	
+	
+//	strInfo						: STRING;
+	
+					
+	
+
+//	ClearTrig					: R_TRIG;
+	
+//	TrackInfo					: PlanarObjectInfo;
+//	nStationTrackID				: UDINT;
+//	nMoverOnTrackID				: UDINT;
+	
+
+	
+//	stMoveOptionsCurve			: ST_MoveCOptions;
+//	fVeloTurn           		: LREAL :=   180.0;
+//	fAccelTurn    				: LREAL :=  1000.0;
+//	fJerkTurn            		: LREAL := 10000.0;	
+//	fTurnAngle					: LREAL;	
+	
+
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// *** Processing Station ***
+
+CASE nStateProcess OF 
+
+	0:		// Enter
+			IF bStationInitDone THEN
+				nStateProcess := 100;
+			END_IF
+
+	
+	100: 	// Waiting for Mover
+			IF P_List_Station.P_FirstInList <> 0 THEN
+				nMoverIndex := P_List_Station.P_FirstInList.P_Id;
+					 nStateProcess := nStateProcess +10;
+			END_IF
+	
+		
+
+	110: 	// Check if Mover is in range
+			IF  ipMoverApplication[nMoverIndex].std.P_SetOnTrack.TrackOID = ipTrack[nStationTrackIndex].std.P_OID 
+			AND ipMoverApplication[nMoverIndex].std.P_SetOnTrack.SetPos   > fStationPositionOnTrack - fInRangeDistance
+			THEN
+				nStateProcess := nStateProcess +10;
+			END_IF
+			
+	
+	120: 	// Checking process situation
+			CASE eProcessMode OF
+				
+			E_ProcessMode.None:
+				;	// Nothing happens -> Process mode needs to be set!
+				
+			E_ProcessMode.InitRun:
+				IF nStationIndex = 1 THEN
+					ipMoverApplication[nMoverIndex].P_ProductData.bInitRun := FALSE;
+				ELSE
+					nStateProcess := 300;
+				END_IF				
+			
+			E_ProcessMode.Production:
+				nStateProcess := 200;
+		
+			END_CASE
+		
+	
+	200: 	// Send mover to Processing-Position
+			fMoverToTrackPosition   := fStationPositionOnTrack;
+			nTrackIndex        		:= nStationTrackIndex;
+			fMoverVelocity     		:=    300.0;
+			fMoverAcceleration 		:=  1_000.0;
+			fMoverJerk         		:= 10_000.0;	
+	
+			stMoveParameters.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionShortestWay;
+			stMoveParameters.gap       := 240.0;
+		
+			
+			// Creating info text with a little history of what happened in the station for debugging purpose		
+			strInfo := fbHistoryInfo.CreateStationInfo(nStationIndex, nMoverIndex, nNextStationIndex);	
+
+
+			// Move on track command	
+			ipMoverApplication[nMoverIndex].std.MoveOnTrack( strInfo,
+															 ipTrack[nTrackIndex].std,
+															 fMoverToTrackPosition,
+															 fMoverVelocity,
+															 fMoverAcceleration,
+															 fMoverJerk,
+															 stMoveParameters.gap,
+															 stMoveParameters.direction);
+			nStateProcess := nStateProcess +1;
+				
+			
+	201: 	// Checking move command return
+			IF ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Done THEN
+				nStateProcess := nStateProcess +9;
+			ELSIF ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Error THEN
+				   nErrorID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.ErrorID;
+				  nObjectID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectID;
+				nObjectType := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectType;
+			END_IF		
+
+			
+	210:	// Process: Showing mover rotation -> Rotating to +90°
+			       fRotationAngle :=   90.0;
+			    fRotationVelocity :=  720.0;
+			fRotationAcceleration := 1800.0;
+			        fRotationJerk := 9000.0;
+
+			stRotationOptions.additionalTurns := 0;
+			stRotationOptions.direction		  := Tc3_Mc3PlanarMotion.MC_Direction.mcDirectionNonModulo;
+
+			IF NOT ipMoverApplication[nMoverIndex].std.P_MoveC.Busy THEN
+					
+				ipMoverApplication[nMoverIndex].std.MoveC( strInfo,
+														   fRotationAngle,
+														   fRotationVelocity,
+														   fRotationAcceleration,
+														   fRotationAcceleration,
+														   fRotationJerk,
+														   stRotationOptions );
+														   
+				nStateProcess := nStateProcess +1;
+			END_IF										   
+
+	211:	// Checking move command return
+			IF ipMoverApplication[nMoverIndex].std.P_MoveC.Done THEN
+				nStateProcess := nStateProcess +9;
+			ELSIF ipMoverApplication[nMoverIndex].std.P_MoveC.Error THEN
+				   nErrorID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.ErrorID;
+				  nObjectID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectID;
+				nObjectType := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectType;				
+			END_IF			
+			
+				
+	220:	// Process: Rotation-Demo done
+			nStateProcess := 300;
+
+		
+			
+			
+	300: 	// Decide to which station the mover needs to travel next.
+			nLastMoverDestination := ipMoverApplication[nMoverIndex].P_ProductData.nDestinationProcess;
+			CASE nLastMoverDestination OF
+			2:	nNextMoverDestination := 3;
+			3:	nNextMoverDestination := 2;
+			ELSE
+				// Mover came in for the first time
+				CASE nMoverIndex OF
+				1:	nNextMoverDestination := 3;
+  				2:	nNextMoverDestination := 2;
+				3:	nNextMoverDestination := 2;
+  				4:	nNextMoverDestination := 3;				
+				END_CASE
+			END_CASE
+			
+			IF  nNextMoverDestination = 2 
+			AND ipStation[2].P_ProcessState > 1
+			AND ipStation[2].P_ProcessState < 5
+			THEN
+				nNextMoverDestination := 3;
+			END_IF
+			
+			ipMoverApplication[nMoverIndex].P_ProductData.nDestinationProcess := nNextMoverDestination;
+			
+			nStateProcess := nStateProcess +10;
+		
+			
+	310:	// Send mover to the next station
+			fMoverToTrackPosition   := fSendAwayPosition;	
+			nTrackIndex        		:= nStationTrackIndex;		
+			fMoverVelocity     		:=    300.0;
+			fMoverAcceleration 		:=  1_000.0;
+			fMoverJerk         		:= 10_000.0;	
+	
+			
+			stMoveParameters.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive;	
+			stMoveParameters.gap       := 240.0;
+
+			
+			// Creating info text with a little history of what happened in the station for debugging purpose		
+			strInfo := fbHistoryInfo.CreateStationInfo(nStationIndex, nMoverIndex, nNextStationIndex);	
+			
+				
+			// Move on track command	
+			ipMoverApplication[nMoverIndex].std.MoveOnTrack( strInfo,
+															 ipTrack[nTrackIndex].std,
+															 fMoverToTrackPosition,
+															 fMoverVelocity,
+															 fMoverAcceleration,
+															 fMoverJerk,
+															 stMoveParameters.gap,
+															 stMoveParameters.direction);
+			nStateProcess := nStateProcess +1;
+			
+		
+		
+	311: 	// Checking move command return
+			IF ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Active
+			OR ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Done 
+			THEN
+				nStateProcess := nStateProcess + 9;
+				
+			ELSIF ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Error THEN
+				   nErrorID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.ErrorID;
+				  nObjectID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectID;
+				nObjectType := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectType;
+			END_IF		
+		
+			
+	320: 	// Mover to the list of the next station
+			ipStation[nNextStationIndex].P_List_Switch_Input_A.AddMover(P_List_Station.RemoveFirstInList());
+			nStateProcess := 500;	
+	
+		
+	500: 	// Done for this cycle
+			nStateProcess := 100;
+
+END_CASE
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_Station_01_Process">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Station_01_Process.Clear">
+      <LineId Id="35" Count="3" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="55" Count="2" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="39" Count="1" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Station_01_Process.Init">
+      <LineId Id="336" Count="55" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="392" Count="14" />
+      <LineId Id="408" Count="26" />
+      <LineId Id="85" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Station_01_Process.Process">
+      <LineId Id="5073" Count="15" />
+      <LineId Id="5362" Count="0" />
+      <LineId Id="5089" Count="116" />
+      <LineId Id="5280" Count="1" />
+      <LineId Id="5283" Count="0" />
+      <LineId Id="5285" Count="0" />
+      <LineId Id="5287" Count="0" />
+      <LineId Id="5286" Count="0" />
+      <LineId Id="5284" Count="0" />
+      <LineId Id="5282" Count="0" />
+      <LineId Id="5278" Count="0" />
+      <LineId Id="5211" Count="0" />
+      <LineId Id="5279" Count="0" />
+      <LineId Id="5216" Count="1" />
+      <LineId Id="5222" Count="55" />
+      <LineId Id="340" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

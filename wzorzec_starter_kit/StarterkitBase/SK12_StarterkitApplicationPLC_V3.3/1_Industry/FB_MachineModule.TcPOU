@@ -1,0 +1,856 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_MachineModule" Id="{6731ada0-e7f3-4a4b-8534-5c6189c275ad}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MachineModule 
+
+VAR
+//===== Aplication Layer =================================
+
+	fbMotionSystem			: FB_MotionSystem;
+	fbXPlanarSystem			: FB_XPlanarSystem;
+	
+	fbMover					: ARRAY [1..gc_nMaxNumberMovers] OF FB_ApplicationMover;
+	fbXPlanarMover			: ARRAY [1..gc_nMaxNumberMovers] OF FB_XPlanarMoverStandard; 
+	
+	fbVisuMessage			: FB_VisuMessage;
+	
+	// Instances of Track-FBs
+	fbTrackSegment01		: FB_TrackSegment_1;
+	fbTrackSegment02		: FB_TrackSegment_2;
+	fbTrackSegment03		: FB_TrackSegment_3;
+	   
+	// Instances of Station-FBs
+	fbStation_01_Process 	: FB_Station_01_Process;
+	fbStation_02_Process 	: FB_Station_02_Process;
+	fbStation_03_Process	: FB_Station_03_Process;
+	fbStation_04_Switch		: FB_Station_04_SW_Separate;
+	fbStation_05_Switch		: FB_Station_05_SW_Merge;
+	
+//===== Base Module =======================================
+
+	eXCommand					: E_XMotion_Command;
+	eXStatus					: E_XMotion_Status;
+	eLastXState					: E_XMotion_Status;	
+
+	fbStateManager				: FB_SK_StateManager;
+	eControlCommand				: E_XMotion_Command;
+	stSequenceStates 			: ST_XMotionStatemachineStates;
+	stAlarm						: ST_VisuMessage;
+	
+	nStateCommandCheck			: INT;
+	bMachineExceptionPending	: BOOL;
+	
+	bUnitModeManagerExecute		: BOOL;
+	bUnitModeManagerDone		: BOOL;
+	bUnitModeManagerError		: BOOL;
+		
+	nStateSequence				: INT;
+	nStateExecute				: INT;
+	bInterfaceAssignmentDone	: BOOL;
+	bDone						: BOOL;
+	
+	nProcessFeedback			: UDINT;
+	bErrorQuit					: BOOL;
+	
+	nForCounter					: UDINT;
+
+	fbVisuDignostics 			: FB_XPlanarVisuDiag;
+	bVisuDiagInit				: BOOL;
+	bVisuDiagInitMover 			: BOOL;
+	bVisuDiagInitTrack 			: BOOL;
+
+	
+	// ...just for testing 
+	nTestCounter_Cycle				: UINT;
+	nTestCounter_Aborted			: UINT;
+	nTestCounter_Aborting			: UINT;
+	nTestCounter_Execute			: UINT;
+	nTestCounter_Preparing			: UINT;
+	nTestCounter_Prepared			: UINT;
+	nTestCounter_Resetting 			: UINT;
+	nTestCounter_StartUp			: UINT;
+	nTestCounter_StateComplete 		: UINT;
+	nTestCounter_Stopped			: UINT;
+	nTestCounter_CommandReceive		: UINT;	
+	
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="Management" Id="{d83bd46d-e324-4fdb-a942-0ab2a2e38b5b}" />
+    <Folder Name="Properties" Id="{3df199e9-8d6a-46d2-95d3-75b590ca7c71}" />
+    <Folder Name="StateMachine" Id="{e56eefdb-7b4c-4acc-8812-149db862ba48}" />
+    <Method Name="Aborted" Id="{68860e43-9d33-4150-aa1b-f9759c02f24b}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[{attribute 'object_name' := 'Aborted'}
+METHOD PRIVATE Aborted
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+
+	nTestCounter_Aborted := nTestCounter_Aborted + 1;
+	
+	(*
+		Aborted:
+		- all movers deactivated
+		- No errors pending
+	*)]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Aborting" Id="{c83e3bc9-e145-46e3-9c33-ce95d5c21ca1}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[{attribute 'object_name' := 'Aborting'}
+METHOD PRIVATE Aborting]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE nStateSequence OF
+	0: 		
+		IF ipMotionSystemApplication <> 0 THEN
+			nStateSequence := 10;
+		END_IF
+
+
+	10:	
+		IF ipMotionSystemApplication.Aborting() THEN
+			nStateSequence := 100;
+		END_IF
+
+	100:
+		StateComplete();
+END_CASE	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CommandReceive" Id="{87de6cc2-4b4c-4e2b-bf44-2ade3cbfcaae}" FolderPath="Management\">
+      <Declaration><![CDATA[METHOD PRIVATE CommandReceive 
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+	nTestCounter_CommandReceive := nTestCounter_CommandReceive + 1;
+
+
+	
+	// Checking Statecommands and reacting to received Control-Commands
+	CASE nStateCommandCheck OF
+	
+	
+	0:  // Check
+		IF NOT bMachineExceptionPending THEN
+			nStateCommandCheck:= 10;   	// No error
+		ELSE
+			nStateCommandCheck:= 20;	// Error pending
+		END_IF
+	
+		
+	10:	// No Machine-Error 
+		
+		CASE eXCommand OF 		// XTags.eCommand received from superior system e.g. Machine-HMI
+
+		E_XMotion_Command.NoCommand:
+				eControlCommand := E_XMotion_Command.NoCommand;
+		
+		E_XMotion_Command.Abort:
+				eControlCommand := E_XMotion_Command.Abort;
+		
+		E_XMotion_Command.Reset: 
+				IF eXStatus = E_XMotion_Status.Aborted THEN
+					eControlCommand := E_XMotion_Command.Reset;
+				END_IF		
+		
+		E_XMotion_Command.Prepare:
+				IF eXStatus = E_XMotion_Status.Stopped THEN
+					eControlCommand := E_XMotion_Command.Prepare;
+				END_IF
+	
+		E_XMotion_Command.Start:	
+				IF eXStatus = E_XMotion_Status.Prepared THEN
+					eControlCommand := E_XMotion_Command.Start;
+				END_IF		
+			
+		E_XMotion_Command.HoldOnError:
+				eControlCommand := E_XMotion_Command.HoldOnError;
+
+				
+		E_XMotion_Command.UserCommand:
+				;
+		
+		// Rückmeldung wenn/warum ein Command nicht ausgeführt wurde		
+							
+		END_CASE
+				
+		nStateCommandCheck := 0;	
+	
+		
+	20:  // Machine-Error reaction
+		   eControlCommand := E_XMotion_Command.Abort;
+		nStateCommandCheck := nStateCommandCheck + 1;	
+		
+	21: IF XTags.Status = E_XMotion_Status.Aborted THEN
+			nStateCommandCheck := nStateCommandCheck + 1;
+		END_IF		
+			
+	22:	IF NOT bMachineExceptionPending THEN
+			nStateCommandCheck := 10;
+		END_IF
+		
+		
+	END_CASE
+	
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cycle" Id="{5a742b61-e02c-4b39-9ed1-02a377068220}">
+      <Declaration><![CDATA[METHOD PUBLIC Cycle
+VAR
+	nForCounter : UDINT;	
+END_VAR
+
+
+VAR_INST
+	nTestCounter	 : UINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	nTestCounter := nTestCounter +1;
+
+
+	fbMotionSystem.std := THIS^.fbXPlanarSystem;
+
+
+	// Calling the state management of the main state-machine	
+	StateManagement();
+
+
+	// Keeping all cyclic activities alive and up-to-date
+	IF ipMotionSystemApplication <> 0 THEN
+		ipMotionSystemApplication.Cycle();
+		stAlarm := ipMotionSystemApplication.P_Alarm;
+	END_IF
+
+	
+	FOR nForCounter := 1 TO g_nMoverCount DO
+		IF ipMoverApplication[nForCounter] <> 0 THEN
+			ipMotionSystemApplication.std.SetMoverStandard(nForCounter, ipMoverApplication[nForCounter].std);
+			ipMoverApplication[nForCounter].std.P_Id := UDINT_TO_UINT(nForCounter);
+			ipMoverApplication[nforcounter].Cycle();		
+		END_IF
+	END_FOR	
+	
+	FOR nForCounter := 1 TO gc_NumberTracks DO
+		IF ipTrack[nForCounter] <> 0 THEN
+			ipMotionSystemApplication.std.SetTrackStandard(nForCounter, ipTrack[nForCounter].std);
+			ipTrack[nForCounter].Cycle();
+		END_IF
+	END_FOR
+
+	FOR nForCounter:=1 TO gc_NumberStations DO 
+		IF ipStation[nForCounter] <> 0 THEN 
+			ipStation[nForCounter].Cycle(); 
+		END_IF
+	END_FOR	
+	
+	
+	// Logging/Diagnostics
+	IF NOT bVisuDiagInit THEN
+		
+		IF NOT bVisuDiagInitMover THEN
+			bVisuDiagInitMover := TRUE;
+			FOR nForCounter := 1 TO g_nMoverCount DO 
+				IF ipMoverApplication[nForCounter] <> 0 THEN
+					fbVisuDignostics.SetStandardMover(ipMoverApplication[nForCounter].std, nForCounter);
+				ELSE
+					bVisuDiagInitMover := FALSE;
+				END_IF
+			END_FOR
+		END_IF
+
+		IF NOT bVisuDiagInitTrack THEN
+			bVisuDiagInitTrack := TRUE;
+			FOR nForCounter := 1 TO gc_NumberTracks DO 
+				IF ipTrack[nForCounter] <> 0 THEN
+					fbVisuDignostics.SetStandardTrack(ipTrack[nForCounter].std, nForCounter);
+				ELSE
+					bVisuDiagInitTrack := FALSE;
+				END_IF
+			END_FOR			
+		END_IF
+		
+		bVisuDiagInit := bVisuDiagInitMover AND bVisuDiagInitTrack;
+	END_IF
+	
+	
+
+	fbVisuDignostics.Cycle();
+	
+	fbVisuMessage.Cycle(g_VisuMessage.bAcknowledge);
+	g_VisuMessage := fbVisuMessage.P_VisuOut;
+	
+
+		
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Execute" Id="{825be72c-aa8e-40b9-8699-374335e35ea2}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[{attribute 'object_name' := 'Execute'}
+METHOD PRIVATE Execute
+
+
+	
+VAR_INST
+	nForCounter : UDINT;	
+
+
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	
+	FOR nForCounter:=1 TO gc_NumberStations DO
+		IF ipStation[nForCounter] <> 0 THEN
+			ipStation[nForCounter].Process();
+			
+			IF ipStation[nForCounter].P_nErrorCode > 0 THEN
+				nProcessFeedback := ipStation[nForCounter].P_nErrorCode;
+			END_IF
+		END_IF
+	END_FOR	
+
+	ipMotionSystemApplication.Execute();
+	
+
+	(*
+	StateComplete();	// <- nothing will happen since there's no state defined after Execute,
+						//    instead Execute can only be left by the Operator pressing the Abort-Button.
+	*)
+	
+	
+	
+	
+	
+	
+	
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="HoldOnError" Id="{de10aca1-4dd7-4b80-a187-1bd16194b0b4}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[METHOD HoldOnError : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+
+CASE nStateSequence OF
+	0: 		
+		IF ipMotionSystemApplication <> 0 THEN
+			nStateSequence := 10;
+		END_IF
+
+	10:	
+		IF nProcessFeedback = 0 THEN
+			nStateSequence := 100;
+		END_IF
+
+	100:
+		StateComplete();
+END_CASE	
+
+
+
+
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="P_Alarm" Id="{95a008a3-74d5-49da-bc84-3eda9338814d}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_Alarm : ST_VisuMessage]]></Declaration>
+      <Get Name="Get" Id="{8213e64e-f796-47ec-b11b-4634f830d209}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_Alarm := stAlarm;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_ErrorQuit" Id="{c44fb0db-4602-485c-aacd-7a1d426310c3}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_ErrorQuit : BOOL]]></Declaration>
+      <Set Name="Set" Id="{8d0d1b8f-e6ac-49ea-8336-ec75d470eca6}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[bErrorQuit := P_ErrorQuit;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_ExternelStop" Id="{75eeafdc-5549-4ccc-a328-2a7c0671c676}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_ExternelStop : BOOL]]></Declaration>
+      <Get Name="Get" Id="{76f625c2-1482-4a9e-a591-6b7563f372bc}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{0ba165ac-0c75-4596-bf3b-4327cb924f2e}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_ProcessFeedback" Id="{66b8d101-a1bb-4f8b-a3ef-5e7dc87558c5}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_ProcessFeedback : UDINT]]></Declaration>
+      <Get Name="Get" Id="{a2ec208c-e380-4c85-8bad-a687473b5b26}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ProcessFeedback := nProcessFeedback;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_XCommand" Id="{63a64e6a-b1a4-4a09-ae08-523657744e73}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_XCommand : E_XMotion_Command]]></Declaration>
+      <Set Name="Set" Id="{30f5dcff-bdbc-4e68-8b63-312a4edb2ad0}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[  eXCommand := P_XCommand;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_XMotionStatus" Id="{72d0a586-0b1a-4f29-92e1-fd923ee8f24f}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_XMotionStatus : E_XMotion_Status]]></Declaration>
+      <Get Name="Get" Id="{3321aeb5-3577-4739-bf01-ddab29e81ec6}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[   P_XMotionStatus := eXStatus;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_XSequenceStates" Id="{ed3abb82-f6db-42e0-9b5a-8e35ccbeeb7c}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_XSequenceStates : ST_XMotionStatemachineStates]]></Declaration>
+      <Get Name="Get" Id="{888cd302-c10a-4c52-96cc-d33cec70f8f7}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_XSequenceStates := stSequenceStates;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="Prepared" Id="{2861cdd7-1375-4c2a-85e2-3dce891e2e5e}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[METHOD PRIVATE Prepared
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+	nTestCounter_Prepared := nTestCounter_Prepared +1;
+	
+	
+	(*
+		Prepared: 
+		- all movers active (flying)
+		- all movers in home position
+	
+	*)
+	
+	
+	
+	
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Preparing" Id="{0f37ef63-2c8e-48f6-9e84-c77671458548}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[{attribute 'object_name' := 'Preparing'}
+METHOD PRIVATE Preparing
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE nStateSequence OF
+	
+	0: 		
+		FOR nForCounter:=1 TO gc_NumberStations DO
+			IF ipStation[nForCounter] <> 0 THEN
+				ipStation[nForCounter].Process();				
+				IF ipStation[nForCounter].P_nErrorCode > 0 THEN
+					nProcessFeedback := ipStation[nForCounter].P_nErrorCode;
+				END_IF
+			END_IF
+		END_FOR	
+		
+
+		IF ipMotionSystemApplication.Prepare() THEN
+			nStateSequence := 100;
+		END_IF
+
+	100:
+		StateComplete();
+		
+END_CASE	
+
+
+	
+	
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Resetting" Id="{bb8cf386-5782-4629-a5b7-1dc8d7ce9545}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[{attribute 'object_name' := 'Resetting'}
+METHOD PRIVATE Resetting
+
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+CASE nStateSequence OF
+	
+	0: 
+		IF ipMotionSystemApplication.Resetting() THEN
+			nStateSequence := 100;
+		END_IF
+
+		
+	100:
+		StateComplete();
+		
+END_CASE	
+	
+	
+	
+	
+	
+	
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="StartUp" Id="{b5f39c5f-976b-4d89-b7c0-5eb12d10e9b8}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[{attribute 'object_name' := 'StartUp'}
+METHOD PRIVATE StartUp
+VAR
+	nForCounter : UDINT;
+END_VAR
+
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE nStateSequence OF
+
+	0: 	// XPlanar- or XTS-System?
+		ipVisuMessage := fbVisuMessage;
+		fbMotionSystem.std := THIS^.fbXPlanarSystem;
+		nStateSequence := 1;
+		
+	1:  // Mover assignment 
+		FOR nForCounter := 1 TO g_nMoverCount DO
+			fbMover[nForCounter].std := THIS^.fbXPlanarMover[nForCounter];
+		END_FOR	
+		nStateSequence := 2;
+	
+	2:	// Motion system to global motion system interface
+		ipMotionSystemApplication := THIS^.fbMotionSystem;
+		nStateSequence := 3;
+			
+	3:  // Movers to global mover interface
+		FOR nForCounter := 1 TO g_nMoverCount DO
+			ipMoverApplication[nForCounter] := THIS^.fbMover[nForCounter];
+			THIS^.fbMover[nForCounter].P_MoverIndex := UDINT_TO_INT(nForCounter); 
+		END_FOR	
+		nStateSequence := 4;
+
+	4:  // Assigning global Track-Interfaces
+		ipTrack[1] := THIS^.fbTrackSegment01;
+		ipTrack[2] := THIS^.fbTrackSegment02;
+		ipTrack[3] := THIS^.fbTrackSegment03;	
+		nStateSequence := 5;	
+					
+	5:  // Assigning global Station-Interfaces
+		ipStation[1] := THIS^.fbStation_01_Process;
+        ipStation[2] := THIS^.fbStation_02_Process;		
+        ipStation[3] := THIS^.fbStation_03_Process;			
+		ipStation[4] := THIS^.fbStation_04_Switch;
+		ipStation[5] := THIS^.fbStation_05_Switch;	
+	
+		bInterfaceAssignmentDone := TRUE;
+		nStateSequence := 10;
+	
+	
+	10: // Calling Application-Startup-Procedure	
+		IF ipMotionSystemApplication.Startup() THEN
+			nStateSequence := 100;
+		END_IF
+	
+
+	100: // Start-up done
+		StateComplete();
+END_CASE	
+	
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="StateComplete" Id="{c69fff04-ca0a-403e-a712-c6501809dcc9}" FolderPath="Management\">
+      <Declaration><![CDATA[{attribute 'object_name' := 'StateComplete'}
+METHOD PRIVATE StateComplete
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+	nTestCounter_StateComplete := nTestCounter_StateComplete + 1;
+
+	nStateSequence := 0;
+	
+	//the actual state is completed
+	fbStateManager.StateComplete();]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="StateManagement" Id="{6a91beb3-9ee2-43ac-a2f5-e4f1013c2986}" FolderPath="Management\">
+      <Declaration><![CDATA[METHOD PRIVATE StateManagement : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	// Checking for command received by superior unit e.g. HMI
+	CommandReceive();
+	
+	
+	// fbStateManager manages the state to be executed:
+	fbStateManager.Cycle();	
+	fbStateManager.XMotionCommand := eControlCommand;
+	eXStatus := fbStateManager.Status;
+						
+	IF eXStatus <> eLastXState THEN
+		nStateSequence := 0;
+		eLastXState := eXStatus;
+	END_IF
+
+	
+	// One of the methods is executing by the actual status
+	CASE eXStatus OF
+		E_XMotion_Status.StartUp:	        StartUp();
+		E_XMotion_Status.Aborting:         Aborting();
+		E_XMotion_Status.Aborted:           Aborted();
+		E_XMotion_Status.Resetting:       Resetting();
+		E_XMotion_Status.Stopped:           Stopped();
+		E_XMotion_Status.Preparing:       Preparing();
+		E_XMotion_Status.Prepared:         Prepared();
+		E_XMotion_Status.Execute:	   		Execute();
+		E_XMotion_Status.HoldOnError:	HoldOnError();
+	END_CASE
+	
+	
+	// Information to visulization etc.
+	IF ipMotionSystemApplication <> 0 THEN 
+		stSequenceStates.nAbortState   := DINT_TO_INT(ipMotionSystemApplication.P_AbortingSequence); 
+		stSequenceStates.nResetState   := DINT_TO_INT(ipMotionSystemApplication.P_ResettingSequence);
+		stSequenceStates.nPrepareState := DINT_TO_INT(ipMotionSystemApplication.P_StartingSequence);
+		stSequenceStates.nStartState   := DINT_TO_INT(ipMotionSystemApplication.P_ExecutingSequence);
+	END_IF	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Stopped" Id="{8465c14a-a7ea-401c-a764-b99b72cc50df}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[{attribute 'object_name' := 'Stopped'}
+METHOD PRIVATE Stopped
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+	nTestCounter_Stopped := nTestCounter_Stopped + 1;
+
+
+	(*
+	
+		Stopped: 
+		- Production finished
+		- …
+		
+	*)]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_MachineModule">
+      <LineId Id="144" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.Aborted">
+      <LineId Id="5" Count="2" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="16" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.Aborting">
+      <LineId Id="111" Count="8" />
+      <LineId Id="122" Count="4" />
+      <LineId Id="101" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.CommandReceive">
+      <LineId Id="95" Count="1" />
+      <LineId Id="6" Count="2" />
+      <LineId Id="14" Count="8" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="24" Count="3" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="72" Count="2" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="31" Count="4" />
+      <LineId Id="41" Count="3" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="154" Count="1" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="49" Count="6" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="138" Count="1" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="100" Count="2" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="66" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="114" Count="23" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.Cycle">
+      <LineId Id="1395" Count="65" />
+      <LineId Id="1466" Count="2" />
+      <LineId Id="1461" Count="0" />
+      <LineId Id="1477" Count="0" />
+      <LineId Id="1462" Count="0" />
+      <LineId Id="1470" Count="0" />
+      <LineId Id="1476" Count="0" />
+      <LineId Id="1475" Count="0" />
+      <LineId Id="1464" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.Execute">
+      <LineId Id="231" Count="24" />
+      <LineId Id="34" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.HoldOnError">
+      <LineId Id="37" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="10" Count="5" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="22" Count="4" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="33" Count="3" />
+      <LineId Id="32" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.P_Alarm.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.P_ErrorQuit.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.P_ExternelStop.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.P_ExternelStop.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.P_ProcessFeedback.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.P_XCommand.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.P_XMotionStatus.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.P_XSequenceStates.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.Prepared">
+      <LineId Id="6" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="2" />
+      <LineId Id="21" Count="2" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="11" Count="4" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.Preparing">
+      <LineId Id="154" Count="24" />
+      <LineId Id="28" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.Resetting">
+      <LineId Id="118" Count="15" />
+      <LineId Id="111" Count="2" />
+      <LineId Id="34" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.StartUp">
+      <LineId Id="528" Count="2" />
+      <LineId Id="578" Count="0" />
+      <LineId Id="531" Count="46" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.StateComplete">
+      <LineId Id="6" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.StateManagement">
+      <LineId Id="157" Count="34" />
+      <LineId Id="40" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MachineModule.Stopped">
+      <LineId Id="5" Count="3" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="16" Count="3" />
+      <LineId Id="15" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

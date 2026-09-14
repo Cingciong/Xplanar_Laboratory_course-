@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_MotionSystem" Id="{abde6b6f-538b-47ff-9f31-e84c44f45dc4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MotionSystem
+VAR
+	fbXPlanarSystem : FB_XPlanarSystem;
+	fbXPlanarMover  : ARRAY[1..maxNumMover] OF FB_XPlanarMoverStandard;
+	nStartupSequence   : UDINT;
+	nStartingSequence  : UDINT;
+	nExecutingSequence : UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Cycle" Id="{268fe22f-b914-4a95-8967-0c87a6446373}">
+      <Declaration><![CDATA[METHOD Cycle
+VAR
+    i : UDINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Cyclic XPlanar objects update
+fbXPlanarSystem.Cycle();
+FOR i := 1 TO moverCount DO
+fbXPlanarMover[i].Cycle();
+END_FOR]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Execute" Id="{1496d55f-fa8d-477f-9931-67d8be42e5c4}">
+      <Declaration><![CDATA[METHOD Execute : BOOL
+VAR_INPUT
+	bReset : BOOL; // Reset sequence
+END_VAR
+VAR
+	i : UDINT;
+END_VAR
+VAR_INST
+	targetPos    : ARRAY[1..maxNumMover] OF PositionXYC;
+	bMoversInPos : BOOL;
+	bMoverError  : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	Execute := FALSE;
+	nExecutingSequence := 0;
+END_IF
+
+CASE nExecutingSequence OF
+	0: // Init
+		bMoversInPos := FALSE;
+		bMoverError := FALSE;
+		IF NOT bReset THEN
+			IF fbXPlanarMover[1].P_CommandMode = MC_PLANAR_MOVER_COMMAND_MODE.FreeMovement THEN
+				nExecutingSequence := nExecutingSequence + 10;
+			END_IF
+		END_IF
+
+	10: // Mover 1 -> X120 Y120, Mover 2 -> X360 Y600, 500 mm/s
+		targetPos[1].SetValuesXYC(120, 120, 0);
+		targetPos[2].SetValuesXYC(360, 600, 0);
+		FOR i := 1 TO moverCount DO
+			fbXPlanarMover[i].MoveToPosition('Move to XY', targetPos[i], 500, 1250, 1250, 12500);
+		END_FOR
+		nExecutingSequence := nExecutingSequence + 1;
+
+	11: // Movers moving
+		bMoversInPos := TRUE;
+		bMoverError := FALSE;
+		FOR i := 1 TO moverCount DO
+			bMoversInPos := bMoversInPos AND fbXPlanarMover[i].P_MoveToPosition.Done;
+			bMoverError  := bMoverError  OR  fbXPlanarMover[i].P_MoveToPosition.Error;
+		END_FOR
+		IF bMoversInPos THEN
+			nExecutingSequence := nExecutingSequence + 9;
+		ELSIF bMoverError THEN
+			nExecutingSequence := nExecutingSequence + 4;
+		END_IF
+
+	20: // Mover 1 -> X120 Y600, Mover 2 -> X360 Y120, 500 mm/s
+		targetPos[1].SetValuesXYC(120, 600, 0);
+		targetPos[2].SetValuesXYC(360, 120, 0);
+		FOR i := 1 TO moverCount DO
+			fbXPlanarMover[i].MoveToPosition('Move to XY', targetPos[i], 500, 1250, 1250, 12500);
+		END_FOR
+		nExecutingSequence := nExecutingSequence + 1;
+
+	21: // Movers moving
+		bMoversInPos := TRUE;
+		bMoverError := FALSE;
+		FOR i := 1 TO moverCount DO
+			bMoversInPos := bMoversInPos AND fbXPlanarMover[i].P_MoveToPosition.Done;
+			bMoverError  := bMoverError  OR  fbXPlanarMover[i].P_MoveToPosition.Error;
+		END_FOR
+		IF bMoversInPos THEN
+			nExecutingSequence := nExecutingSequence + 9;
+		ELSIF bMoverError THEN
+			nExecutingSequence := nExecutingSequence + 4;
+		END_IF
+
+	30: // Done - loop
+		Execute := FALSE; // operator przerywa ręcznie (Stop / E-Stop)
+		nExecutingSequence := nExecutingSequence - 20; // wraca do 10 - pętla
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Starting" Id="{f59f7d91-d449-4346-9fd5-b71952c2bfb9}">
+      <Declaration><![CDATA[METHOD Starting : BOOL
+VAR_INPUT
+	bReset : BOOL;
+END_VAR
+VAR
+	i : UDINT;
+END_VAR
+VAR_INST
+	// --- diagnostyka bledu enable ---
+	nErrorID       : UDINT;    // surowy kod bledu
+	sErrorHex      : STRING;   // ten sam kod w HEX (do szukania w InfoSys)
+	nErrObjType    : UDINT;    // typ obiektu, ktory zawinil
+	nErrObjID      : UDINT;    // ktory konkretnie (np. mover 2)
+	stStartCheck   : ARRAY[1..maxNumMover] OF ST_CheckStartConditionFeedback;  // czemu pozycja zla
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	Starting := FALSE;
+	nStartingSequence := 0;
+END_IF
+
+CASE nStartingSequence OF
+	0: // Init
+		Execute(bReset := TRUE);
+		IF NOT bReset THEN
+			nStartingSequence := nStartingSequence + 50;   // -> 50
+		END_IF
+
+	50: // Enable movers command
+		IF fbXPlanarSystem.EnableMovers() THEN
+			nStartingSequence := nStartingSequence + 1;    // -> 51
+		END_IF
+
+	51: // Enabling movers
+		IF fbXPlanarSystem.P_EnableMovers.Done THEN
+			nStartingSequence := nStartingSequence + 29;   // -> 80 (OK)
+				ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+			nErrorID    := fbXPlanarSystem.P_EnableMovers.ErrorID;
+			nErrObjType := fbXPlanarSystem.P_EnableMovers.stInfo.nObjectType;
+			nErrObjID   := fbXPlanarSystem.P_EnableMovers.stInfo.nObjectID;
+			FOR i := 1 TO moverCount DO
+				stStartCheck[i] := fbXPlanarMover[i].CheckStartConditions();
+			END_FOR
+			nStartingSequence := nStartingSequence + 4;    // -> 55 (blad)
+		END_IF
+
+	55: // Enable movers FAILED - stoimy tu; wszystkie dane bledu w zmiennych powyzej
+		;
+
+	80: // Done
+		Starting := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Startup" Id="{8252e625-fcad-434e-bcac-dc951253175d}">
+      <Declaration><![CDATA[METHOD Startup : BOOL
+VAR
+	i : UDINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE nStartupSequence OF
+	0: // Init
+		nStartupSequence := nStartupSequence + 1;
+	1: // Assign mover references to the system
+	FOR i := 1 TO moverCount DO
+		fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
+	END_FOR
+	nStartupSequence := nStartupSequence + 29;
+	30: // Done
+	Startup := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

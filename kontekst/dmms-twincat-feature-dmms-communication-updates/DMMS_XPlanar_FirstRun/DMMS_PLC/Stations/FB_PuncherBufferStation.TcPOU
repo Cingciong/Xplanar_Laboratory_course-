@@ -1,0 +1,290 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_PuncherBufferStation" Id="{943cea0b-7626-46f1-bd90-16ddd5b5b427}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PuncherBufferStation EXTENDS FB_StationBase
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Clear" Id="{47d356fc-24a2-41d7-8593-03dc0286be7a}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	CASE nStateClear OF
+		
+	0:	// Enter
+		Clear := FALSE;
+		nStateClear := nStateClear +10;
+		
+	10: // Clearing all Station-Lists 
+		IF SUPER^.Clear() THEN
+			nStateClear := nStateClear +10;
+		END_IF	
+	
+	20:	// Add aditional Data to be cleared here...
+		nStateClear := 100;
+		
+		
+	100: // Done
+		      Clear := TRUE;
+		nStateClear := 0;
+
+	END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Init" Id="{c061b7cd-4ceb-442f-9613-95a1d94c2885}">
+      <Declaration><![CDATA[METHOD Init : BOOL
+
+
+VAR_INST
+	nTestCounter	: INT;	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nTestCounter := nTestCounter +1;
+
+CASE nStateInit OF
+
+	0:		// Enter 
+			bStationInitDone := FALSE;
+			   nStateProcess := 0;
+			      nStateInit := 10;
+				 
+			
+	10:		// Init Station-Parameters				
+				  nStationIndex := 3;				// Each station needs an unique index	
+			 nStationTrackIndex := 4;	 			// Track on which the station resides
+			 
+			 
+	nPreviousStationIndexInputW := 7;
+			  nTrackIndexInputW := 10;
+	   nNextStationIndexOutputW := 1;
+	   		 nTrackIndexOutputW := 1;	 
+			 
+			 
+			 	  
+			 fStationPosition_X := 660.0;			// Position of the station in X/Y coordinates
+			 fStationPosition_Y := 420.0;			// Position of the station in X/Y coordinates
+			  
+	   fSendAwayDistanceOutputW := 300.0;
+	   fSendAwayDistanceOutputN := 100.0;			// Position on track a mover will be send to after processing 
+			  fInRangeDistance  := 300.0;			// Position in front of a station from where a mover will be taken over
+			  
+			  nStateInit := 11;
+				   
+				  
+	11: // Fail-safe check, just to make sure all variables have been assigned after doing copy&paste from the template
+			IF        nStationIndex > 0
+			AND  nStationTrackIndex > 0
+			AND  nPreviousStationIndexInputW > 0
+			AND  nTrackIndexInputW > 0
+			AND  nNextStationIndexOutputW > 0
+			AND  nTrackIndexOutputW > 0
+			AND  fStationPosition_X > 0
+			AND  fStationPosition_Y > 0
+			AND  fSendAwayDistanceOutputW <> 0
+			AND   fInRangeDistance > 0
+			THEN   
+				nStateInit := 20;
+			END_IF
+			
+				   
+	20:		// Calculating positions
+	
+			// 1. Calculating station position on track
+			position.SetValuesXYC(fStationPosition_X, fStationPosition_Y, 0.0);
+			//fStationPositionOnTrack := GVL.g_Tracks[nStationTrackIndex].std.GetTrackPositionAt_XY(fStationPosition_X, fStationPosition_Y);
+			fStationPositionOnTrack := GVL.g_Tracks[nStationTrackIndex].P_TrackLength;;
+							
+			// 2. Calculating send-away position on track
+			fSendAwayPositionOutputW := fStationPositionOnTrack + fSendAwayDistanceOutputW; 
+			
+			// The send away position must not exceed the lenght of the track!
+			IF fSendAwayPositionOutputW > GVL.g_Tracks[nStationTrackIndex].P_TrackLength THEN
+				fSendAwayPositionOutputW := GVL.g_Tracks[nStationTrackIndex].P_TrackLength;
+			END_IF
+			
+			// 3. Calculating the station position in X/Y coordinates determined by the track	
+            //    This is to make sure the center of the station is always located directly on the track.
+			//    This value can differ from the initial fStationPosition_X, fStationPosition_Y in case they were not matching the track
+			GVL.g_Tracks[nStationTrackIndex].std.GetMoverPositionAt(fStationPositionOnTrack, StationPosition);
+			
+			// Providing the station position to e.g. visualization	
+			stStationPosition.bInit            := TRUE;
+			stStationPosition.fPositionOnTrack := fStationPositionOnTrack;
+			stStationPosition.nTrackId         := nStationTrackIndex;
+			stStationPosition.fPosition_X	   := StationPosition.x;
+			stStationPosition.fPosition_Y	   := StationPosition.y;
+
+			nStateInit := 30;
+			
+			
+	30:		// Clear Lists
+			IF THIS^.Clear() THEN
+				nStateInit := 90;	
+			END_IF
+
+			
+		
+	90:		// Creating a little history of what happened in the station for debugging purpose
+			fbHistoryInfo.AddEntry('Init');
+	
+			nStateInit := 100;
+			
+						
+	100:	// Init done
+			IF SUPER^.Init() THEN
+				bStationInitDone := TRUE;	
+				           Init := TRUE;
+			END_IF
+				
+	
+END_CASE
+			
+			]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Process" Id="{c4e75aea-59c6-479a-9c47-c96b9a8f5d7a}">
+      <Declaration><![CDATA[METHOD Process : BOOL
+
+VAR_INST
+		
+	nMoverIndex				: UINT;
+	(*
+	fMoverToTrackPosition	: LREAL;
+	nTrackIndex				: UINT;
+	fMoverVelocity			: LREAL;
+	fMoverAcceleration		: LREAL;
+	fMoverJerk				: LREAL;
+	
+	
+	nErrorId				: UDINT;
+	nObjectID				: UDINT;
+	nObjectType				: UDINT;		
+	
+	
+	// Process
+	nDestinationProcess		: UINT;
+	nIncommingTrackOID		: UDINT;
+	nNextStationIndex		: UINT;		 				
+	fSendAwayPosition		: LREAL;
+	nTrackindexNext			: UINT;
+	*)
+	
+END_VAR
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Station - Switch-Seperate
+
+CASE nStateProcess OF 
+
+	0:		// Enter
+			IF bStationInitDone THEN
+				nStateProcess := 100;
+			END_IF
+
+	
+	100: 	// Waiting for Mover
+			IF P_List_Switch_Input_W.P_FirstInList <> 0 THEN
+				P_List_Station.AddMover(P_List_Switch_Input_W.RemoveFirstInList());
+			    nStateProcess := nStateProcess +10;
+			END_IF
+	
+			
+	110:	// Working with the station list from here on	
+			IF P_List_Station.P_FirstInList <> 0 THEN
+				nMoverIndex := P_List_Station.P_FirstInList.P_Id;
+			    nStateProcess := nStateProcess +10;
+			END_IF		
+			
+		
+	120: 	// Check if Mover is in range
+			IF  GVL.g_Movers[nMoverIndex].std.P_SetOnTrack.TrackOID = GVL.g_Tracks[nTrackIndexInputW].std.P_OID
+			AND GVL.g_Movers[nMoverIndex].std.P_SetOnTrack.SetPos   > fStationPositionOnTrack - fInRangeDistance
+			THEN
+				nStateProcess := nStateProcess +10;
+			END_IF
+			
+			
+// 			
+// 	130: // Decide to which Station the mover has to travel to next.	
+// 			IF 	GVL.g_Stations[PuncherStation].P_ProcessState
+// 				
+// 				// -> Wait in buffer 
+// 				nNextStationIndex  := nNextStationIndexOutputB;
+// 				fSendAwayPosition  := fSendAwayPositionOutputB;
+// 				nTrackindexNext    := nTrackIndexOutputB;		
+// 		
+// 			ELSE: // -> send to puncher
+// 				nNextStationIndex  := nNextStationIndexOutputC;
+// 				fSendAwayPosition  := fSendAwayPositionOutputC;
+// 				nTrackindexNext    := nTrackIndexOutputC;				
+// 		END_IF
+// 			
+// 				nStateProcess := 200;	
+// 		
+// 			
+// 			
+// 		
+// 	200: 	// Send mover to the next station	
+// 			fMoverToTrackPosition := fSendAwayPosition;
+// 			nTrackIndex           := nTrackindexNext;
+// 			fMoverVelocity     	  :=    300.0;
+// 			fMoverAcceleration 	  :=  1_000.0;
+// 			fMoverJerk         	  := 10_000.0;	
+// 	
+// 			stMoveParameters.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive;	
+// 			stMoveParameters.gap       := 240.0;
+// 
+// 			
+// 			// Creating info text with a little history of what happened in the station for debugging purpose		
+// 			strInfo := fbHistoryInfo.CreateStationInfo(nStationIndex, nMoverIndex, nNextStationIndex);	
+// 			
+// 				
+// 			// Move on track command	
+// 			ipMoverApplication[nMoverIndex].std.MoveOnTrack( strInfo,
+// 															 ipTrack[nTrackIndex].std,
+// 															 fMoverToTrackPosition,
+// 															 fMoverVelocity,
+// 															 fMoverAcceleration,
+// 															 fMoverJerk,
+// 															 stMoveParameters.gap,
+// 															 stMoveParameters.direction);
+// 			nStateProcess := nStateProcess +1;
+// 			
+// 		
+// 		
+// 	201: 	// Checking move command return
+// 			IF ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Active
+// 			OR ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Done 
+// 			THEN
+// 				nStateProcess := nStateProcess + 9;
+// 				
+// 			ELSIF ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Error THEN
+// 				   nErrorID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.ErrorID;
+// 				  nObjectID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectID;
+// 				nObjectType := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectType;
+// 			END_IF		
+// 		
+// 	
+// 	210:	// Wait till the mover passed the junction point
+// 			IF ipMoverApplication[nMoverIndex].std.P_SetOnTrack.TrackOID <> ipTrack[nTrackIndexInputA].std.P_OID THEN
+// 				nStateProcess := nStateProcess + 10;
+// 			END_IF		
+// 
+// 		
+// 	220: 	// Mover to the list of the next station
+// 			ipStation[nNextStationIndex].P_List_Station.AddMover(P_List_Station.RemoveFirstInList());
+// 			nStateProcess := 500;	
+// 	*)
+// 		
+// 	500: 	// Done for this cycle
+// 			nStateProcess := 100;
+
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

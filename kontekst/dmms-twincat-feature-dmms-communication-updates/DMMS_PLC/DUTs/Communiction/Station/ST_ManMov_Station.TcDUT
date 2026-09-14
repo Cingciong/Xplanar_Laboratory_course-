@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ManMov_Station" Id="{3f7d8e21-6a4c-4b9e-9c1d-2e5f7a8b9c02}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ManMov_Station :
+STRUCT
+	CMD: INT;
+	CMD_Confirm: INT;
+	CMD_done: BOOL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

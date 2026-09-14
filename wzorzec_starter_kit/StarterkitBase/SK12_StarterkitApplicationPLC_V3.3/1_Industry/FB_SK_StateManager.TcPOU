@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_SK_StateManager" Id="{ba6ea3a9-f4d6-452f-bbd4-8f581c1dd188}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SK_StateManager
+
+VAR
+	bStartUpDone		: BOOL;	
+	bFirstAbortDone		: BOOL;
+	
+	eCommand			: E_XMotion_Command;	
+	eCommandOld			: E_XMotion_Command;
+	eStatus				: E_XMotion_Status;	
+	nCommandCounter		: UDINT;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+	
+
+]]></ST>
+    </Implementation>
+    <Method Name="Cycle" Id="{2b480e1d-388a-4266-9461-4240b3740607}">
+      <Declaration><![CDATA[METHOD PUBLIC Cycle
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+	IF NOT bStartUpDone THEN					
+		eStatus := E_XMotion_Status.StartUp;
+	ELSIF NOT bFirstAbortDone THEN
+		eStatus := E_XMotion_Status.Aborting;
+	ELSE
+
+		IF eCommand <> eCommandOld THEN
+			eCommandOld := eCommand;
+	
+			nCommandCounter := nCommandCounter +1;
+			
+			
+			CASE eCommand OF
+				
+			
+			E_XMotion_Command.Abort:	
+						eStatus := E_XMotion_Status.Aborting;	
+			
+			E_XMotion_Command.Reset:
+						IF eStatus = E_XMotion_Status.Aborted THEN
+							eStatus := E_XMotion_Status.Resetting;	
+						END_IF
+				
+			E_XMotion_Command.Prepare:
+						IF eStatus = E_XMotion_Status.Stopped THEN
+							eStatus := E_XMotion_Status.Preparing;	
+						END_IF	
+			
+			E_XMotion_Command.Start:
+						IF eStatus = E_XMotion_Status.Prepared THEN
+							eStatus := E_XMotion_Status.Execute;	
+						END_IF	
+
+			E_XMotion_Command.HoldOnError:
+						eStatus := E_XMotion_Status.HoldOnError;
+
+					
+			END_CASE
+		END_IF
+		
+	END_IF
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="StateComplete" Id="{bb432478-cdb4-46c1-ae1e-3b9c78e8a7c5}">
+      <Declaration><![CDATA[METHOD PUBLIC StateComplete : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+
+
+	CASE eStatus OF
+		
+	E_XMotion_Status.StartUp:
+				bStartUpDone := TRUE;
+				
+	E_XMotion_Status.Aborting:
+				bFirstAbortDone := TRUE;	
+				eStatus := E_XMotion_Status.Aborted;	
+	
+	E_XMotion_Status.Resetting:
+				eStatus := E_XMotion_Status.Stopped;
+		
+	E_XMotion_Status.Preparing:
+				eStatus := E_XMotion_Status.Prepared;
+	
+				
+	END_CASE
+	
+	
+	
+	
+	
+	
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Status" Id="{cd3b1284-33bd-4147-894f-f84c692ae866}">
+      <Declaration><![CDATA[PROPERTY Status : E_XMotion_Status]]></Declaration>
+      <Get Name="Get" Id="{7cc5837d-c26d-4941-86af-4b977c7f86dd}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Status := eStatus;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="XMotionCommand" Id="{b194e988-2fd8-448f-985b-c21173801e09}">
+      <Declaration><![CDATA[PROPERTY XMotionCommand : E_XMotion_Command]]></Declaration>
+      <Set Name="Set" Id="{5bed3948-1fe7-419e-9df8-105a5a39f66c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[eCommand := XMotionCommand;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="FB_SK_StateManager">
+      <LineId Id="244" Count="2" />
+      <LineId Id="46" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_SK_StateManager.Cycle">
+      <LineId Id="6" Count="33" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="40" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_SK_StateManager.StateComplete">
+      <LineId Id="9" Count="6" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="22" Count="2" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="44" Count="6" />
+    </LineIds>
+    <LineIds Name="FB_SK_StateManager.Status.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_SK_StateManager.XMotionCommand.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

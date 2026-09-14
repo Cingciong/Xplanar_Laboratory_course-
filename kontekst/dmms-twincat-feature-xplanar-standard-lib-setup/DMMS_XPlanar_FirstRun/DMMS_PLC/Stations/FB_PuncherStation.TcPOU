@@ -1,0 +1,698 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_PuncherStation" Id="{f8114a25-38a9-4e61-9247-503a04809785}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PuncherStation EXTENDS FB_StationBase
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Clear" Id="{7796330e-ce80-4b95-a706-068e522abdd8}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	CASE nStateClear OF
+		
+	0:	// Enter
+		Clear := FALSE;
+		nStateClear := nStateClear +10;
+		
+	10: // Clearing all Station-Lists 
+		IF SUPER^.Clear() THEN
+			nStateClear := nStateClear +10;
+		END_IF	
+	
+	20:	// Add aditional Data to be cleared here...
+		nStateClear := 100;
+		
+		
+	100: // Done
+		      Clear := TRUE;
+		nStateClear := 0;
+
+	END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Init" Id="{82470c45-ba2f-4664-87a2-1c43dcd6dac8}">
+      <Declaration><![CDATA[METHOD Init : BOOL
+
+
+VAR_INST
+	nTestCounter	: INT;	
+	
+	// temp
+	trackLength: LREAL;
+	index: INT; 
+	tempList: ARRAY[1..200] OF UDINT;
+END_VAR
+
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nTestCounter := nTestCounter +1;
+
+CASE nStateInit OF
+
+	0:		// Enter 
+			bStationInitDone := FALSE;
+			   nStateProcess := 0;
+			      nStateInit := 10;
+				 
+			
+	10:		// Init Station-Parameters				
+				  nStationIndex := 1;				// Each station needs an unique index	
+			 nStationTrackIndex := 1;	 			// Track on which the station resides
+
+		
+	 
+	nPreviousStationIndexInputN := 1;
+			  nTrackIndexInputN := 1;
+	   nNextStationIndexOutputN:= 4;
+	   		 nTrackIndexOutputN := 3;
+			 
+			 	  
+			 fStationPosition_X := 600.0;			// Position of the station in X/Y coordinates
+			 fStationPosition_Y := 60.0;			// Position of the station in X/Y coordinates
+			  
+	   fSendAwayDistanceOutputW := 500.0;			// Position on track a mover will be send to after processing 
+			  fInRangeDistance  := 300.0;			// Position in front of a station from where a mover will be taken over
+			  
+			  nStateInit := 11;
+				   
+				  
+	11: // Fail-safe check, just to make sure all variables have been assigned after doing copy&paste from the template
+			IF        nStationIndex > 0
+			AND  nStationTrackIndex > 0
+			AND  nPreviousStationIndexInputN > 0
+			AND  nTrackIndexInputN > 0
+			AND  nNextStationIndexOutputN > 0
+			AND  nTrackIndexOutputN > 0
+			AND  fStationPosition_X > 0
+			AND  fStationPosition_Y > 0
+			AND  fSendAwayDistanceOutputN> 0
+			AND   fInRangeDistance > 0
+			THEN   
+				nStateInit := 20;
+			END_IF
+			
+				   
+	20:		// Calculating positions
+	
+			// 1. Calculating station position on track
+			position.SetValuesXYC(fStationPosition_X, fStationPosition_Y, 0.0);
+			trackLength := GVL.g_Tracks[nStationTrackIndex].P_TrackLength;
+			//fStationPositionOnTrack := GVL.g_Tracks[nStationTrackIndex].std.GetTrackPositionAt_XY(fStationPosition_X, fStationPosition_Y);
+			//fStationPositionOnTrack2 := GVL.g_Tracks[nStationTrackIndex].std.GetTrackPositionAt(position);	
+			fStationPositionOnTrack := 0;  // GetTrackPositionAt only is giving rounded to 60 positions
+					
+			// 2. Calculating send-away position on track
+			fSendAwayPositionOutputW := fStationPositionOnTrack + fSendAwayDistanceOutputW; 
+			
+			// The send away position must not exceed the lenght of the track!
+			IF fSendAwayPositionOutputW > GVL.g_Tracks[nStationTrackIndex].P_TrackLength THEN
+				fSendAwayPositionOutputW := GVL.g_Tracks[nStationTrackIndex].P_TrackLength;
+			END_IF
+			
+			// 3. Calculating the station position in X/Y coordinates determined by the track	
+            //    This is to make sure the center of the station is always located directly on the track.
+			//    This value can differ from the initial fStationPosition_X, fStationPosition_Y in case they were not matching the track
+			GVL.g_Tracks[nStationTrackIndex].std.GetMoverPositionAt(fStationPositionOnTrack, StationPosition);
+			
+			// Providing the station position to e.g. visualization	
+			stStationPosition.bInit            := TRUE;
+			stStationPosition.fPositionOnTrack := fStationPositionOnTrack;
+			stStationPosition.nTrackId         := nStationTrackIndex;
+			stStationPosition.fPosition_X	   := StationPosition.x;
+			stStationPosition.fPosition_Y	   := StationPosition.y;
+
+			nStateInit := 30;
+			
+			
+	30:		// Clear Lists
+			IF THIS^.Clear() THEN
+				nStateInit := 40;	
+			END_IF
+
+	40: // create station task list 
+	
+	//fill hole 1-96
+			
+			tempList := THIS^.P_StationTaskList;
+
+			FOR index := 1 TO 96 DO
+				tempList[index] := INT_TO_UDINT(index) + 10000;
+			END_FOR
+			
+			THIS^.P_StationTaskList := tempList;
+			nStateInit := 90;
+			
+		
+	90:		// Creating a little history of what happened in the station for debugging purpose
+			fbHistoryInfo.AddEntry('Init');
+	
+			nStateInit := 100;
+			
+						
+	100:	// Init done
+			IF SUPER^.Init() THEN
+				bStationInitDone := TRUE;	
+				           Init := TRUE;
+			END_IF
+				
+	
+END_CASE
+			
+			]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Process" Id="{a2beeaff-c6ca-45ac-8a87-9876d46886bb}">
+      <Declaration><![CDATA[METHOD Process : BOOL
+
+VAR_INST
+	
+	nTaskIndex				:UINT;
+	nMoverIndex				: UINT;
+	com_index				:UDINT;
+	nHoleIndex				: INT; 
+	nMaxHoleNo				:	INT;
+	RowIndex				: INT;
+    ColIndex				: INT;
+	
+	fMoverToTrackPosition	: LREAL;
+	nTrackIndex				: UINT;
+	fMoverVelocity			: LREAL;
+	fMoverAcceleration		: LREAL;
+	fMoverJerk				: LREAL;
+	
+	
+	nErrorId				: UDINT;
+	nObjectID				: UDINT;
+	nObjectType				: UDINT;		
+	
+	
+	// Process
+	nDestinationProcess		: UINT;
+	nIncommingTrackOID		: UDINT;
+	nNextStationIndex		: UINT;		 				
+	fSendAwayPosition		: LREAL;
+	nTrackindexNext			: UINT;
+	bValidTask				: BOOL;
+	bRotateMover			:BOOL;  
+	nProcesedTask			:ST_ProcessTask;
+	sProductData : ST_ProductData;
+	sMoverConfiguration: REFERENCE TO ST_MoverConfiguration;
+	nCmdReq					:UDINT;
+	
+	
+	// positions 
+	nextPosition : PositionXYC;
+	waitPosition : PositionXYC;
+	
+	
+	//movemets setup
+
+	
+END_VAR
+
+VAR
+	IBN_Timer:ton;
+	GetP_ProcessTask: INT;
+	
+END_VAR
+
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// Stop process
+IF Communication.g_Com_GlobalState.IN.Stop THEN
+	nStateProcess:=0;
+END_IF;
+
+// Station - Switch-Seperate
+CASE nStateProcess OF 
+
+	0:		// Enter
+			IF bStationInitDone THEN
+				nStateProcess := 100;
+			END_IF
+
+	
+	100: 	// Waiting for Mover
+			IF P_List_Switch_Input_N.P_FirstInList <> 0 THEN
+				P_List_Station.AddMover(P_List_Switch_Input_N.RemoveFirstInList());
+			    nStateProcess := nStateProcess +20;
+				ELSE 
+			//		GVL.g_Stations[GVL.PuncherStation].P_ProcessState:=ST_EStationProcessState.Empty;
+			END_IF
+				
+			
+	120: 	// Check if Mover is in range
+			IF  GVL.g_Movers[nMoverIndex].std.P_SetOnTrack.TrackOID = GVL.g_Tracks[nTrackIndexInputW].std.P_OID
+			AND GVL.g_Movers[nMoverIndex].std.P_SetOnTrack.SetPos   > fStationPositionOnTrack - fInRangeDistance
+			AND GVL.g_Movers[nMoverIndex].P_MoverConfiguration.MoverType= TO_UINT(ST_EMoverLoadType.Wellplate)
+			THEN
+				nStateProcess := nStateProcess +1;
+			END_IF
+			
+			IF GVL.g_Movers[nMoverIndex].P_MoverConfiguration.MoverType=TO_UINT(ST_EMoverLoadType.Gripper)
+				THEN 
+				nStateProcess := 400;				
+		
+			ELSIF GVL.g_Movers[nMoverIndex].P_MoverConfiguration.MoverType=TO_UINT(ST_EMoverLoadType.PipetteTips) 
+				THEN 
+				nStateProcess := 300;	
+				
+			END_IF
+			
+	121:	// Checking station  staus	
+				CASE eProcessMode OF
+				
+			E_ProcessMode.None:
+				;	// Nothing happens -> Process mode needs to be set!
+				
+			E_ProcessMode.InitRun:
+				IF nStationIndex = 1 THEN
+					GVL.g_Movers[nMoverIndex].P_ProductData.bInitRun := FALSE;
+				//ELSE
+				//	nStateProcess := 300;
+				END_IF				
+			
+			E_ProcessMode.Production:
+				nStateProcess := 200;
+			
+		
+END_CASE
+
+			
+	200: 	// Send mover to Processing-Position
+			fMoverToTrackPosition   := fStationPositionOnTrack;
+			nTrackIndex        		:= nStationTrackIndex;
+			fMoverVelocity     		:=    200.0;
+			fMoverAcceleration 		:=  100.0;
+			fMoverJerk         		:= 10_000.0;	
+	
+			stMoveOnTrackParameters.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionShortestWay;
+			stMoveOnTrackParameters.gap       := 120.0;
+		
+			
+			// Creating info text with a little history of what happened in the station for debugging purpose		
+			strInfo := fbHistoryInfo.CreateStationInfo(nStationIndex, nMoverIndex, nNextStationIndex);	
+
+
+			// Move on track command	
+			GVL.g_Movers[nMoverIndex].std.MoveOnTrackExt( strInfo,
+														GVL.g_Tracks[nTrackIndex].std,
+														fMoverToTrackPosition,
+														fMoverVelocity,
+														fMoverAcceleration,
+														fMoverJerk,
+														stMoveOnTrackParameters);
+			nStateProcess := nStateProcess +1;
+	201: 	// Checking move command return
+			IF GVL.g_Movers[nMoverIndex].std.P_MoveOnTrackExt.Done THEN
+				nStateProcess := nStateProcess +9;
+			ELSIF GVL.g_Movers[nMoverIndex].std.P_MoveOnTrackExt.Error THEN
+				   nErrorID := GVL.g_Movers[nMoverIndex].std.P_MoveOnTrackExt.ErrorID;
+				  nObjectID := GVL.g_Movers[nMoverIndex].std.P_MoveOnTrackExt.stInfo.nObjectID;
+				nObjectType := GVL.g_Movers[nMoverIndex].std.P_MoveOnTrackExt.stInfo.nObjectType;
+			END_IF		
+
+	210: 
+		IF NOT GVL.g_Movers[nMoverIndex].std.P_Busy THEN
+			GVL.g_Movers[nMoverIndex].std.LeaveTrackInPosition( strInfo, FALSE);
+			nStateProcess := nStateProcess +1;
+		END_IF
+		
+	211:
+			IF GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.Done THEN
+				nStateProcess := nStateProcess +9;
+			ELSIF GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.Error THEN
+				   nErrorID := GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.ErrorID;
+				  nObjectID := GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.stInfo.nObjectID;
+				nObjectType := GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.stInfo.nObjectType;
+			END_IF	
+		
+		
+	220: 	// Checking mover staus
+
+			FOR com_index:=1 TO moverCount DO 
+			IF communication.g_Com_Movers[com_index].IN.id= gvl.g_Movers[nMoverIndex].P_MoverID THEN 
+			GVL.g_Movers[nMoverIndex].P_ProductData:=Communication.g_Com_Movers[com_index].ProcessData;
+			END_IF
+			END_FOR
+
+ 	
+	
+			sProductData:=GVL.g_Movers[nMoverIndex].P_ProductData;
+			 IF sProductData.OK_ToProcess AND sProductData.WellplateStatus =1 THEN 
+				 nStateProcess := nStateProcess +1;
+				 ELSE
+					 nStateProcess := 300;
+					 nDestinationProcess:=3;
+					 
+					 
+			 END_IF
+
+
+	221: //check actual task is validate
+	
+	nProcesedTask:= GVL.g_Movers[nMoverIndex].P_ProcessTask;
+	
+	
+		IF nProcesedTask.TaskToProcessed<>0  AND nProcesedTask.TaskToProcessed<>nProcesedTask.CurrentTask THEN 
+			bValidTask:=FALSE;
+			FOR  nTaskIndex:=1 TO 200 DO
+				IF nProcesedTask.TaskToProcessed= nStationTaskList[nTaskIndex] THEN 
+					bValidTask:=TRUE;
+					nStateProcess:=nStateProcess+1;
+					  RETURN;
+				END_IF
+			END_FOR
+		
+		END_IF
+		
+		IF bValidTask=TRUE THEN 
+			nStateProcess:=nStateProcess+1;
+// 		ELSE
+// 			nStateProcess:=270;
+		END_IF
+
+	222: // set task to process as current task 
+			nProcesedTask.CurrentTask:=nProcesedTask.TaskToProcessed;
+			nProcesedTask.CurrentTaskFinished:=FALSE;
+			GVL.g_Movers[nMoverIndex].P_ProcessTask:= nProcesedTask;
+			nStateProcess:=nStateProcess+1;
+		//	 GVL.g_Stations[GVL.PuncherStation].P_ProcessState:=ST_EStationProcessState.InProcess;
+			
+	223: // send mover to waiting position
+			waitPosition.SetValuesXY(575,70);
+	
+	
+		IF NOT GVL.g_Movers[nMoverIndex].std.P_Busy THEN
+			stMoveToPositionOptions.useOrientation := TRUE;
+			GVL.g_Movers[nMoverIndex].std.MoveToPositionExt(strInfo, waitPosition, 100, 1000, 1000, 1000, stMoveToPositionOptions);
+			nStateProcess := nStateProcess +1;
+		END_IF
+		
+	224: //check state 
+			
+		IF GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.Done THEN
+				nStateProcess := nStateProcess +8;
+			ELSIF GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.Error THEN
+				   nErrorID := GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.ErrorID;
+				  nObjectID := GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.stInfo.nObjectID;
+				nObjectType := GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.stInfo.nObjectType;
+		END_IF
+
+	230:// CMD to station Puncher seperate- load material 
+
+		GVL.g_Stations[GVL.PuncherStation].P_ProcessRequest:=GVL.PuncherSeparateStation;
+		
+		nStateProcess:=nStateProcess+1;
+	
+	231:// CMD from station Puncher seperate-  material loaded
+	
+// 		IF  GVL.g_Stations[GVL.PuncherSeparateStation].P_ProcessState:= ST_EStationProcessState.Finished THEN 
+// 			GVL.g_Stations[GVL.PuncherStation].P_ProcessRequest:=0;
+// 			nStateProcess:=nStateProcess+9;
+// 		END_IF
+
+ 			
+	240: // calculate next position 
+		bRotateMover:=FALSE;
+		sMoverConfiguration REF= GVL.g_Movers[nMoverIndex].P_MoverConfiguration;
+		
+		nMaxHoleNo:=sMoverConfiguration.WellplateData.Columns*sMoverConfiguration.WellplateData.Row;
+	
+		nHoleIndex:= UDINT_TO_INT( nProcesedTask.CurrentTask MOD 10000);
+		RowIndex:=0;
+		ColIndex :=0; 
+		
+		IF 		nHoleIndex>1 THEN 
+			IF  nHoleIndex< (nMaxHoleNo/2)THEN 
+	
+				(* row *)
+				RowIndex := (nHoleIndex  / sMoverConfiguration.WellplateData.Columns)+1;
+			
+				(* Column *)
+				ColIndex := nHoleIndex MOD sMoverConfiguration.WellplateData.Columns;
+		ELSE 
+			bRotateMover:=TRUE;
+			nHoleIndex:=nMaxHoleNo-nHoleIndex;
+			
+				(* row *)
+				RowIndex := (nHoleIndex  / sMoverConfiguration.WellplateData.Columns)+1;
+			
+				(* Column *)
+				ColIndex := nHoleIndex  MOD sMoverConfiguration.WellplateData.Columns;
+			
+	END_IF 
+END_IF
+		 
+    (* Calculate next position  *)
+   nextPosition.x := sMoverConfiguration.WellplateData.OffsetFirstHoles_X + DINT_TO_REAL(ColIndex)* sMoverConfiguration.WellplateData.DistanceBetweenHoles_X;
+   nextPosition.y := sMoverConfiguration.WellplateData.OffsetFirstHoles_Y + DINT_TO_REAL(RowIndex) * sMoverConfiguration.WellplateData.DistanceBetweenHoles_y;
+
+nStateProcess := nStateProcess +1;
+
+
+
+	241: // go to next position 
+		
+		IF NOT GVL.g_Movers[nMoverIndex].std.P_Busy THEN
+			stMoveToPositionOptions.useOrientation := FALSE;
+			GVL.g_Movers[nMoverIndex].std.MoveToPositionExt(strInfo, nextPosition, 100, 1000, 1000, 1000, stMoveToPositionOptions);
+			nStateProcess := nStateProcess +1;
+		END_IF
+	242: //check state 
+			IF GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.Done THEN
+				nStateProcess := nStateProcess +8;
+			ELSIF GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.Error THEN
+				   nErrorID := GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.ErrorID;
+				  nObjectID := GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.stInfo.nObjectID;
+				nObjectType := GVL.g_Movers[nMoverIndex].std.P_MoveToPositionExt.stInfo.nObjectType;
+			END_IF
+			
+	243: 
+		// do rotation if needed
+		IF NOT GVL.g_Movers[nMoverIndex].std.P_Busy  AND  bRotateMover THEN
+			stMoveRotateOptions.additionalTurns := 0;
+			stMoveRotateOptions.direction:= Tc3_Mc3PlanarMotion.MC_Direction.mcDirectionNonModulo;		
+			
+			GVL.g_Movers[nMoverIndex].std.MoveC(strInfo, 0.0, 100.0, 1000.0, 1000.0, 1000.0, stMoveRotateOptions);
+			nStateProcess := nStateProcess +1;
+			ELSE
+				nStateProcess := nStateProcess +7;
+		END_IF
+		
+	244:
+			IF GVL.g_Movers[nMoverIndex].std.P_MoveC.Done THEN
+				nStateProcess := nStateProcess +6;
+			ELSIF GVL.g_Movers[nMoverIndex].std.P_MoveC.Error THEN
+				   nErrorID := GVL.g_Movers[nMoverIndex].std.P_MoveC.ErrorID;
+				  nObjectID := GVL.g_Movers[nMoverIndex].std.P_MoveC.stInfo.nObjectID;
+				nObjectType := GVL.g_Movers[nMoverIndex].std.P_MoveC.stInfo.nObjectType;
+			END_IF
+	
+ 	250: // cuting 
+		
+
+
+	IBN_Timer(IN:=TRUE , PT:= T#3S);
+			IF IBN_Timer.Q THEN 
+				nStateProcess := 260;
+				
+			END_IF
+
+
+
+	260:
+		//update product data 
+		sProductData:=GVL.g_Movers[nMoverIndex].P_ProductData;
+		Communication.g_Com_Movers[nMoverIndex].ProcessData:=GVL.g_Movers[nMoverIndex].P_ProductData;
+		
+		
+		nProcesedTask:=GVL.g_Movers[nMoverIndex].P_ProcessTask;
+		nProcesedTask.CurrentTaskFinished:=TRUE;
+		GVL.g_Movers[nMoverIndex].P_ProcessTask:=nProcesedTask;
+		
+
+		IF nProcesedTask.CurrentTask<>nProcesedTask.TaskToProcessed THEN  
+			
+			nStateProcess := nStateProcess+1;
+			
+		END_IF
+		
+	261: // check next task 
+		nProcesedTask:= GVL.g_Movers[nMoverIndex].P_ProcessTask;
+	
+	
+		IF nProcesedTask.TaskToProcessed<>0  AND nProcesedTask.TaskToProcessed<>nProcesedTask.CurrentTask THEN 
+			bValidTask:=FALSE;
+			FOR  nTaskIndex:=1 TO 200 DO
+				IF nProcesedTask.TaskToProcessed= nStationTaskList[nTaskIndex] THEN 
+					nStateProcess:=220;
+					  RETURN;
+				END_IF
+			END_FOR
+		
+
+			IF bValidTask=TRUE THEN 
+				nStateProcess:=220;
+			//ELSE
+// 				nStateProcess:=270;
+		END_IF
+		
+		END_IF
+		
+	270: 
+		// do rotation if needed
+		IF NOT GVL.g_Movers[nMoverIndex].std.P_Busy THEN
+			stMoveRotateOptions.additionalTurns := 0;
+			stMoveRotateOptions.direction:= Tc3_Mc3PlanarMotion.MC_Direction.mcDirectionNonModulo;		
+			
+			GVL.g_Movers[nMoverIndex].std.MoveC(strInfo, 0.0, 100.0, 1000.0, 1000.0, 1000.0, stMoveRotateOptions);
+			nStateProcess := nStateProcess +1;
+		END_IF
+		
+	271:
+			IF GVL.g_Movers[nMoverIndex].std.P_MoveC.Done THEN
+				nStateProcess := nStateProcess +9;
+			ELSIF GVL.g_Movers[nMoverIndex].std.P_MoveC.Error THEN
+				   nErrorID := GVL.g_Movers[nMoverIndex].std.P_MoveC.ErrorID;
+				  nObjectID := GVL.g_Movers[nMoverIndex].std.P_MoveC.stInfo.nObjectID;
+				nObjectType := GVL.g_Movers[nMoverIndex].std.P_MoveC.stInfo.nObjectType;
+			END_IF
+	
+
+	280:  // Join track
+		IF NOT GVL.g_Movers[nMoverIndex].std.P_Busy THEN
+			stJoinTrackOptions.useOrientation := FALSE;
+			GVL.g_Movers[nMoverIndex].std.JoinTrack(strInfo, GVL.g_Tracks[nTrackIndex].std, 100, 1000, 1000, stJoinTrackOptions);
+			
+			nStateProcess := nStateProcess +1;
+		END_IF
+	281:
+		IF GVL.g_Movers[nMoverIndex].std.P_JoinTrack.Done THEN
+			gvl.g_Movers[nMoverIndex].P_TrackId:=nTrackIndex;
+			nStateProcess := 300;
+		ELSIF GVL.g_Movers[nMoverIndex].std.P_JoinTrack.Error THEN
+			   nErrorID := GVL.g_Movers[nMoverIndex].std.P_JoinTrack.ErrorID;
+			  nObjectID := GVL.g_Movers[nMoverIndex].std.P_JoinTrack.stInfo.nObjectID;
+			nObjectType := GVL.g_Movers[nMoverIndex].std.P_JoinTrack.stInfo.nObjectType;
+		END_IF	
+	
+
+	
+		300: 	// Send mover to the next station
+			fSendAwayPosition		:=415.95;
+			fMoverToTrackPosition   := fSendAwayPosition;	
+			nTrackIndex        		:= nStationTrackIndex;		
+			fMoverVelocity     		:=    300.0;
+			fMoverAcceleration 		:=  1_000.0;
+			fMoverJerk         		:= 10_000.0;	
+	
+	
+			stMoveOnTrackParameters.dynamicMode := MC_DYNAMICS_REDUCTION_MODE.AccelerationLimitedVelocity;
+			stMoveOnTrackParameters.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive;	
+			stMoveOnTrackParameters.gap       := 120.0;
+
+			
+			// Creating info text with a little history of what happened in the station for debugging purpose		
+			strInfo := fbHistoryInfo.CreateStationInfo(nStationIndex, nMoverIndex, nNextStationIndexOutputW);	
+			
+				
+			// Move on track command	
+				GVL.g_Movers[nMoverIndex].std.MoveOnTrackExt('move on track', GVL.g_Tracks[nTrackIndex].std, fMoverToTrackPosition,
+ 								fMoverVelocity, fMoverAcceleration , fMoverJerk, stMoveOnTrackParameters);											 
+			
+			nStateProcess := nStateProcess +1;
+			
+
+	301: 	// Checking move command return
+			IF GVL.g_Movers[nMoverIndex].std.P_MoveOnTrackExt.Active
+			OR GVL.g_Movers[nMoverIndex].std.P_MoveOnTrackExt.Done 
+			THEN
+				nStateProcess := nStateProcess + 9;
+				
+			ELSIF GVL.g_Movers[nMoverIndex].std.P_MoveOnTrackExt.Error THEN
+				   nErrorID := GVL.g_Movers[nMoverIndex].std.P_MoveOnTrack.ErrorID;
+				  nObjectID := GVL.g_Movers[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectID;
+				nObjectType := GVL.g_Movers[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectType;
+			END_IF		
+		
+			
+	310: 	// Mover to the list of the next station
+	
+	
+// Decide to which Station the mover has to travel to next.	
+			//nDestinationProcess := 
+	
+						
+			CASE nDestinationProcess OF
+			0: // -> pipete station 
+				nNextStationIndex  := nNextStationIndexOutputW ;
+				nTrackindexNext    := nTrackIndexOutputW;		
+		
+			2: // -> buffer station 
+				nNextStationIndex  := nNextStationIndexOutputN;
+				nTrackindexNext    := nTrackIndexOutputN;				
+	
+			3: // -> User interaction
+				nNextStationIndex  := nNextStationIndexOutputN;
+				nTrackindexNext    := nTrackIndexOutputN;	
+				nProcesedTask.CurrentTask:=50001;
+				GVL.g_Movers[nMoverIndex].P_ProcessTask:=nProcesedTask;
+	
+			END_CASE
+			
+			IF nTrackindexNext > 0 THEN
+				nStateProcess := 400;	
+			END_IF
+			
+	400: 	 
+		IF NOT GVL.g_Movers[nMoverIndex].std.P_Busy THEN
+			GVL.g_Movers[nMoverIndex].std.LeaveTrackInPosition( strInfo, FALSE);
+			nStateProcess := nStateProcess +1;
+		END_IF
+		
+	401:
+			IF GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.Done THEN
+				nStateProcess := nStateProcess +9;
+			ELSIF GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.Error THEN
+				   nErrorID := GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.ErrorID;
+				  nObjectID := GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.stInfo.nObjectID;
+				nObjectType := GVL.g_Movers[nMoverIndex].std.P_LeaveTrackInPosition.stInfo.nObjectType;
+			END_IF	
+	402:  // Join track
+		nTrackIndex:=		nTrackIndexOutputE;
+		
+		IF NOT GVL.g_Movers[nMoverIndex].std.P_Busy THEN
+			stJoinTrackOptions.useOrientation := FALSE;
+			GVL.g_Movers[nMoverIndex].std.JoinTrack(strInfo, GVL.g_Tracks[nTrackindexNext].std, 100, 1000, 1000, stJoinTrackOptions);
+			
+			nStateProcess := nStateProcess +1;
+		END_IF
+	403:
+		IF GVL.g_Movers[nMoverIndex].std.P_JoinTrack.Done THEN
+			gvl.g_Movers[nMoverIndex].P_TrackId:=nTrackIndex;
+			nStateProcess := 300;
+		ELSIF GVL.g_Movers[nMoverIndex].std.P_JoinTrack.Error THEN
+			   nErrorID := GVL.g_Movers[nMoverIndex].std.P_JoinTrack.ErrorID;
+			  nObjectID := GVL.g_Movers[nMoverIndex].std.P_JoinTrack.stInfo.nObjectID;
+			nObjectType := GVL.g_Movers[nMoverIndex].std.P_JoinTrack.stInfo.nObjectType;
+		END_IF	
+	
+	404:// send gripper to Puncher seperate station.
+				GVL.g_Stations[nNextStationIndexOutputE].P_List_Switch_Input_S.AddMover(P_List_Station.RemoveFirstInList());
+
+	500: //	// Done for this cycle
+			//GVL.g_Stations[GVL.PuncherStation].P_ProcessState:=ST_EStationProcessState.Finished;
+			nStateProcess := 100;
+
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

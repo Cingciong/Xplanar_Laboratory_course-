@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="MoverPositionUnion" Id="{8ff4f5f0-75ea-4e55-9ce4-6a2a1992896b}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}
+TYPE MoverPositionUnion :
+	UNION
+		arr: ARRAY[1..6] OF LREAL;
+		vec: MoverVector;
+	END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

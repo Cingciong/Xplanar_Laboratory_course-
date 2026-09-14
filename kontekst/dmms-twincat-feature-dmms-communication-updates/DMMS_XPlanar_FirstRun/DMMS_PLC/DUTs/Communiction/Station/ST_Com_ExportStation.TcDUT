@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_Com_ExportStation" Id="{b1b6a454-2fc5-47e7-abd5-9914d947d331}">
+    <Declaration><![CDATA[TYPE ST_Com_ExportStation :
+STRUCT
+		IN: 		ST_ComIn_ExportStation;
+		OUT:		ST_ComOut_ExportStation;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

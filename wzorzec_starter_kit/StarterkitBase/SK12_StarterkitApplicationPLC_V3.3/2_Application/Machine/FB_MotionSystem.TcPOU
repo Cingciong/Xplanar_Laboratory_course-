@@ -1,0 +1,2344 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_MotionSystem" Id="{c68ba1aa-d99a-41ec-bf62-e008962e2939}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MotionSystem IMPLEMENTS I_MotionSystemApplication
+
+VAR
+	
+	ipMotionSystem			: I_MotionSystem;
+	stMoverDetectionInfos   : ST_TcIoMoverDetectionInfos;
+	
+	// Sequences
+	nStartupSequence 		: DINT;
+	nAbortingSequence 		: DINT;
+	nPrepareSequence 		: DINT;
+	nResettingSequence 		: DINT;
+	nExecutingSequence 		: DINT;	
+	
+	// Helper
+	bDone 					: BOOL;
+	idx						: UDINT;
+	nForCounter 			: UDINT;	
+	nErrorID				: UDINT;
+	bMoverError				: BOOL;	
+
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="Methods" Id="{91e35361-bc44-45dd-a128-86c46caaf17a}" />
+    <Folder Name="Properties" Id="{efa9f437-f192-4201-98d8-01b3ba472d58}" />
+    <Folder Name="StateMachine" Id="{7f5f3f66-f754-42e6-b79a-2d35cb228eb0}" />
+    <Method Name="Aborting" Id="{9ccf5fae-fdd4-4e5e-a1a1-553ef638d975}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[METHOD Aborting : BOOL
+VAR_INST
+	bWaitForRotatioFinished		: BOOL;
+END_VAR
+
+
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+nErrorID := 0;
+
+CASE nAbortingSequence OF 
+
+	0: // Enter	
+		bWaitForRotatioFinished := FALSE;
+		FOR idx:=1 TO g_nMoverCount DO
+			IF ipMoverApplication[idx].std.P_MoveC.Busy THEN
+				bWaitForRotatioFinished := TRUE;	
+			END_IF
+		END_FOR
+		
+		IF NOT bWaitForRotatioFinished THEN
+			nAbortingSequence := 10; 
+		ELSE
+			ipVisuMessage.SetInfoMessage('Waiting for rotation finished', 'Aborting', nAbortingSequence);	
+		END_IF			
+		
+		
+	10: // Sending "Halt" to all movers for immediate stop 
+		IF ipMotionSystem.HaltSystem() THEN
+			ipVisuMessage.SetInfoMessage('Sending HALT', 'Aborting', nAbortingSequence);
+			nAbortingSequence := nAbortingSequence +1;
+		END_IF
+		
+	11: IF ipMotionSystem.P_HaltSystem.Done THEN
+			nAbortingSequence := nAbortingSequence +9;
+		ELSIF ipMotionSystem.P_HaltSystem.Error THEN
+			nAbortingSequence := nAbortingSequence +1;				
+		END_IF
+	
+	12:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_HaltSystem.ErrorID;
+		IF nErrorID = 33105 THEN
+			nAbortingSequence := nAbortingSequence +8;
+		ELSE
+			ipVisuMessage.SetErrorMessage('HALT failed', 'Aborting', nAbortingSequence, nErrorID);
+		END_IF
+				
+
+		
+	20: // Reset Movers
+		IF ipMotionSystem.ResetMovers() THEN
+			ipVisuMessage.SetInfoMessage('RESET Movers', 'Aborting', nAbortingSequence);
+			nAbortingSequence := nAbortingSequence +1;				
+		END_IF
+		
+	21: IF ipMotionSystem.P_ResetMovers.Done THEN
+			nAbortingSequence := nAbortingSequence +9;
+		ELSIF ipMotionSystem.P_ResetMovers.Error THEN
+			nAbortingSequence := nAbortingSequence +1;		
+		END_IF
+
+	22:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_ResetMovers.ErrorID;			
+		ipVisuMessage.SetErrorMessage('RESET failed', 'Aborting', nAbortingSequence, nErrorID);			
+		
+		
+	30: // Disable all movers	
+		IF ipMotionSystem.DisableMovers() THEN
+			ipVisuMessage.SetInfoMessage('DISABLE Movers', 'Aborting', nAbortingSequence);
+			nAbortingSequence := nAbortingSequence +1;
+		ELSE
+			nAbortingSequence := nAbortingSequence +5;
+		END_IF
+		
+	31: IF ipMotionSystem.P_DisableMovers.Done THEN
+			nAbortingSequence := nAbortingSequence +9;
+					
+		ELSIF ipMotionSystem.P_DisableMovers.Error THEN
+			nAbortingSequence := nAbortingSequence +1;					
+		END_IF
+
+	32:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_DisableMovers.ErrorID;	
+		ipVisuMessage.SetErrorMessage('DISABLE failed', 'Aborting', nAbortingSequence, nErrorID);	
+		
+		
+		
+	40:	// Remove Tracks from Group
+		IF ipMotionSystem.RemoveTracksFromGroup() THEN
+			ipVisuMessage.SetInfoMessage('REMOVE TRACKS FROM GROUP', 'Aborting', nAbortingSequence);
+			nAbortingSequence := nAbortingSequence +1;
+		END_IF	
+
+	41: IF ipMotionSystem.P_RemoveTracksFromGroup.Done THEN
+			nAbortingSequence := nAbortingSequence +9;
+		ELSIF ipMotionSystem.P_RemoveTracksFromGroup.Error THEN
+			nAbortingSequence := nAbortingSequence +1;	
+		END_IF
+		
+	42:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_RemoveTracksFromGroup.ErrorID;
+		ipVisuMessage.SetErrorMessage('REMOVE TRACKS FROM GROUP failed', 'Aborting', nAbortingSequence, nErrorID);			
+		
+		
+		
+	50: // Remove Environment from Group
+		IF ipMotionSystem.RemoveEnvironmentFromGroup() THEN
+			ipVisuMessage.SetInfoMessage('REMOVE ENVIRONMENT FROM GROUP', 'Aborting', nAbortingSequence);
+			nAbortingSequence := nAbortingSequence +1;
+		END_IF	
+		
+	51: IF ipMotionSystem.P_RemoveEnviromentFromGroup.Done THEN
+			nAbortingSequence := nAbortingSequence +9;
+		ELSIF ipMotionSystem.P_RemoveEnviromentFromGroup.Error THEN
+			nAbortingSequence := nAbortingSequence +1;				
+		END_IF		
+
+	52:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_RemoveEnviromentFromGroup.ErrorID;	
+		ipVisuMessage.SetErrorMessage('REMOVE ENVIRONMENT FROM GROUP failed', 'Aborting', nAbortingSequence, nErrorID);			
+		
+		
+		
+	60: // Disable group
+		IF ipMotionSystem.DisableGroup() THEN
+			ipVisuMessage.SetInfoMessage('DISABLE GROUP', 'Aborting', nAbortingSequence);
+			nAbortingSequence := nAbortingSequence +1;
+		END_IF
+
+	61: IF ipMotionSystem.P_DisableGroup.Done THEN
+			nAbortingSequence := nAbortingSequence +9;
+		ELSIF ipMotionSystem.P_DisableGroup.Error THEN
+			nAbortingSequence := nAbortingSequence +1;					
+		END_IF		
+	
+	62:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_DisableGroup.ErrorID;
+		ipVisuMessage.SetErrorMessage('DISABLE GROUP failed', 'Aborting', nAbortingSequence, nErrorID);		
+
+
+		
+	70: // Disable all tracks
+		IF ipMotionSystem.DisableTracks() THEN
+			ipVisuMessage.SetInfoMessage('DISABLE TRACKS', 'Aborting', nAbortingSequence);
+			nAbortingSequence := nAbortingSequence +1;
+		END_IF
+		
+	71:	IF ipMotionSystem.P_DisableTracks.Done THEN
+			nAbortingSequence := nAbortingSequence +9;
+		ELSIF ipMotionSystem.P_DisableTracks.Error THEN
+			nAbortingSequence := nAbortingSequence +1;
+		END_IF
+	
+	72:	nErrorID := ipMotionSystem.P_DisableTracks.ErrorID;
+		ipVisuMessage.SetErrorMessage('DISABLE TRACKS failed', 'Aborting', nAbortingSequence, nErrorID);	
+
+
+	80:	nAbortingSequence := 100;
+
+
+		
+	100: // Reset of all sequences / Aborting done
+		ipVisuMessage.SetInfoMessage('ABORTING finished', 'Aborting', 0);
+	
+		nAbortingSequence  := 0;
+		nResettingSequence := 0;
+		nPrepareSequence   := 0;
+		nExecutingSequence := 0;
+		          Aborting := TRUE;
+				  
+ 		  
+END_CASE
+
+
+	ipVisuMessage.StateUpdate(nAbortingSequence, 'Aborting');
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cycle" Id="{1b98e8cd-c360-43d4-9175-089db5478f78}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD Cycle : BOOL
+VAR_INPUT
+END_VAR
+
+
+VAR_INST
+	nMoverIndex	: UDINT;
+	nTestCnt	: UINT;
+END_VAR
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+	nTestCnt := nTestCnt +1;
+
+
+	// Keeping the std cycle alive
+	IF THIS^.std <> 0 THEN
+		THIS^.std.Cycle();
+	END_IF
+
+
+
+	// Scanning for mover error e.g. Following Error
+	bMoverError := FALSE;
+	FOR nMoverIndex:=1 TO g_nMoverCount DO	
+		IF ipMoverApplication[nMoverIndex] <> 0 THEN
+			IF ipMoverApplication[nMoverIndex].std.P_State = MC_PLANAR_STATE.Error THEN
+				bMoverError := TRUE;	
+			END_IF
+		END_IF
+	END_FOR
+
+
+
+
+
+	
+	
+	
+	
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Execute" Id="{f53cf4b4-169a-4ddf-be8c-a6508e61f5bb}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[METHOD Execute : UDINT
+
+
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+	CASE nExecutingSequence OF
+		
+	
+	0:	// Enter
+		ipVisuMessage.ClearAllMessages();
+		nExecutingSequence := 10;
+	
+	
+	10: // Setting all stations into production mode
+		FOR idx:=1 TO gc_NumberStations DO
+			ipStation[idx].P_eProcessMode := E_ProcessMode.Production;
+		END_FOR
+		nExecutingSequence := 100;
+		
+		
+		
+	100: // Execution	
+		;
+	
+
+	END_CASE
+	
+	
+	
+	
+	
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoverPreparation" Id="{ebe3098c-1879-46fd-949c-cfb999e18a1e}">
+      <Declaration><![CDATA[METHOD MoverPreparation : BOOL
+VAR_INPUT
+	bReset 	: BOOL;
+END_VAR
+
+
+VAR_INST
+	
+	nStatePreparation		: DINT;
+	
+	
+	operationMode				: XPlanarOperationMode; 
+	
+	idx2						: UDINT;
+
+	nTileDcLinkVoltage			: UINT;
+	bTilePowerOK				: BOOL;
+	bTilePowerOverview			: ARRAY[1..gc_MaxNumberTiles] OF BOOL;
+	bPowerOK					: BOOL;
+	bPowerMissing				: BOOL;
+	nTileCount					: UDINT;
+	nTileToCheck				: UINT;
+	bWithBumperID				: BOOL;	
+	nMoverAccessoryIdCount		: ARRAY[1..gc_nMaxNumberMovers] OF UDINT;	
+	
+	stStartCheck 				: ST_CheckStartConditionFeedback;
+	nLimitExceeded_MoverID		: UDINT;
+	bLimitExceeded_Angle 		: BOOL;
+	bLimitExceeded_PositionX 	: BOOL;
+	bLimitExceeded_PositionY 	: BOOL;	
+	fCurrentAngleDeviation		: LREAL;
+	fCurrentPositionDeviationX	: LREAL;
+	fCurrentPositionDeviationY	: LREAL;	
+
+	sTextTemp					: STRING;
+
+	eMoverAccessoryID			: MoverAccessoryID;
+
+	
+	moverCoordComStatus			: CoordinatedMoverCommStatus;
+	moverComStatus				: MoverCommunicationStatus;
+	
+	bMoverCommunicationProblem  : ARRAY[1..gc_nMaxNumberMovers] OF BOOL;
+	bCommunicationProblem		: BOOL;
+	
+	nMoverToCorrect				: UDINT;
+	fMoverOrientationRead		: LREAL;
+	fMoverOrientationCorrect	: LREAL;
+	bDoRotationCorrection		: BOOL;
+	CorrectionPos				: PositionXYC;
+	
+	bDeterminedMoverID				: BOOL;
+	bDerterminedMoverOrientation 	: BOOL;
+	
+	fPosX							: LREAL;
+	fPosY							: LREAL;
+	fPosC							: LREAL;
+	
+	nCommunicationRetryCounter		: UINT;
+	
+	nMoverToCheck					: UINT;
+	
+	nMoverID_ErrorCode				: DWORD;
+	
+	MoverType						: XPlanarMoverType;
+	bMoverCanDeterminOrientation	: BOOL;
+END_VAR
+
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	nStatePreparation := 0;
+	MoverPreparation := TRUE;
+END_IF
+
+
+	CASE nStatePreparation OF
+		
+	0:  nStatePreparation := 10;
+	
+
+	10: // 1st: Check if the system is in simulation mode or not
+		// Simulation > OperationMode = 1
+		//     Normal > OperationMode = 0
+	    operationMode := ipMotionSystem.ipDriver.XpuTcIo(1).GetOperationMode();	
+		IF operationMode = 0 THEN
+			bPowerMissing := FALSE;
+			nStatePreparation := nStatePreparation + 10;
+		ELSE
+			nStatePreparation := 500;
+		END_IF
+	
+		
+	20: // 2nd: Check power of each tile
+		IF NOT bPowerMissing THEN
+			ipVisuMessage.SetInfoMessage('Checking tile power', 'MoverPreparation', nStatePreparation);
+		ELSE
+			ipVisuMessage.SetErrorMessage('Tile power missing!', 'MoverPreparation', nStatePreparation, 0);	
+		END_IF
+		
+		    bPowerOK := TRUE;
+		nTileToCheck := 0;
+		  nTileCount := ipMotionSystem.ipDriver.XpuTcIo(1).GetTileCount();
+		
+		nStatePreparation := nStatePreparation + 1;
+		
+	21:
+		nTileToCheck := nTileToCheck +1;
+		IF nTileToCheck <= nTileCount THEN
+			nStatePreparation := nStatePreparation + 1;
+		ELSE
+			IF bPowerOK THEN
+				nStatePreparation := nStatePreparation + 9;
+			ELSE
+				bPowerMissing := TRUE;
+				nStatePreparation := nStatePreparation - 1;
+			END_IF
+		END_IF
+		
+	22:
+		nTileDcLinkVoltage := ipMotionSystem.ipDriver.XpuTcIo(1).TileTcIo(1,nTileToCheck).GetActDcLinkVoltage(); 
+		IF nTileDcLinkVoltage > 6000 THEN
+			bTilePowerOK := TRUE;
+		ELSE
+			bTilePowerOK := FALSE;	
+		END_IF
+		bPowerOK := bPowerOK AND bTilePowerOK;
+		bTilePowerOverview[nTileToCheck] := bPowerOK;
+		nStatePreparation := nStatePreparation - 1;
+		
+		
+		
+	30:// 3rd: Mover re-detection, in case a mover was removed inbetween
+	
+		// Check if a mover has been lost...
+		IF ipMotionSystem.CheckValidMovers() THEN
+			ipVisuMessage.SetInfoMessage('Mover re-detection', 'MoverPreparation', nStatePreparation);
+			nStatePreparation := nStatePreparation + 1;
+		END_IF
+	
+	31:
+		IF ipMotionSystem.P_CheckValidMovers.bDone THEN
+			IF ipMotionSystem.P_CheckValidMovers.bMoverLost THEN
+				         bDeterminedMoverID := FALSE;
+				bDerterminedMoverOrientation := FALSE;
+				nStatePreparation := nStatePreparation + 1;
+			ELSE
+				nStatePreparation := nStatePreparation + 9;
+			END_IF
+		END_IF
+				
+		bDeterminedMoverID := FALSE;
+		bDerterminedMoverOrientation := FALSE;		
+		
+		
+	32: // Starting mover re-detection
+		IF ipMotionSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+			IF ipMotionSystem.ipDriver.XpuTcIo(1).SetStartMoverRedetection() THEN	
+				nStatePreparation := nStatePreparation +1;
+			END_IF
+		END_IF
+	
+	33: // Checking if all movers have been found on the XPlanar surface
+		stMoverDetectionInfos := ipMotionSystem.ipDriver.XpuTcIo(1).GetMoverDetectionInfos();
+		
+		IF stMoverDetectionInfos.APM4220Detected = stMoverDetectionInfos.APM4220Expected THEN
+			nStatePreparation := nStatePreparation +7;
+		ELSE
+			sTextTemp := 'Mover Missing!  Expected:';
+			sTextTemp := CONCAT(sTextTemp, UDINT_TO_STRING(stMoverDetectionInfos.APM4220Detected));
+			sTextTemp := CONCAT(sTextTemp, '  Detected:');
+			sTextTemp := CONCAT(sTextTemp, UDINT_TO_STRING(stMoverDetectionInfos.APM4220Detected));
+			
+			ipVisuMessage.SetErrorMessage(sTextTemp, 'MoverPreparation', nStatePreparation, 0);	
+		END_IF
+	
+		
+	
+	 40: // 4th: Checking the position of each mover before enabeling
+	 	ipVisuMessage.SetInfoMessage('Check mover position', 'MoverPreparation', nStatePreparation);
+	 
+		bDone := TRUE;
+		FOR idx:=1 TO g_nMoverCount DO
+			stStartCheck := ipMoverApplication[idx].std.CheckStartConditions();
+			IF NOT stStartCheck.bPositionOK THEN
+				bDone := FALSE;
+				EXIT;
+			END_IF			
+		END_FOR
+	
+		IF bDone THEN
+			nStatePreparation := nStatePreparation + 2;
+		ELSE
+			nStatePreparation := nStatePreparation + 1;
+		END_IF
+			
+	 41: // Position-Check failed:
+		 // Except for rotation-points between four quadrants the angle limit of the c-axis is +/- 10.0°
+		 // At rotation-points the max position deviation is +/-1mm in x/y-direction  	
+				nLimitExceeded_MoverID := stStartCheck.nMoverID;
+				  bLimitExceeded_Angle := stStartCheck.bAngleLimitExceeded;
+			  bLimitExceeded_PositionX := stStartCheck.bPositionXLimitExceeded;
+			  bLimitExceeded_PositionY := stStartCheck.bPositionYLimitExceeded;	
+				fCurrentAngleDeviation := stStartCheck.fCurrentAngleDeviation;
+			fCurrentPositionDeviationX := stStartCheck.fCurrentPositionDeviationX;
+			fCurrentPositionDeviationY := stStartCheck.fCurrentPositionDeviationY;
+	
+			sTextTemp := 'Position Check Failed! - Mover ';
+			sTextTemp := CONCAT(sTextTemp, UDINT_TO_STRING(nLimitExceeded_MoverID));
+			sTextTemp := CONCAT(sTextTemp, ' too far away from rotation point.');
+			
+			ipVisuMessage.SetErrorMessage(sTextTemp, 'MoverPreparation', nStatePreparation, 0);	
+			
+			nStatePreparation := nStatePreparation - 1;
+			
+	42:		ipVisuMessage.ClearAllMessages();
+			nStatePreparation := nStatePreparation + 8;
+		
+		
+		
+	50: // 5th: Check if movers with accessory MoverID are present. If yes, do mover identification before enabeling all movers.	
+		bWithBumperID := FALSE;
+			
+		IF ipMotionSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+			FOR idx:=1 TO g_nMoverCount DO
+				nMoverAccessoryIdCount[idx] := ipMotionSystem.ipDriver.XpuTcIo(1).MoverTcIo(UDINT_TO_UINT(idx)).GetAccessoryIdCount();
+			END_FOR
+			
+			FOR idx:=1 TO g_nMoverCount DO
+				FOR idx2:=1 TO nMoverAccessoryIdCount[idx] DO
+					eMoverAccessoryID := ipMotionSystem.ipDriver.XpuTcIo(1).MoverTcIo(UDINT_TO_UINT(idx)).GetAccessoryID(UDINT_TO_UINT(idx2));
+					
+					IF eMoverAccessoryID = MoverAccessoryID.APM9001_0000 THEN
+						// Note: With the current driver release (3.2209.36.0) mover identification only works if all movers are equiped with ID bumpers!
+						bWithBumperID := TRUE;						
+					END_IF
+				END_FOR
+			END_FOR
+		END_IF
+
+			
+		IF bWithBumperID THEN
+			nStatePreparation := nStatePreparation + 10;
+		ELSE
+			nStatePreparation := 500;
+		END_IF
+		
+		
+	60: // 6th: Do mover identification
+		ipVisuMessage.SetInfoMessage('Start mover-identification', 'MoverPreparation', nStatePreparation);
+	
+		IF NOT bDeterminedMoverID THEN
+			IF ipMotionSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+				IF ipMotionSystem.ipDriver.XpuTcIo(1).SetCoordMoverCommunicationCmd(CoordinatedMoverCommCommand.IdentifyAndAssignPossible) THEN
+					nStatePreparation := nStatePreparation +1;
+				END_IF	
+			END_IF
+		ELSE
+			nStatePreparation := nStatePreparation +10;
+		END_IF
+	
+	61:
+		IF ipMotionSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN			
+			moverCoordComStatus := ipMotionSystem.ipDriver.XpuTcIo(1).GetCoordMoverCommStatus();
+			
+			IF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationSuccessful THEN
+				bDeterminedMoverID := TRUE;
+				ipVisuMessage.ClearAllMessages();
+				nStatePreparation := nStatePreparation + 9;	
+			ELSIF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationFailed THEN
+				nStatePreparation := nStatePreparation + 1;	
+			END_IF
+			
+		END_IF
+		
+	62:	IF ipMotionSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN	
+			nMoverID_ErrorCode := ipMotionSystem.ipDriver.XpuTcIo(1).GetCoordMoverCommunicationErrorId();
+			ipVisuMessage.SetErrorMessage('Mover Identification Failed!', 'MoverPreparation', nStatePreparation, nMoverID_ErrorCode);
+		END_IF
+		
+		IF ipVisuMessage.CheckAknowledge()  THEN
+			nStatePreparation := 0;	
+		END_IF
+		
+		
+		
+	70: // 7th: Determine Mover-Orientation
+	
+		// Note: At the time of creation of this example code only APM4330 was able to determine its orientation.
+		//       Change the code according to newer driver releases and availability of the orientation feature.
+		bMoverCanDeterminOrientation := TRUE;
+		FOR idx:=1 TO g_nMoverCount DO
+			MoverType := ipMotionSystem.ipDriver.XpuTcIo(1).MoverTcIo(UDINT_TO_UINT(idx)).GetMoverType();
+			IF MoverType <> XPlanarMoverType.APM4330 THEN
+				bMoverCanDeterminOrientation := FALSE;
+			END_IF
+		END_FOR
+			
+		IF bMoverCanDeterminOrientation THEN
+			IF NOT bDerterminedMoverOrientation THEN
+				ipVisuMessage.SetInfoMessage('Mover orientation determination', 'MoverPreparation', nStatePreparation);
+				IF ipMotionSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+					IF ipMotionSystem.ipDriver.XpuTcIo(1).SetCoordMoverCommunicationCmd(CoordinatedMoverCommCommand.DetermineOrientations) THEN
+						nStatePreparation := nStatePreparation + 1;	
+					END_IF
+				END_IF
+			ELSE
+				nStatePreparation := nStatePreparation + 20;		
+			END_IF
+		ELSE
+			nStatePreparation := nStatePreparation + 20;
+		END_IF
+	
+		
+	71: // Check if communication is active
+		IF ipMotionSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+			moverCoordComStatus := ipMotionSystem.ipDriver.XpuTcIo(1).GetCoordMoverCommStatus();
+			IF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationInProcess THEN
+				nStatePreparation := nStatePreparation + 1;	
+			END_IF
+		END_IF
+	
+		
+	72: // Wait for orientation determination finished
+		IF ipMotionSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+			moverCoordComStatus := ipMotionSystem.ipDriver.XpuTcIo(1).GetCoordMoverCommStatus();
+			IF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationSuccessful THEN
+				nStatePreparation := nStatePreparation + 8;	
+			ELSIF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationFailed THEN
+				IF nCommunicationRetryCounter <= 5 THEN
+					nCommunicationRetryCounter := nCommunicationRetryCounter +1;
+					nStatePreparation := nStatePreparation - 2;	
+				ELSE
+					nStatePreparation := nStatePreparation + 1;	
+				END_IF
+			END_IF
+		END_IF
+		
+				
+	73:	// Check which movers do not communicate correctly:
+		nMoverToCheck := 0;
+		nStatePreparation := nStatePreparation + 1;
+		
+	74: nMoverToCheck := nMoverToCheck +1;
+		IF nMoverToCheck <= g_nMoverCount THEN
+			IF ipMotionSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+				IF ipMotionSystem.ipDriver.XpuTcIo(1).MoverTcIo(nMoverToCheck).SetMoverCommunicationCommand(MoverCommunicationCommand.DetermineOrientation) THEN
+					nStatePreparation := nStatePreparation + 1;
+				END_IF
+			END_IF
+		ELSE
+			FOR idx:=1 TO g_nMoverCount DO
+				bCommunicationProblem := FALSE;
+				IF bMoverCommunicationProblem[idx] THEN
+					bCommunicationProblem := TRUE;	
+				END_IF
+			END_FOR
+			
+			IF bCommunicationProblem THEN
+				sTextTemp := 'Mover Communication Problem: ';
+				FOR idx:=1 TO g_nMoverCount DO
+					IF bMoverCommunicationProblem[idx] THEN
+						sTextTemp := CONCAT(sTextTemp, ' M');
+						sTextTemp := CONCAT(sTextTemp, UDINT_TO_STRING(idx));
+					END_IF
+				END_FOR				
+				ipVisuMessage.SetErrorMessage(sTextTemp, sTextTemp, nStatePreparation, 0);
+			ELSE
+				nStatePreparation := nStatePreparation - 4;	
+			END_IF
+		END_IF
+		
+	75: moverComStatus := ipMotionSystem.ipDriver.XpuTcIo(1).MoverTcIo(nMoverToCheck).GetCommunicationStatus();
+		IF moverComStatus = MoverCommunicationStatus.CommunicationSuccessful THEN
+			bMoverCommunicationProblem[nMoverToCheck] := FALSE;
+			nStatePreparation := nStatePreparation - 1;
+		ELSIF moverComStatus = MoverCommunicationStatus.CommunicationFailed THEN
+			bMoverCommunicationProblem[nMoverToCheck] := TRUE;
+			nStatePreparation := nStatePreparation - 1;
+		END_IF
+		
+		
+	80:	// Rotation-Angle modulo adaption
+		ipVisuMessage.SetInfoMessage('Rotation-Angle modulo adaption', 'MoverPreparation', nStatePreparation);
+		nMoverToCorrect := 0;
+		nStatePreparation := nStatePreparation + 1;	
+		
+	81:	nMoverToCorrect := nMoverToCorrect +1;
+		IF nMoverToCorrect <= g_nMoverCount THEN
+			fMoverOrientationRead    := ipMoverApplication[nMoverToCorrect].std.P_ActPosition.c; 
+			fMoverOrientationCorrect := fMoverOrientationRead;
+			 bDoRotationCorrection := FALSE;
+			nStatePreparation := nStatePreparation + 1;	
+		ELSE
+			bDerterminedMoverOrientation := TRUE;
+			nStatePreparation := nStatePreparation + 9;	
+		END_IF
+		
+	82:	IF fMoverOrientationCorrect >= 0 THEN
+			IF fMoverOrientationCorrect > 360.0 THEN
+				fMoverOrientationCorrect := fMoverOrientationCorrect - 180.0;
+				bDoRotationCorrection := TRUE;
+			ELSE
+				nStatePreparation := nStatePreparation + 1;
+			END_IF
+		ELSE
+			IF fMoverOrientationCorrect < 360.0 THEN
+				fMoverOrientationCorrect := fMoverOrientationCorrect + 180.0;
+				bDoRotationCorrection := TRUE;
+			ELSE
+				nStatePreparation := nStatePreparation + 1;
+			END_IF
+		END_IF			
+		
+		
+	83:	IF bDoRotationCorrection THEN
+			
+			fPosX := ipMoverApplication[nMoverToCorrect].std.P_ActPosition.x;
+			fPosY := ipMoverApplication[nMoverToCorrect].std.P_ActPosition.y;
+			fPosC := ipMoverApplication[nMoverToCorrect].std.P_ActPosition.c;
+	
+			CorrectionPos.SetValuesXYC(fPosX, fPosY, fMoverOrientationCorrect);	
+	
+			ipMoverApplication[nMoverToCorrect].std.SetMoverPosition('Correction', CorrectionPos);
+			
+			nStatePreparation := nStatePreparation + 1;	
+		ELSE
+			nStatePreparation := nStatePreparation - 2;
+		END_IF
+		
+	84:
+		IF ipMoverApplication[nMoverToCorrect].std.P_SetMoverPosition.Done THEN
+			nStatePreparation := nStatePreparation - 3;
+		ELSIF ipMoverApplication[nMoverToCorrect].std.P_SetMoverPosition.Error THEN
+			nErrorID := ipMoverApplication[nMoverToCorrect].std.P_SetMoverPosition.ErrorID;
+			ipVisuMessage.SetErrorMessage('Rotation-Angle modulo adaption', 'MoverPreparation', nStatePreparation, nErrorID);		
+		END_IF
+		
+
+	90: nStatePreparation := 500;
+	
+			
+	500: // Done
+		nStatePreparation := 0;
+		MoverPreparation := TRUE;		
+			
+		
+	END_CASE
+
+
+	ipVisuMessage.StateUpdate(nStatePreparation, 'MoverPreparation');
+
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoverRecovery" Id="{11b61646-5205-4eab-b591-cdfd2d5233bf}">
+      <Declaration><![CDATA[METHOD MoverRecovery : BOOL
+VAR_INPUT
+	bReset	: BOOL;
+END_VAR
+
+
+
+VAR_INST
+
+	// Dynamic limitations
+	fVeloRec           				: LREAL := 250.0;
+	fAccelRec    					: LREAL := 3000.0;
+	fJerkRec            			: LREAL := 30000.0;
+	
+	fVeloTurn           			: LREAL :=  1800.0;
+	fAccelTurn    					: LREAL :=   720.0;
+	fJerkTurn            			: LREAL := 14400.0;		
+	
+
+	idx								: UDINT;	
+	nTestCounter					: UDINT;
+	nStateMoverRecovery				: INT;	
+	bAllMoversDone					: BOOL;
+	nForCounter						: UDINT;
+	bStillBusy						: BOOL;
+	nInitPositionToMoveTo			: UDINT;
+	bAllMoversAtInitPosition		: BOOL;
+	nInitPositionIndex	  			: UDINT;
+	nMoverIndex			  			: UDINT;
+	nMoversToInitPositionFound		: UDINT;
+	nMoverToJoinTrack				: UDINT;
+	nMoverToInitPosition			: UDINT;
+	bTryMoveX						: BOOL;
+	bTryMoveY						: BOOL;
+	nCounterMoverToMove				: INT;	
+	
+	fInitialMoverPosition			: ARRAY [1..gc_nMaxNumberMovers,1..2] OF LREAL;
+	bMoverSortedAlready				: ARRAY [1..gc_nMaxNumberMovers] OF BOOL;
+	bMoverSkipInitPosition			: ARRAY [1..gc_nMaxNumberMovers] OF BOOL;
+	bMoverToInitPosition			: ARRAY [1..gc_nMaxNumberMovers] OF BOOL;
+	bMoverAtInitPosition			: ARRAY [1..gc_nMaxNumberMovers] OF BOOL;
+	bMoverBlockedByMove				: ARRAY [1..gc_nMaxNumberMovers] OF BOOL;
+	bInitPositionBlockedByMove		: ARRAY [1..gc_nMaxNumberMovers] OF BOOL;	
+	bInitialMoverPositionDone		: ARRAY [1..gc_nMaxNumberMovers] OF BOOL;
+	nMoverOnTheWayToInitPosition	: ARRAY [1..gc_nMaxNumberMovers] OF UDINT;
+	fMoverDistanceToInitialPosition	: ARRAY [1..gc_nMaxNumberMovers] OF LREAL;
+	fShortestDistance				: ARRAY [1..gc_nMaxNumberMovers] OF LREAL;
+	nClosestMoverToInitPosition		: ARRAY [1..gc_nMaxNumberMovers] OF UDINT;
+	nInitPositionMoverTable			: ARRAY [1..gc_nMaxNumberMovers] OF UDINT;
+	nMoverRecoveryPosition			: ARRAY [1..gc_nMaxNumberMovers] OF UDINT;
+	nJoinTrack						: ARRAY [1..gc_nMaxNumberMovers] OF UDINT;	
+	
+	fRotationMoverPosition			: ARRAY [1..gc_nMaxNumberMovers,1..2] OF LREAL;
+	nMoverToRotationPosition		: UDINT;
+	nRotationPositionToMoveTo		: UDINT;
+	nMoverBackToInitPosition		: UDINT;
+
+	sInfoText						: STRING;
+	targetPos            	 		: PositionXYC;
+    currentPos			     		: PositionXYC;
+	nCmdReturnError					: UDINT;
+	
+	
+//-----------------first Track run
+
+	fTrackLengthTrack1  	: LREAL;
+	fTrackLengthTrack2  	: LREAL;	
+	fTrackLengthTrack3  	: LREAL;	
+	
+	bInitRunFlag			: BOOL;
+	bInitRunDone			: BOOL;
+	bOneMoverMoving			: BOOL;
+	bAllMoversStandingStill	: BOOL;
+	bMoversQueuing			: BOOL;
+	
+	TimerWaitForMovement	: TON;	
+	
+	
+	nState 					: INT;	
+	nStateInit				: INT;
+	
+	
+	fbInitList				: FB_List;
+
+	fPositionOnTrack			: LREAL;
+	nStationIndex				: UINT;
+	nNextStationTrackIndex 		: UINT;
+	fNextStationWaitingPosition	: LREAL;
+	nTrackIndex					: UDINT;
+	nNextStationIndex			: UDINT;
+	nListIdentifier				: UDINT;
+	bFirstMoverIn				: BOOL;
+	ClearTrig					: R_TRIG;
+	fMoverPosition				: LREAL;
+	fMoverVelocity				: LREAL;
+	fMoverAcceleration			: LREAL;
+	fMoverJerk					: LREAL;
+	strInfo						: STRING;
+	
+	fMoverSpace					: LREAL;
+	fWaitingPositionStation01	: LREAL;
+	fWaitingPositionStation02	: LREAL;	
+	fWaitingPositionStation03	: LREAL;	
+	fWaitingPositionStation04	: LREAL;	
+	fWaitingPositionStation05b	: LREAL;	
+	fWaitingPositionStation05c	: LREAL;
+	
+	stMoveParameters 	: ST_MoveOnTrackOptions; 
+	strInfoHistory		: ARRAY[0..10] OF STRING;
+	
+	nResult				: DINT;
+	sMessage			: STRING;
+	
+	
+	stJoinTrackOptions		: ST_JoinTrackOptions;
+	stMoveOptionsCurve		: ST_MoveCOptions;	
+
+	
+	
+	nMoverToTurnBack				: UDINT;
+	fRecoveryRotTarget				: LREAL;
+	fRecoveryRotVel					: LREAL :=  360.0;
+	fRecoveryRotAcc					: LREAL := 1800.0;
+	fRecoveryRotJerk				: LREAL := 9000.0;
+	stRotationOptions				: ST_MoveCOptions;
+	
+	
+	LeavOptions	: ST_LeaveTrackOptions;
+	
+END_VAR
+
+
+VAR_INST
+	nMoverToTurn					: UDINT;
+
+	fbMoverTarget		: FB_MoverTarget;
+	nErrorCode			: DINT;
+	bError				: BOOL;
+	sInfoMessage		: STRING;
+
+	
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	nStateMoverRecovery := 0;
+	MoverRecovery := TRUE;
+END_IF
+
+
+
+CASE nStateMoverRecovery OF
+
+	0:	// Starting mover recovery
+		nStateMoverRecovery := 50;
+			
+	(***************************************************************************************)
+	(* Mover Recovery Part1: Checking for unfinished rotation                              *)
+	(***************************************************************************************)     			
+		
+	50:		// Turn rotation angle to closets quarter-angle 
+			ipVisuMessage.SetInfoMessage('Clearing rotation', 'Recovery', nStateMoverRecovery);
+
+			nMoverToTurn := 0;
+			nStateMoverRecovery := nStateMoverRecovery +1;
+			
+	51:  	nMoverToTurn := nMoverToTurn +1;
+			IF nMoverToTurn > g_nMoverCount THEN
+				nStateMoverRecovery := nStateMoverRecovery +3;
+			ELSE
+				IF ipMoverApplication[nMoverToTurn].std.P_IsPresent THEN
+
+					fRecoveryRotTarget 				  := ipMoverApplication[nMoverToTurn].std.P_ClosestQuaterAngle;	
+					stRotationOptions.additionalTurns := 0;
+					stRotationOptions.direction		  := Tc3_Mc3PlanarMotion.MC_direction.mcDirectionNonModulo;	
+					
+					ipMoverApplication[nMoverToTurn].std.MoveC('Recovery - unfinished rotation', fRecoveryRotTarget, fRecoveryRotVel, fRecoveryRotAcc, fRecoveryRotAcc, fRecoveryRotJerk, stRotationOptions);
+					nStateMoverRecovery := nStateMoverRecovery +1;				
+				END_IF	
+			END_IF
+
+	52:		IF ipMoverApplication[nMoverToTurn].std.P_MoveC.Done THEN
+				nStateMoverRecovery := nStateMoverRecovery -1;	
+			ELSIF ipMoverApplication[nMoverToTurn].std.P_MoveC.Error THEN
+				nStateMoverRecovery := nStateMoverRecovery +1;	
+			END_IF
+ 
+	53:		// Check error ID and react accordingly
+			nErrorID := ipMoverApplication[nMoverToTurn].std.P_MoveC.ErrorID;	
+			
+			// In case rotation is not possible due to collision with another mover proceed without rotation correction.
+			IF nErrorID = 33158 THEN
+				nStateMoverRecovery := nStateMoverRecovery -2;	
+			END_IF
+						
+	54:		nStateMoverRecovery := 100;		
+			
+			
+	(*******************************************************************************************)
+	(* Mover Recovery Part2: Separating all movers and move each of them to a corner position. *)
+	(*******************************************************************************************)    			
+		
+	100: 
+		ipVisuMessage.SetInfoMessage('Separating all movers', 'Recovery', nStateMoverRecovery);
+		IF fbMoverTarget.Clear() THEN
+			nStateMoverRecovery := nStateMoverRecovery +10;
+		END_IF
+	
+	110:
+		bError := FALSE;
+		FOR idx:=1 TO g_nMoverCount DO
+			IF ipMoverApplication[idx].std.P_IsPresent THEN
+				fbMoverTarget.AddMover(ipMoverApplication[idx]);
+				IF fbMoverTarget.P_ErrorWarningCode < 0 THEN
+					bError := TRUE;
+				END_IF
+			END_IF
+		END_FOR
+		
+		IF bError THEN
+			sInfoMessage := fbMoverTarget.P_Info;
+		ELSE
+			nStateMoverRecovery := nStateMoverRecovery +10;
+		END_IF
+			
+	120:
+		fbMoverTarget.AddPosition(120.0, 120.0);
+		fbMoverTarget.AddPosition(120.0, 600.0);
+		fbMoverTarget.AddPosition(840.0, 600.0);
+		fbMoverTarget.AddPosition(840.0, 120.0);
+		
+		fbMoverTarget.SetDynamics(250.0, 1000.0, 10000.0);
+		
+		IF fbMoverTarget.P_ErrorWarningCode < 0 THEN
+			sInfoMessage := fbMoverTarget.P_Info;
+		ELSE
+			nStateMoverRecovery := nStateMoverRecovery +10;
+		END_IF
+		
+
+	130:
+		  sMessage := fbMoverTarget.P_Info;
+		nErrorCode := fbMoverTarget.P_ErrorWarningCode;	
+
+		IF fbMoverTarget.MoversToTarget() THEN
+			nStateMoverRecovery := 300;
+		END_IF
+					
+	
+	(***************************************************************************************)
+	(* Mover Recovery Part3: All movers join the outer-track							   *)
+	(***************************************************************************************)  	
+					
+			
+	300:	// All movers go on track
+			ipVisuMessage.SetInfoMessage('All movers join track', 'Recovery', nStateMoverRecovery);
+	
+			FOR nForCounter := 1 TO g_nMoverCount DO
+				IF ipMoverApplication[nForCounter].std.P_SetPosition.x > 480.0 THEN
+					nJoinTrack[nForCounter] := 3;	
+				ELSE
+					nJoinTrack[nForCounter] := 1;	
+				END_IF
+			END_FOR
+			nStateMoverRecovery := nStateMoverRecovery +1;	
+				
+	301:	IF nMoverToJoinTrack < g_nMoverCount THEN
+				nMoverToJoinTrack := nMoverToJoinTrack +1;
+				nStateMoverRecovery := nStateMoverRecovery +1;
+			ELSE
+				nMoverToJoinTrack := 0;
+				nStateMoverRecovery := nStateMoverRecovery + 2; 
+			END_IF
+				
+	302:	stJoinTrackOptions.useOrientation := FALSE;
+	
+			sInfoText := 'Recovery, join TrackID: ';
+			sInfoText := CONCAT(sInfoText, UDINT_TO_STRING(nJoinTrack[nMoverToJoinTrack]));
+			
+			IF ipMoverApplication[nMoverToJoinTrack].std.JoinTrack( sInfoText,
+																	ipTrack[nJoinTrack[nMoverToJoinTrack]].std,
+																    fVeloRec,
+																	fAccelRec,
+																	fJerkRec,
+																	stJoinTrackOptions )
+			THEN
+				ipMoverApplication[nMoverToJoinTrack].P_TrackId := nJoinTrack[nMoverToJoinTrack];
+				nStateMoverRecovery := nStateMoverRecovery -1;
+			END_IF
+			
+				
+			
+			
+	303:	bDone := TRUE;
+			FOR nForCounter := 1 TO g_nMoverCount DO
+				bDone := bDone AND ipMoverApplication[nForCounter].std.P_JoinTrack.Done;
+			END_FOR
+			
+			IF bDone THEN
+				nStateMoverRecovery := nStateMoverRecovery + 7;
+			END_IF
+		
+	310:  // Wait for all movers on-track
+			bDone := TRUE;
+			FOR nForCounter := 1 TO g_nMoverCount DO
+				bDone := bDone AND ipMoverApplication[nForCounter].std.P_JoinTrack.Done;
+			END_FOR
+			IF bDone THEN
+				nStateMoverRecovery := 400;
+			END_IF
+	
+				
+	(***************************************************************************************)
+	(* Mover Recovery Part4: Adding all movers to the Initialization-List and sort them    *)
+	(*                       ascending.                              				       *)
+	(***************************************************************************************)  			
+				
+	400:	ipVisuMessage.SetInfoMessage('Sorting all movers', 'Recovery', nStateMoverRecovery);
+			IF fbInitList.ClearList() THEN
+				nStateMoverRecovery := nStateMoverRecovery + 1;
+			END_IF
+			
+	401:	IF fbInitList.ClearTrackOrder() THEN
+				nStateMoverRecovery := nStateMoverRecovery + 9;
+			END_IF
+	
+			
+	410:	// Adding all movers to the Initialization-List
+			FOR nForCounter := 1 TO g_nMoverCount DO
+				fbInitList.AddMover(ipMoverApplication[nForCounter].std);
+			END_FOR				
+			nStateMoverRecovery := nStateMoverRecovery + 10;
+			
+			
+	420: 	// Adding Track-Order to the Initialization-List for Sorting-Order
+			IF fbInitList.AddTrack(ipTrack[1].std) > 0 THEN
+				nStateMoverRecovery := nStateMoverRecovery + 1;
+			ELSE
+				 nResult := fbInitList.P_nResult;
+				sMessage := fbInitList.P_sMessage;	
+			END_IF
+			
+	421: 	IF fbInitList.AddTrack(ipTrack[3].std) > 0 THEN
+				nStateMoverRecovery := nStateMoverRecovery + 1;
+			ELSE
+				 nResult := fbInitList.P_nResult;
+				sMessage := fbInitList.P_sMessage;	
+			END_IF			
+						
+ 	422:	nStateMoverRecovery := 450;
+				
+	450:	// Sorting all movers 
+			fbInitList.P_SortingDirection := eSortingDirection.ascending;
+			fbInitList.P_SortingOrigin := 0.0;
+	
+			 nResult := fbInitList.SortList();
+			sMessage := fbInitList.P_sMessage;
+			
+			IF nResult > 0 THEN
+				// Sorting succesful - will return the number of movers sorted e.g. 4
+				nStateMoverRecovery:= nStateMoverRecovery + 10;
+			ELSIF nResult = 0 THEN
+				;// Sorting 
+			ELSIF nResult < 0 THEN
+				// sorting Error - Check error code and error message
+				nStateMoverRecovery:= nStateMoverRecovery +1;
+			END_IF
+			
+	451:	// Check error message and act accordingly		
+			 nResult := fbInitList.P_nResult;
+			sMessage := fbInitList.P_sMessage;				
+	
+			
+	460:	nStateMoverRecovery:= 500;			
+	
+
+	
+	(***************************************************************************************)
+	(* Mover Recovery Part5: Initialization-Run                                            *)
+	(*						 - Sending/Adding each mover to its next closest station       *)
+	(*						 - From there on each station takes care of the init-run       *)
+	(* 						 - Movers will queu in in front of station 01 				   *)
+	(***************************************************************************************)  
+
+	500: // Init all variables 
+		ipVisuMessage.SetInfoMessage('Mover init-run', 'Recovery', nStateMoverRecovery);
+	
+					bOneMoverMoving := FALSE;
+			bAllMoversStandingStill := FALSE;
+					   bInitRunDone := FALSE;
+	
+				   nStateMoverRecovery := nStateMoverRecovery + 10;
+	
+	510: // Check for next Mover
+		IF fbInitList.P_FirstInList <> 0 THEN
+				 nMoverIndex := fbInitList.P_FirstInList.P_Id;
+				 nTrackIndex := ipMoverApplication[nMoverIndex].P_TrackId;
+			fPositionOnTrack := ipMoverApplication[nMoverIndex].std.P_SetOnTrack.SetPos;
+			
+			      bFirstMoverIn := TRUE;
+			nStateMoverRecovery := nStateMoverRecovery + 10;
+		ELSE
+			IF bFirstMoverIn THEN
+				nStateMoverRecovery := 600;
+			ELSE
+				// Init-Run completed
+				bInitRunFlag := FALSE;
+				nStateMoverRecovery := 1000;	
+			END_IF
+		END_IF
+			
+		
+	520: // Figuring out the next station the mover has to travel to:
+		fMoverSpace := 155.0 + 5.0;
+	
+		fWaitingPositionStation01	:= ipTrack[1].P_TrackLength/2.0 - fMoverSpace;	
+		fWaitingPositionStation02	:= ipTrack[2].P_TrackLength/2.0 - fMoverSpace;	
+		fWaitingPositionStation03	:= ipTrack[3].P_TrackLength/2.0 - fMoverSpace;
+		fWaitingPositionStation04	:= ipTrack[1].P_TrackLength - fMoverSpace;	
+		fWaitingPositionStation05b	:= ipTrack[3].P_TrackLength - fMoverSpace;	
+		fWaitingPositionStation05c	:= ipTrack[2].P_TrackLength - fMoverSpace;	
+	
+		nListIdentifier := 0;
+		CASE nTrackIndex OF		
+		1:	// Mover on Track01 / Station01
+			IF fPositionOnTrack <= fWaitingPositionStation01 THEN
+				nNextStationIndex := 1;
+				  nListIdentifier := 11;
+			ELSE
+				nNextStationIndex := 4;
+				  nListIdentifier := 14;
+			END_IF	
+	
+		2:	// Mover on Track02 / Station02
+			IF fPositionOnTrack <= fWaitingPositionStation02 THEN
+				nNextStationIndex := 2;
+				  nListIdentifier := 22;
+			ELSE
+				nNextStationIndex := 5;
+				  nListIdentifier := 25;
+			END_IF			
+		
+		3:	// Mover on Track03 / Station 03
+			IF fPositionOnTrack <= fWaitingPositionStation03 THEN
+				nNextStationIndex := 3;
+				  nListIdentifier := 33;
+			ELSE
+				nNextStationIndex := 5;
+				  nListIdentifier := 35;
+			END_IF			
+		END_CASE
+		
+		nStateMoverRecovery := nStateMoverRecovery + 10;
+			
+			
+	530: // Calculating the position the mover has to move to next:
+		nNextStationTrackIndex := 0;
+		
+		CASE nNextStationIndex OF
+			1:	nNextStationTrackIndex      := 1;
+				fNextStationWaitingPosition	:= fWaitingPositionStation01;	
+			
+			2:	nNextStationTrackIndex      := 2;
+				fNextStationWaitingPosition	:= fWaitingPositionStation02;			
+			
+			3:	nNextStationTrackIndex      := 3;
+				fNextStationWaitingPosition	:= fWaitingPositionStation01;			
+			
+			4:	nNextStationTrackIndex      := 1;
+				fNextStationWaitingPosition	:= fWaitingPositionStation04;				
+				
+			5:	IF nTrackIndex = 2 THEN
+					nNextStationTrackIndex := 2;
+					fNextStationWaitingPosition	:= fWaitingPositionStation05c;	
+				ELSIF nTrackIndex = 3 THEN
+					nNextStationTrackIndex := 3;
+					fNextStationWaitingPosition	:= fWaitingPositionStation05b;	
+				END_IF									
+		END_CASE
+			
+		IF nNextStationTrackIndex > 0 THEN
+			nStateMoverRecovery := nStateMoverRecovery + 10;
+		END_IF
+	
+	
+	540: 	// Send mover to the next station
+			fMoverPosition     := fNextStationWaitingPosition;
+			fMoverVelocity     :=    300.0;
+			fMoverAcceleration :=  1_000.0;
+			fMoverJerk         := 10_000.0;	
+	
+			stMoveParameters.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive;
+			stMoveParameters.gap       := 240.0;
+			
+			strInfo := 'Recovery: ';
+			strInfo := CONCAT(strInfo, ' Mover: ');
+			strInfo := CONCAT(strInfo, UDINT_TO_STRING(nMoverIndex));
+			strInfo := CONCAT(strInfo, ' move to Station:' );
+			strInfo := CONCAT(strInfo, UDINT_TO_STRING(nNextStationIndex));
+			
+		
+			IF NOT ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Busy THEN
+	
+				FOR idx:=10 TO 1 BY -1 DO 
+					strInfoHistory[idx] := strInfoHistory[idx-1];
+				END_FOR
+				strInfoHistory[0] := strInfo;		
+			
+				ipMoverApplication[nMoverIndex].std.MoveOnTrack( strInfo,
+																 ipTrack[nNextStationTrackIndex].std,
+																 fMoverPosition,
+																 fMoverVelocity,
+																 fMoverAcceleration,
+																 fMoverJerk,
+																 stMoveParameters.gap,
+																 stMoveParameters.direction);
+				nStateMoverRecovery := nStateMoverRecovery +1;
+				
+				
+				ipMoverApplication[nMoverIndex].P_ProductData.bInitRun            := TRUE;
+				ipMoverApplication[nMoverIndex].P_ProductData.nDestinationProcess := 0;
+			END_IF	
+			
+	541: 
+		IF ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Active THEN
+			nStateMoverRecovery := nStateMoverRecovery + 9;
+		END_IF
+			
+	 
+	550: // Mover to the list of the next station
+		CASE nListIdentifier OF
+		11:	ipStation[1].P_List_Station.AddMover(fbInitList.RemoveFirstInList());
+		14: ipStation[4].P_List_Switch_Input_A.AddMover(fbInitList.RemoveFirstInList());
+		
+		22: ipStation[2].P_List_Station.AddMover(fbInitList.RemoveFirstInList());
+		25:	ipStation[5].P_List_Switch_Input_C.AddMover(fbInitList.RemoveFirstInList());
+		
+		33: ipStation[3].P_List_Station.AddMover(fbInitList.RemoveFirstInList());
+		35: ipStation[5].P_List_Switch_Input_B.AddMover(fbInitList.RemoveFirstInList());
+		END_CASE
+	
+		IF nListIdentifier > 0 THEN
+			nStateMoverRecovery := 510;	
+		END_IF
+		
+
+	600: // Set all stations into "Init-Run" Mode	
+		FOR idx:=1 TO gc_NumberStations DO
+			ipStation[idx].P_eProcessMode := E_ProcessMode.InitRun;
+		END_FOR	
+		nStateMoverRecovery := nStateMoverRecovery + 10;	
+		
+		
+	610: // Wait till at least one mover started moving, or timeout if no movement at all.	
+		bOneMoverMoving := FALSE;
+		FOR idx:=1 TO g_nMoverCount DO	
+			IF ABS(ipMoverApplication[idx].std.P_SetVelocity.x) > 0.1
+			OR ABS(ipMoverApplication[idx].std.P_SetVelocity.y) > 0.1
+			THEN
+				bOneMoverMoving := TRUE;
+			END_IF
+		END_FOR		
+	
+		TimerWaitForMovement(IN:=TRUE, PT:=T#2S);
+		
+		IF bOneMoverMoving 
+		OR TimerWaitForMovement.Q 
+		THEN
+			TimerWaitForMovement(IN:=FALSE);
+			nStateMoverRecovery := nStateMoverRecovery + 10;			
+		END_IF
+		
+	
+	620: // Wait till all movers are standing still	
+		bAllMoversStandingStill := TRUE;
+		FOR idx:=1 TO g_nMoverCount DO			
+			IF ipMoverApplication[idx].std.P_IsMovingXY THEN
+				bAllMoversStandingStill := FALSE;
+			END_IF
+		END_FOR
+		
+		IF bAllMoversStandingStill THEN
+			nStateMoverRecovery := nStateMoverRecovery + 10;				
+		END_IF
+		
+		
+	630: // Init-Run done
+		FOR idx:=1 TO gc_NumberStations DO
+			ipStation[idx].P_eProcessMode := E_ProcessMode.None;
+		END_FOR		
+
+			   bInitRunDone := TRUE;
+		nStateMoverRecovery := 1000;		
+			
+	
+	1000:// Mover recovery done
+		ipVisuMessage.SetInfoMessage('Mover recovery done', 'Recovery', nStateMoverRecovery);
+	
+			   MoverRecovery := TRUE;
+		 nStateMoverRecovery := 0;	
+			
+
+END_CASE
+
+
+ipVisuMessage.StateUpdate(nStateMoverRecovery, 'Recovery');
+
+
+
+
+	
+
+	
+
+		]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="P_AbortingSequence" Id="{1589822b-155c-45bb-b032-059d0c6c0241}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_AbortingSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{97441fda-522f-480c-8a56-74bf795f92c9}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_AbortingSequence := nAbortingSequence;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_Alarm" Id="{a987617e-cc1a-40df-beb0-3ffd40991783}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_Alarm : ST_VisuMessage]]></Declaration>
+      <Get Name="Get" Id="{3ac26912-c6c4-4f0f-98f9-a41adcc915af}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_ExecutingSequence" Id="{e52c6b02-4236-451d-b287-a477892a45e2}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_ExecutingSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{85cf41ad-d711-422d-a688-00c69a1e3230}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ExecutingSequence := nExecutingSequence;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_MoverError" Id="{272e7ce2-5f5e-47b0-aef2-ecfb6a486e59}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_MoverError : BOOL]]></Declaration>
+      <Get Name="Get" Id="{ffdcc1f4-9a11-4850-9451-0a6a7f737663}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_MoverError := bMoverError;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{77f24c53-d0ac-4742-9cde-950322999a99}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[bMoverError := P_MoverError;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_ResettingSequence" Id="{b9f5c181-730c-40f4-b368-5cf76c818dc3}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_ResettingSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{503dc619-1cb9-4f87-b810-c26d632b1fee}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ResettingSequence := nResettingSequence;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_StartingSequence" Id="{7b85a47d-b63c-4e6d-9b5e-24e8abb0a5ad}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_StartingSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{bd632d36-eaaa-4c11-9b69-897b52806514}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_StartingSequence := nPrepareSequence;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_StartupSequence" Id="{fcba6d0e-0df0-4b06-a840-3871559ef638}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_StartupSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{ac736f88-ec18-4fb8-b848-ba20ae1edd1c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_StartupSequence := nStartupSequence;
+
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="Prepare" Id="{dbac9a22-f245-438d-9863-d6f49428be15}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[METHOD Prepare : BOOL
+
+
+VAR_INST
+	Test : LREAL;	
+
+	bAllMoversDone				: BOOL; 	
+	
+	nStationToInit				: UINT;
+	
+
+	nMoversFound				: UDINT;
+	
+	sTextTemp					: STRING;
+	
+
+	
+	nTestCounter				: UDINT;
+	
+	
+	
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nErrorID := 0;
+
+CASE nPrepareSequence OF 
+	
+
+	0:	// Enter
+		nPrepareSequence := 10;	
+
+	
+	(***************************************************************************************)
+	(* Starting Part 1: Getting everything ready...                                        *)
+	(***************************************************************************************) 		
+			
+	10: // EnableGroup
+		IF ipMotionSystem.EnableGroup() THEN
+			ipVisuMessage.SetInfoMessage('ENABLE Group', 'Prepare', nPrepareSequence);
+			nPrepareSequence := nPrepareSequence + 1;
+		END_IF
+		
+	11: IF ipMotionSystem.P_EnableGroup.Done THEN
+			nPrepareSequence := nPrepareSequence +9;
+		ELSIF ipMotionSystem.P_EnableGroup.Error THEN
+			nPrepareSequence := nPrepareSequence + 1;
+		END_IF	
+			
+	12:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_EnableGroup.ErrorID;
+		ipVisuMessage.SetErrorMessage('ENABLE Group failed', 'Prepare', nPrepareSequence, nErrorID);		
+		
+		
+	20: // Adding Environment to Group
+		IF ipMotionSystem.AddEnvironmentToGroup() THEN
+			ipVisuMessage.SetInfoMessage('Add Group to Environment', 'Prepare', nPrepareSequence);
+			nPrepareSequence := nPrepareSequence +1;
+		END_IF	
+		
+	21: IF ipMotionSystem.P_AddEnviromentToGroup.Done THEN
+			nPrepareSequence := nPrepareSequence +9;
+		ELSIF ipMotionSystem.P_AddEnviromentToGroup.Error THEN
+			nPrepareSequence := nPrepareSequence +1;		
+		END_IF	
+		
+	22:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_AddEnviromentToGroup.ErrorID;
+		ipVisuMessage.SetErrorMessage('Add Group to Environment failed', 'Prepare', nPrepareSequence, nErrorID);			
+				
+				
+	30: // Enable all tracks
+		IF ipMotionSystem.EnableTracks() THEN
+			ipVisuMessage.SetInfoMessage('ENABLE Tracks', 'Prepare', nPrepareSequence);
+			nPrepareSequence := nPrepareSequence +1;
+		END_IF
+		
+	31:	
+		IF ipMotionSystem.P_EnableTracks.Done THEN
+			nPrepareSequence := nPrepareSequence +9;
+		ELSIF ipMotionSystem.P_EnableTracks.Error THEN
+			nPrepareSequence := nPrepareSequence +1;		
+		END_IF
+		
+	32:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_EnableTracks.ErrorID;
+		ipVisuMessage.SetErrorMessage('ENABLE Tracks failed', 'Prepare', nPrepareSequence, nErrorID);				
+		
+			
+	40: // Adding all tracks to the group
+		IF ipMotionSystem.AddTracksToGroup() THEN
+			ipVisuMessage.SetInfoMessage('Add tracks to Group', 'Prepare', nPrepareSequence);
+			nPrepareSequence := nPrepareSequence +1;
+		END_IF
+	
+	41: IF ipMotionSystem.P_AddTracksToGroup.Done THEN
+			nPrepareSequence := nPrepareSequence +9;
+		ELSIF ipMotionSystem.P_AddTracksToGroup.Error THEN
+			nPrepareSequence := nPrepareSequence +1;
+		END_IF
+		
+	42:	// Check error ID and react accordingly120
+		nErrorID := ipMotionSystem.P_AddTracksToGroup.ErrorID;
+		ipVisuMessage.SetErrorMessage('Add tracks to Group failed', 'Prepare', nPrepareSequence, nErrorID);				
+
+	
+	50: // Init all stations
+		nStationToInit := 0;
+		nPrepareSequence := nPrepareSequence +1;
+
+	51:	nStationToInit := nStationToInit +1;
+		IF nStationToInit <= gc_NumberStations THEN
+			ipVisuMessage.SetInfoMessage(CONCAT('Init Station:' ,UINT_TO_STRING(nStationToInit)), 'Prepare', nPrepareSequence);
+			nPrepareSequence := nPrepareSequence +1;
+		ELSE
+			nPrepareSequence := nPrepareSequence +9;
+		END_IF	
+				
+	52: IF ipStation[nStationToInit].Init() THEN
+			nPrepareSequence := nPrepareSequence -1;
+		END_IF
+
+		
+	60:	nPrepareSequence := 100;
+	
+	
+	
+	100: // Prepare all movers
+		IF MoverPreparation(bReset:=TRUE) THEN
+			nPrepareSequence := nPrepareSequence + 1;
+		END_IF
+		
+	101:
+		IF MoverPreparation(bReset:=FALSE) THEN
+			nPrepareSequence := nPrepareSequence + 9;
+		END_IF	
+		
+		
+		
+	110: nPrepareSequence := 160;
+		
+	
+	160:// Enable all movers
+		IF ipMotionSystem.EnableMovers() THEN
+			ipVisuMessage.SetInfoMessage('ENABLE all movers', 'Prepare', nPrepareSequence);
+			nPrepareSequence := nPrepareSequence + 1;
+		END_IF
+	
+	161: 
+		IF ipMotionSystem.P_EnableMovers.Done THEN
+			nPrepareSequence := nPrepareSequence +9;
+		ELSIF ipMotionSystem.P_EnableMovers.Error THEN
+
+			nPrepareSequence := nPrepareSequence + 1;
+		END_IF	
+			
+	162:// Error = Not able to enable movers e.g. mover was not able to reach it's flight hight due to high payload 
+		nErrorID := ipMotionSystem.P_EnableMovers.ErrorID;	
+		ipVisuMessage.SetErrorMessage('ENABLE all movers failed', 'Prepare', nPrepareSequence, nErrorID);	
+	
+
+		
+	
+    170: // Adding movers to the group
+		IF ipMotionSystem.AddMoversToGroup() THEN
+			ipVisuMessage.SetInfoMessage('Add movers to Group', 'Prepare', nPrepareSequence);
+			nPrepareSequence := nPrepareSequence + 1;
+		END_IF
+	
+    171: IF ipMotionSystem.P_AddMoversToGroup.Done THEN
+			nPrepareSequence := nPrepareSequence +9;
+		ELSIF ipMotionSystem.P_AddMoversToGroup.Error THEN
+			nPrepareSequence := nPrepareSequence + 1;
+		END_IF	
+	
+    172:// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_AddMoversToGroup.ErrorID;
+		ipVisuMessage.SetErrorMessage('Add movers to Group failed', 'Prepare', nPrepareSequence, nErrorID);	
+	
+	
+	180: nPrepareSequence := 200;			
+				
+
+	(***************************************************************************************)
+	(* Starting Part 3: Organize all movers to get ready for the machine process           *)
+	(***************************************************************************************) 		
+			
+	200:  // Mover Recovery/Sorting
+		IF MoverRecovery(bReset:=TRUE) THEN;
+			nPrepareSequence := nPrepareSequence +1;	
+		END_IF	
+	
+	201:
+		IF MoverRecovery(bReset:=FALSE) THEN
+			nPrepareSequence := nPrepareSequence +9;		
+		END_IF
+	
+			
+	210:  // Prepare sequence done
+		ipVisuMessage.SetInfoMessage('PREPARE finished', 'Prepare', 0);
+					 Prepare := TRUE;			 
+			nPrepareSequence := 0; 
+			
+		
+END_CASE
+
+
+ipVisuMessage.StateUpdate(nPrepareSequence, 'Prepare');
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reset" Id="{d4ed3da2-5d89-417f-9ada-092f6348d790}" FolderPath="Methods\">
+      <Declaration><![CDATA[METHOD Reset : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	
+	// Resetting all necesarry internal data 
+	bMoverError := FALSE;
+
+
+
+	Reset := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Resetting" Id="{694859be-68a2-4e34-b4af-c62ce9ab73dd}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[METHOD Resetting : BOOL
+VAR_INPUT
+END_VAR
+
+
+
+
+VAR_INST
+	
+	nTrackToEnable		: UDINT;
+	stProductDataClear 	: ST_ProductData;
+	
+END_VAR
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nErrorID := 0;
+
+CASE nResettingSequence OF 
+	
+	0: // Enter 
+		nResettingSequence := 10;
+		
+		
+		
+	10: // Reset all movers
+		IF ipMotionSystem.ResetMovers() THEN
+			ipVisuMessage.SetInfoMessage('RESET all movers', 'Resetting', nResettingSequence);
+			nResettingSequence := nResettingSequence +1;			
+		END_IF
+		
+	11: IF ipMotionSystem.P_ResetMovers.Done THEN
+			nResettingSequence := nResettingSequence +9;
+		ELSIF ipMotionSystem.P_ResetMovers.Error THEN
+			nResettingSequence := nResettingSequence +1;	
+		END_IF
+
+	12:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_EnableMovers.ErrorID;
+		ipVisuMessage.SetErrorMessage('RESET movers failed', 'Resetting', nResettingSequence, nErrorID);					
+		
+		
+		
+	20:	// Reset all tracks
+		IF ipMotionSystem.ResetTracks() THEN
+			ipVisuMessage.SetInfoMessage('RESET all tracks', 'Resetting', nResettingSequence);
+			nResettingSequence := nResettingSequence +1;
+		END_IF
+		
+	21: IF ipMotionSystem.P_ResetTracks.Done THEN
+			nResettingSequence := nResettingSequence +9;
+	 	ELSIF ipMotionSystem.P_ResetTracks.Error THEN
+			nResettingSequence := nResettingSequence +1;	
+		END_IF
+	
+	22:	// Check error ID and react accordingly
+		nErrorID := ipMotionSystem.P_EnableMovers.ErrorID;
+		ipVisuMessage.SetErrorMessage('RESET tracks failed', 'Resetting', nResettingSequence, nErrorID);			
+		
+	
+		
+	30:	// Reset MotionSystemApplication
+		IF ipMotionSystemApplication.Reset() THEN
+			ipVisuMessage.SetInfoMessage('RESET MotionSystemApplication', 'Resetting', nResettingSequence);
+			nResettingSequence := nResettingSequence +10;
+		END_IF
+	
+				
+	40:  // Cleaning all process data
+		FOR idx:=1 TO g_nMoverCount DO
+			ipMoverApplication[idx].P_ProductData := stProductDataClear;
+		END_FOR
+		nResettingSequence := 100;
+		
+	
+	100: // Reset done
+		ipVisuMessage.SetInfoMessage('RESET finished', 'Resetting', 0);
+	
+		nResettingSequence := 0; 
+		         Resetting := TRUE;
+
+END_CASE
+
+
+
+ipVisuMessage.StateUpdate(nResettingSequence, 'Resetting');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Startup" Id="{1e53eaa1-63e7-4d66-8826-754b8d6a2263}" FolderPath="StateMachine\">
+      <Declaration><![CDATA[METHOD Startup : BOOL
+VAR
+	aMoverDetectionSetup	: ARRAY[1..3] OF ST_TcIoMoverDetectionSetup;
+END_VAR
+
+VAR_INST
+	
+	// Tracks
+	nTrackToInit			: UDINT;
+	nTrackToGroup			: UDINT;
+	sErrorInfo				: STRING;
+	
+	stHaltDynamics			: ST_HaltDynamics;
+	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+CASE nStartupSequence OF 
+	
+	0: // Enter
+		IF ipVisuMessage <> 0 THEN
+			nStartupSequence := nStartupSequence +1;
+		END_IF
+
+ 
+	1: // Wait for initialization
+		IF ipMotionSystem.P_SystemInitialized THEN
+			ipVisuMessage.SetInfoMessage('MotionSystem initialized', 'Startup', nStartupSequence);	
+			nStartupSequence := 10;
+		ELSE
+			ipVisuMessage.SetInfoMessage('Waiting for initialization of MotionSystem', 'Startup', nStartupSequence);	
+		END_IF
+	
+	
+	10: // Initialization of all tracks	
+		    nTrackToInit := 0;
+		nStartupSequence := nStartupSequence +1;
+	
+	11: // Track number count
+		IF nTrackToInit < gc_NumberTracks THEN
+			nTrackToInit := nTrackToInit + 1;
+			nStartupSequence := nStartupSequence +1;
+					
+			sTextTemp := 'Initializing Track: ';
+			sTextTemp := CONCAT(sTextTemp, UDINT_TO_STRING(nTrackToInit));			
+			ipVisuMessage.SetInfoMessage(sTextTemp, 'Startup', nStartupSequence);
+		ELSE
+			    nTrackToInit := 0;
+			nStartupSequence := 20;
+		END_IF
+				
+	12:	// Clear track data
+		IF ipTrack[nTrackToInit].Clear() THEN
+			nStartupSequence := nStartupSequence +1;
+		END_IF
+		
+	13: // Build the track
+		IF ipTrack[nTrackToInit].Initialize(nTrackToInit) THEN	
+			nStartupSequence := 11;
+		ELSE
+			IF ipTrack[nTrackToInit].P_Error THEN
+				nStartupSequence := nStartupSequence +1;
+			END_IF
+		END_IF
+		
+	14:	// In case of error react accordingly
+		sErrorInfo := ipTrack[nTrackToInit].P_ErrorInfo;
+				
+		sTextTemp := CONCAT(sErrorInfo, UDINT_TO_STRING(nTrackToInit));			
+		ipVisuMessage.SetErrorMessage(sTextTemp, 'Startup', nStartupSequence, 0);
+	
+	
+	20: // Setting halt-dynamics for all movers
+		stHaltDynamics.Mode := E_HaltDynamicsMode.AxisX_AxisY_CoordinatedOnPath;
+	
+		stHaltDynamics.PathXY.fVelocity		:=    500.0;
+		stHaltDynamics.PathXY.fAcceleration	:=  10000.0;
+		stHaltDynamics.PathXY.fDeceleration	:=  10000.0;
+		stHaltDynamics.PathXY.fJerk			:= 100000.0;
+
+		stHaltDynamics.AxisX.fVelocity		:=    500.0;
+		stHaltDynamics.AxisX.fAcceleration	:=  10000.0;
+		stHaltDynamics.AxisX.fDeceleration	:=  10000.0;
+		stHaltDynamics.AxisX.fJerk			:= 100000.0;
+
+		stHaltDynamics.AxisY.fVelocity		:=    500.0;
+		stHaltDynamics.AxisY.fAcceleration	:=  10000.0;
+		stHaltDynamics.AxisY.fDeceleration	:=  10000.0;
+		stHaltDynamics.AxisY.fJerk			:= 100000.0;
+
+		stHaltDynamics.AxisZ.fVelocity		:=    500.0;
+		stHaltDynamics.AxisZ.fAcceleration	:=  10000.0;
+		stHaltDynamics.AxisZ.fDeceleration	:=  10000.0;
+		stHaltDynamics.AxisZ.fJerk			:= 100000.0;		
+		
+		stHaltDynamics.AxisA.fVelocity		:=     10.0;
+		stHaltDynamics.AxisA.fAcceleration	:=    100.0;
+		stHaltDynamics.AxisA.fDeceleration	:=    100.0;	
+		stHaltDynamics.AxisA.fJerk          :=    100.0;		
+		
+		stHaltDynamics.AxisB.fVelocity		:=     10.0;
+		stHaltDynamics.AxisB.fAcceleration	:=    100.0;
+		stHaltDynamics.AxisB.fDeceleration	:=    100.0;	
+		stHaltDynamics.AxisB.fJerk          :=    100.0;			
+		
+		stHaltDynamics.AxisC.fVelocity		:=     36.0;
+		stHaltDynamics.AxisC.fAcceleration	:=    360.0;
+		stHaltDynamics.AxisC.fDeceleration	:=    360.0;	
+		stHaltDynamics.AxisC.fJerk          :=    360.0;
+		
+		FOR idx:=1 TO g_nMoverCount DO
+			ipMoverApplication[idx].std.P_HaltDynamics := stHaltDynamics;
+		END_FOR
+		
+		nStartupSequence := 100;
+
+
+	100: // Start-Up Done!
+		ipVisuMessage.SetInfoMessage('START-UP finished', 'Startup', 0);				
+		Startup := TRUE;
+		
+END_CASE
+
+
+ipVisuMessage.StateUpdate(nStartupSequence, 'Startup');
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="std" Id="{96e02249-3848-4d5c-8c92-2fb62c3e8511}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY std : I_MotionSystem]]></Declaration>
+      <Get Name="Get" Id="{810f6a8b-f692-463a-b51c-f4fe8936bd21}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF ipMotionSystem <> 0 THEN
+	std := ipMotionSystem;	
+END_IF
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{138a43ae-42a5-423b-8f0d-9576c9bba5bb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ipMotionSystem := std;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="FB_MotionSystem">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.Aborting">
+      <LineId Id="872" Count="5" />
+      <LineId Id="1038" Count="8" />
+      <LineId Id="1053" Count="1" />
+      <LineId Id="879" Count="1" />
+      <LineId Id="1052" Count="0" />
+      <LineId Id="881" Count="1" />
+      <LineId Id="1056" Count="0" />
+      <LineId Id="883" Count="10" />
+      <LineId Id="1086" Count="1" />
+      <LineId Id="1089" Count="1" />
+      <LineId Id="1088" Count="0" />
+      <LineId Id="894" Count="4" />
+      <LineId Id="1065" Count="0" />
+      <LineId Id="899" Count="15" />
+      <LineId Id="1066" Count="0" />
+      <LineId Id="915" Count="13" />
+      <LineId Id="1057" Count="0" />
+      <LineId Id="929" Count="4" />
+      <LineId Id="1067" Count="0" />
+      <LineId Id="934" Count="10" />
+      <LineId Id="1058" Count="0" />
+      <LineId Id="945" Count="4" />
+      <LineId Id="1068" Count="0" />
+      <LineId Id="950" Count="10" />
+      <LineId Id="1059" Count="0" />
+      <LineId Id="961" Count="4" />
+      <LineId Id="1069" Count="0" />
+      <LineId Id="966" Count="1" />
+      <LineId Id="1032" Count="0" />
+      <LineId Id="969" Count="7" />
+      <LineId Id="1060" Count="0" />
+      <LineId Id="977" Count="4" />
+      <LineId Id="1070" Count="0" />
+      <LineId Id="982" Count="9" />
+      <LineId Id="1061" Count="0" />
+      <LineId Id="992" Count="1" />
+      <LineId Id="995" Count="0" />
+      <LineId Id="1136" Count="1" />
+      <LineId Id="1122" Count="0" />
+      <LineId Id="998" Count="0" />
+      <LineId Id="1063" Count="1" />
+      <LineId Id="999" Count="4" />
+      <LineId Id="1062" Count="0" />
+      <LineId Id="1138" Count="0" />
+      <LineId Id="1007" Count="0" />
+      <LineId Id="1077" Count="1" />
+      <LineId Id="1076" Count="0" />
+      <LineId Id="1008" Count="11" />
+      <LineId Id="164" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.Cycle">
+      <LineId Id="100" Count="0" />
+      <LineId Id="70" Count="1" />
+      <LineId Id="62" Count="1" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="17" Count="1" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="46" Count="3" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.Execute">
+      <LineId Id="76" Count="4" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="81" Count="16" />
+      <LineId Id="105" Count="3" />
+      <LineId Id="99" Count="3" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.MoverPreparation">
+      <LineId Id="3605" Count="3" />
+      <LineId Id="3603" Count="1" />
+      <LineId Id="3770" Count="0" />
+      <LineId Id="2981" Count="78" />
+      <LineId Id="3394" Count="0" />
+      <LineId Id="3060" Count="2" />
+      <LineId Id="3395" Count="0" />
+      <LineId Id="3063" Count="102" />
+      <LineId Id="3463" Count="0" />
+      <LineId Id="3166" Count="4" />
+      <LineId Id="3172" Count="1" />
+      <LineId Id="3464" Count="0" />
+      <LineId Id="3174" Count="1" />
+      <LineId Id="3383" Count="0" />
+      <LineId Id="3387" Count="1" />
+      <LineId Id="3386" Count="0" />
+      <LineId Id="3384" Count="0" />
+      <LineId Id="3391" Count="2" />
+      <LineId Id="3176" Count="3" />
+      <LineId Id="3696" Count="1" />
+      <LineId Id="3699" Count="0" />
+      <LineId Id="3690" Count="0" />
+      <LineId Id="3682" Count="1" />
+      <LineId Id="3687" Count="2" />
+      <LineId Id="3684" Count="1" />
+      <LineId Id="3677" Count="0" />
+      <LineId Id="3180" Count="9" />
+      <LineId Id="3693" Count="2" />
+      <LineId Id="3190" Count="0" />
+      <LineId Id="3363" Count="1" />
+      <LineId Id="3379" Count="0" />
+      <LineId Id="3376" Count="2" />
+      <LineId Id="3374" Count="0" />
+      <LineId Id="3380" Count="0" />
+      <LineId Id="3375" Count="0" />
+      <LineId Id="3370" Count="0" />
+      <LineId Id="3191" Count="0" />
+      <LineId Id="3381" Count="0" />
+      <LineId Id="3192" Count="10" />
+      <LineId Id="3382" Count="0" />
+      <LineId Id="3203" Count="0" />
+      <LineId Id="3532" Count="0" />
+      <LineId Id="3205" Count="40" />
+      <LineId Id="3361" Count="1" />
+      <LineId Id="3248" Count="109" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.MoverRecovery">
+      <LineId Id="6" Count="1" />
+      <LineId Id="1343" Count="0" />
+      <LineId Id="8" Count="6" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="1200" Count="0" />
+      <LineId Id="1099" Count="4" />
+      <LineId Id="1631" Count="0" />
+      <LineId Id="1630" Count="0" />
+      <LineId Id="1104" Count="39" />
+      <LineId Id="1632" Count="0" />
+      <LineId Id="1144" Count="42" />
+      <LineId Id="594" Count="0" />
+      <LineId Id="596" Count="6" />
+      <LineId Id="1633" Count="1" />
+      <LineId Id="603" Count="60" />
+      <LineId Id="1635" Count="0" />
+      <LineId Id="664" Count="65" />
+      <LineId Id="1636" Count="1" />
+      <LineId Id="730" Count="188" />
+      <LineId Id="1487" Count="0" />
+      <LineId Id="922" Count="18" />
+      <LineId Id="1638" Count="1" />
+      <LineId Id="941" Count="5" />
+      <LineId Id="1783" Count="0" />
+      <LineId Id="947" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.P_AbortingSequence.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.P_Alarm.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.P_ExecutingSequence.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.P_MoverError.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.P_MoverError.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.P_ResettingSequence.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.P_StartingSequence.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.P_StartupSequence.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.Prepare">
+      <LineId Id="3940" Count="5" />
+      <LineId Id="3947" Count="2" />
+      <LineId Id="3954" Count="5" />
+      <LineId Id="4155" Count="0" />
+      <LineId Id="3960" Count="10" />
+      <LineId Id="4162" Count="0" />
+      <LineId Id="3971" Count="3" />
+      <LineId Id="4156" Count="0" />
+      <LineId Id="3975" Count="10" />
+      <LineId Id="4163" Count="0" />
+      <LineId Id="3986" Count="3" />
+      <LineId Id="4157" Count="0" />
+      <LineId Id="3990" Count="11" />
+      <LineId Id="4164" Count="0" />
+      <LineId Id="4002" Count="3" />
+      <LineId Id="4158" Count="0" />
+      <LineId Id="4006" Count="10" />
+      <LineId Id="4165" Count="0" />
+      <LineId Id="4017" Count="7" />
+      <LineId Id="4159" Count="0" />
+      <LineId Id="4025" Count="17" />
+      <LineId Id="4196" Count="0" />
+      <LineId Id="4193" Count="2" />
+      <LineId Id="4043" Count="8" />
+      <LineId Id="4160" Count="0" />
+      <LineId Id="4052" Count="12" />
+      <LineId Id="4167" Count="0" />
+      <LineId Id="4166" Count="0" />
+      <LineId Id="4065" Count="4" />
+      <LineId Id="4161" Count="0" />
+      <LineId Id="4070" Count="10" />
+      <LineId Id="4168" Count="0" />
+      <LineId Id="4081" Count="0" />
+      <LineId Id="4192" Count="0" />
+      <LineId Id="4082" Count="1" />
+      <LineId Id="4085" Count="16" />
+      <LineId Id="4169" Count="0" />
+      <LineId Id="4102" Count="30" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.Reset">
+      <LineId Id="12" Count="1" />
+      <LineId Id="10" Count="1" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.Resetting">
+      <LineId Id="583" Count="10" />
+      <LineId Id="726" Count="0" />
+      <LineId Id="594" Count="10" />
+      <LineId Id="731" Count="0" />
+      <LineId Id="605" Count="4" />
+      <LineId Id="727" Count="0" />
+      <LineId Id="610" Count="10" />
+      <LineId Id="732" Count="0" />
+      <LineId Id="621" Count="4" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="626" Count="7" />
+      <LineId Id="705" Count="0" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="638" Count="1" />
+      <LineId Id="729" Count="1" />
+      <LineId Id="640" Count="34" />
+      <LineId Id="400" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.Startup">
+      <LineId Id="942" Count="1" />
+      <LineId Id="734" Count="2" />
+      <LineId Id="924" Count="0" />
+      <LineId Id="926" Count="1" />
+      <LineId Id="925" Count="0" />
+      <LineId Id="923" Count="0" />
+      <LineId Id="928" Count="0" />
+      <LineId Id="899" Count="0" />
+      <LineId Id="906" Count="0" />
+      <LineId Id="904" Count="0" />
+      <LineId Id="921" Count="1" />
+      <LineId Id="905" Count="0" />
+      <LineId Id="900" Count="1" />
+      <LineId Id="740" Count="7" />
+      <LineId Id="929" Count="0" />
+      <LineId Id="935" Count="1" />
+      <LineId Id="930" Count="0" />
+      <LineId Id="748" Count="4" />
+      <LineId Id="754" Count="4" />
+      <LineId Id="884" Count="0" />
+      <LineId Id="760" Count="9" />
+      <LineId Id="937" Count="0" />
+      <LineId Id="940" Count="0" />
+      <LineId Id="931" Count="0" />
+      <LineId Id="770" Count="0" />
+      <LineId Id="772" Count="0" />
+      <LineId Id="775" Count="2" />
+      <LineId Id="851" Count="32" />
+      <LineId Id="796" Count="6" />
+      <LineId Id="804" Count="2" />
+      <LineId Id="941" Count="0" />
+      <LineId Id="807" Count="4" />
+      <LineId Id="813" Count="8" />
+      <LineId Id="320" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.std.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotionSystem.std.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ComIn_ExportStation" Id="{fb89b242-ed00-417e-a233-59a95367b420}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ComIn_ExportStation :
+STRUCT
+	Enable: BOOL;
+	StationName: INT;
+	ControlWord: INT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ProcessTask" Id="{231731b8-73aa-4d9a-85ad-c7ea44ba74e4}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ProcessTask :
+STRUCT
+	CurrentTaskFinished: BOOL;
+	LastTask: UDINT;
+	TaskToProcessed: UDINT;
+	CurrentTask: UDINT;
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

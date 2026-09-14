@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="MAIN" Id="{8db0f090-d0ae-4db8-b9db-ad114473a4f9}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'TcCallAfterOutputUpdate'}
+PROGRAM MAIN
+
+VAR
+	fbXMotionUnit					: FB_MachineModule;
+	fbOperationalControl			: FB_OperationalControl;
+	fbVisStarterKitStateMachine		: FB_VisStarterKitStateMachine;	
+	
+	stVisAlarm						: ST_VisuMessage;	
+
+	nTestCNT	: UINT;
+END_VAR
+	
+
+VAR
+    bCxButtonRingUp 		AT %I* 	: BOOL;
+    bCxButtonRingDown		AT %I*	: BOOL;
+    bCxButtonRingLeft 		AT %I*  : BOOL;
+    bCxButtonRingRight 		AT %I*  : BOOL;
+    bCxButtonRingEnter 		AT %I* 	: BOOL;
+    bCxButtonRingToggle 	AT %I*  : BOOL;
+END_VAR	
+	
+	
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+Cycle();
+
+
+nTestCNT := nTestCNT +1;
+
+]]></ST>
+    </Implementation>
+    <Method Name="Cycle" Id="{c94b07ea-bac6-480b-a356-7c115944db4e}">
+      <Declaration><![CDATA[METHOD Cycle : BOOL
+VAR_INPUT
+END_VAR
+
+
+VAR
+	bExternalMachineStop 	: BOOL;	
+	bHelp01					: BOOL;
+	bHelp02					: BOOL;	
+	bHelp03					: BOOL;
+	bHelp04					: BOOL;	
+	sHelp01					: STRING;
+	nHelp01					: INT;	
+	bResetOC				: BOOL;
+	idx						: UDINT;
+	stPosition				: ST_StationPosition;
+END_VAR
+
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+	// Keeping the motion system alive
+	fbXMotionUnit.Cycle(); 	
+	stVisAlarm := fbXMotionUnit.P_Alarm;								   
+
+	
+	// Exchanging XTags and Commands 
+	XTags.Status := fbXMotionUnit.P_XMotionStatus;			// Getting current status of XMotionUnit for e.g. HMI display	
+	XTags.States := fbXMotionUnit.P_XSequenceStates; 		// Writing current states information into XTags
+	
+	fbXMotionUnit.P_XCommand 	 := XTags.Command;	    								// Writing command from superior unit e.g. HMI
+	fbXMotionUnit.P_ExternelStop := bExternalMachineStop;								// External exception e.g. signal from E-Stop	
+	fbXMotionUnit.P_ErrorQuit    := fbVisStarterKitStateMachine.P_OCQuitButtonState;	// Error-Quit from external button
+	
+	
+	// Operational Control 		
+	IF XTags.Status = E_XMotion_Status.Aborting 
+	OR XTags.Status = E_XMotion_Status.Aborted
+	THEN
+		bResetOC := TRUE;
+	ELSE
+		bResetOC := FALSE;
+	END_IF
+	fbOperationalControl.P_ProcessFeedback := fbXMotionUnit.P_ProcessFeedback;
+	
+	fbOperationalControl(	   bStartCommand := fbVisStarterKitStateMachine.P_OCStartButtonState OR bCxButtonRingUp, 
+								bStopCommand := fbVisStarterKitStateMachine.P_OCStopButtonState OR bCxButtonRingDown, 
+								bQuitCommand := fbVisStarterKitStateMachine.P_OCQuitButtonState OR bCxButtonRingEnter,
+						   bExceptionCommand := fbVisStarterKitStateMachine.P_OCEStopButtonState,
+							   bResetCommand := bResetOC,
+								  bStartLamp => bHelp01,
+								   bStopLamp => bHelp02,
+								   bQuitLamp => bHelp03,
+								  bEStopLamp => bHelp04,
+									bStopped => ,
+								   bStarting => , 
+									bRunning => , 
+									 sResult => sHelp01,
+									 nResult => nHelp01,
+									   XTags := XTags );
+		
+	
+								fbVisStarterKitStateMachine.P_OCStartLampState 		:= bHelp01;
+								fbVisStarterKitStateMachine.P_OCStopLampState  		:= bHelp02;
+								fbVisStarterKitStateMachine.P_OCQuitLampState  		:= bHelp03;
+								fbVisStarterKitStateMachine.P_OCEStopLampState  	:= bHelp04;
+								fbVisStarterKitStateMachine.P_OCResultTextDisplay 	:= sHelp01;
+								fbVisStarterKitStateMachine.P_OCResult 				:= nHelp01;							  
+	
+								
+	// Visu Statemachine									  
+	fbVisStarterKitStateMachine( iq_stVisControl := stVisControl,
+										iq_XTags := XTags );
+	
+	
+	// Collecting station data for visulization
+	FOR idx:=1 TO gc_NumberStations DO
+		IF ipStation[idx] <> 0 THEN
+			stPosition := ipStation[idx].P_Position;
+			g_VisStationData[idx].bInit       := stPosition.bInit;
+			g_VisStationData[idx].fPosition_X := stPosition.fPosition_X;
+			g_VisStationData[idx].fPosition_Y := stPosition.fPosition_Y;
+		END_IF
+	END_FOR
+		
+		
+		
+
+	
+	
+	
+	
+	
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="MAIN">
+      <LineId Id="1388" Count="0" />
+      <LineId Id="1360" Count="0" />
+      <LineId Id="1189" Count="0" />
+      <LineId Id="1326" Count="1" />
+      <LineId Id="1325" Count="0" />
+      <LineId Id="1417" Count="0" />
+      <LineId Id="1258" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.Cycle">
+      <LineId Id="247" Count="3" />
+      <LineId Id="344" Count="0" />
+      <LineId Id="251" Count="10" />
+      <LineId Id="264" Count="43" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="308" Count="5" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="196" Count="5" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

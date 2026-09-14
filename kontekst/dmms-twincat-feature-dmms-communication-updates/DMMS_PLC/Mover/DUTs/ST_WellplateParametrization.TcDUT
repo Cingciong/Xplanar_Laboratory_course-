@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_WellplateParametrization" Id="{c4d94e89-1591-40cb-9db8-8f7268cc3034}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_WellplateParametrization :
+STRUCT
+	Row: INT;
+	Columns:INT;
+	DistanceBetweenHoles_X:REAL;
+	DistanceBetweenHoles_Y:REAL;
+	OffsetFirstHoles_X:REAL; 
+	OffsetFirstHoles_Y:REAL; 
+ 
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

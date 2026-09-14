@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <GVL Name="Debug" Id="{edbc2757-db55-4a3c-881b-283dd95aa9d9}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	IBN_bool: ARRAY[1..16] OF BOOL;
+	IBN_int: ARRAY[1..16] OF INT;
+	IBN_dint: ARRAY[1..16] OF DINT;
+	IBN_udint: ARRAY[1..16] OF UDINT;
+	IBN_Timer: ARRAY[1..16] OF TON; 
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

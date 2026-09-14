@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_Com_ExportMover" Id="{feccbb94-f273-4c0c-961c-c02369d5eed0}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_Com_ExportMover :
+STRUCT
+		IN: 			ST_ComIn_ExportMover;
+		OUT:			ST_ComOut_ExportMover;
+		ProcessData:	ST_ProductData;
+		ManualMovements:ST_ManualMovements;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

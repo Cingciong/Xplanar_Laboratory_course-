@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <Itf Name="I_MoverApplication" Id="{2d233772-f0bf-4695-a678-fe38f4e7c1c5}">
+    <Declaration><![CDATA[INTERFACE I_MoverApplication
+]]></Declaration>
+    <Method Name="Cycle" Id="{f43fd93a-e2cb-47c2-a3de-21bdc47238e4}">
+      <Declaration><![CDATA[METHOD Cycle]]></Declaration>
+    </Method>
+    <Method Name="ManualMovement" Id="{e629a72f-6c66-44a2-884a-c1554dec6d7f}">
+      <Declaration><![CDATA[METHOD ManualMovement : BOOL
+VAR_INPUT
+	bReset: bool;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="P_ControlData" Id="{01a4b4bb-8db9-459c-8809-c35c4a0f1e40}">
+      <Declaration><![CDATA[PROPERTY P_ControlData : Reference to ST_ControlData]]></Declaration>
+      <Get Name="Get" Id="{7659d63f-140d-42cb-b882-8510c86f7c08}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{1dbf80a9-4c03-4ee2-8370-492112e80615}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="P_MoverConfiguration" Id="{60d582db-9baa-4bfc-8270-f9cf8cb176fa}">
+      <Declaration><![CDATA[PROPERTY P_MoverConfiguration : Reference to  ST_MoverConfiguration]]></Declaration>
+      <Get Name="Get" Id="{73e0d4a2-80f9-4b6a-a644-f94302571f2d}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{8b4f0813-9bd6-4db7-9990-17d16e50ad93}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="P_MoverID" Id="{c5ffd2eb-82d6-4892-91a9-ea8dd4064515}">
+      <Declaration><![CDATA[PROPERTY P_MoverID : STRING]]></Declaration>
+      <Get Name="Get" Id="{bc0587d8-5f90-4c03-8c17-ab2ac279b85a}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{18363c60-76de-4add-a7e4-6f681968cf33}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="P_MoverIndex" Id="{4f8c3075-92e1-4b10-bfa6-f4a114e4b7a1}">
+      <Declaration><![CDATA[PROPERTY P_MoverIndex : INT]]></Declaration>
+      <Get Name="Get" Id="{3b99cd83-19d1-4af4-ab9f-5eff4d1efcb8}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{abd560e0-fa77-46be-91e3-66acff6c720a}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="P_ProcessTask" Id="{befe07a7-fb76-4afd-9c8e-3484becf5edb}">
+      <Declaration><![CDATA[PROPERTY P_ProcessTask :  ST_ProcessTask]]></Declaration>
+      <Get Name="Get" Id="{3ccde889-082f-4385-aa30-16c2bae33964}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{44688895-afb1-467b-a6a0-b3129d10f018}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="P_ProductData" Id="{3b03a1c6-796a-4d01-b444-d57076cdc9eb}">
+      <Declaration><![CDATA[PROPERTY P_ProductData : Reference to ST_ProductData]]></Declaration>
+      <Get Name="Get" Id="{16df046f-9c26-449c-8309-dd706c232b69}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{67002266-736a-447e-88cf-2b0fd2186e1e}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="P_TrackId" Id="{1e1e122f-b4ed-43b3-a453-0a593fc24b6d}">
+      <Declaration><![CDATA[PROPERTY P_TrackId : UDINT]]></Declaration>
+      <Get Name="Get" Id="{01e8f662-4981-4055-8180-6caf5d9fb045}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{cc6df96b-abb1-481a-884a-ad88396cdcc5}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="std" Id="{05327cc5-17a4-457d-b31f-c5ae95d8b6e6}">
+      <Declaration><![CDATA[PROPERTY std : I_XPlanarMoverStandard]]></Declaration>
+      <Get Name="Get" Id="{45bcb9f9-0a7a-4b76-8bdf-8c82272a7da1}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{e2f1fc17-80b0-4048-8c41-007948767f1a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+      </Set>
+    </Property>
+  </Itf>
+</TcPlcObject>

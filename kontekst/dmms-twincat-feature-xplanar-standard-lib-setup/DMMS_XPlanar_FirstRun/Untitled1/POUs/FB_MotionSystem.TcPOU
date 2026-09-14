@@ -1,0 +1,576 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_MotionSystem" Id="{abde6b6f-538b-47ff-9f31-e84c44f45dc4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MotionSystem
+VAR
+	fbXPlanarSystem : FB_XPlanarSystem;
+	fbXPlanarMover  : ARRAY[1..maxNumMover]   OF FB_XPlanarMoverStandard;
+	fbTrackStandard : ARRAY[1..maxTrackCount] OF FB_TrackStandard;
+
+	nStartupSequence   : UDINT;
+	nStartingSequence  : UDINT;
+	nExecutingSequence : UDINT;
+	nRecoverySequence : UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Cycle" Id="{268fe22f-b914-4a95-8967-0c87a6446373}">
+      <Declaration><![CDATA[METHOD Cycle
+VAR
+    i : UDINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Cyclic XPlanar objects update
+fbXPlanarSystem.Cycle();
+
+FOR i := 1 TO moverCount DO
+	fbXPlanarMover[i].Cycle();
+END_FOR
+
+FOR i := 1 TO maxTrackCount DO
+	fbTrackStandard[i].Cycle();
+END_FOR]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Execute" Id="{1496d55f-fa8d-477f-9931-67d8be42e5c4}">
+      <Declaration><![CDATA[METHOD Execute : BOOL
+VAR_INPUT
+	bReset : BOOL;
+END_VAR
+VAR
+	i : UDINT;
+END_VAR
+VAR_INST
+	targetPos     : ARRAY[1..maxNumMover] OF PositionXYC;
+	homePos       : ARRAY[1..maxNumMover] OF PositionXYC;
+	bHomeCaptured : BOOL;
+	bMoversInPos  : BOOL;
+	bMoverError   : BOOL;
+
+	// diagnostics — per mover
+	aErrorID      : ARRAY[1..maxNumMover] OF UDINT;
+	aCmdMode      : ARRAY[1..maxNumMover] OF MC_PLANAR_MOVER_COMMAND_MODE;
+	aState        : ARRAY[1..maxNumMover] OF MC_PLANAR_STATE;
+	aErrObjType   : ARRAY[1..maxNumMover] OF UDINT;   // what blocked: environment / mover
+	aErrObjID     : ARRAY[1..maxNumMover] OF UDINT;   // which object exactly
+
+	// on-track movement
+	fTrackLen     : LREAL;
+	aTrackErrID   : ARRAY[1..maxNumMover] OF UDINT;
+	nTargetTrack  : UDINT;   // biezacy track w petli sieci (1->2->3->1)
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	Execute := FALSE;
+	nExecutingSequence := 0;
+	bHomeCaptured := FALSE;
+END_IF
+
+CASE nExecutingSequence OF
+	0: // Init: branch on command mode
+		bMoversInPos := FALSE;
+		bMoverError := FALSE;
+
+		FOR i := 1 TO moverCount DO
+			aCmdMode[i] := fbXPlanarMover[i].P_CommandMode;
+			aState[i]   := fbXPlanarMover[i].P_State;
+		END_FOR
+
+		IF NOT bReset THEN
+			IF fbXPlanarMover[1].P_CommandMode = MC_PLANAR_MOVER_COMMAND_MODE.FreeMovement THEN
+				IF NOT bHomeCaptured THEN
+					FOR i := 1 TO moverCount DO
+						homePos[i].SetValuesXYC(
+							fbXPlanarMover[i].P_ActPosition.x,
+							fbXPlanarMover[i].P_ActPosition.y,
+							0);
+					END_FOR
+					bHomeCaptured := TRUE;
+				END_IF
+				nExecutingSequence := 10;
+			ELSIF fbXPlanarMover[1].P_CommandMode = MC_PLANAR_MOVER_COMMAND_MODE.OnTrack THEN
+				nTargetTrack := 1;
+				nExecutingSequence := 50;
+			END_IF
+		END_IF
+
+	// ------------ A: FreeMovement (bez tracka) ------------
+
+	10: // Command move: home + 50 mm in Y
+		FOR i := 1 TO moverCount DO
+			targetPos[i].SetValuesXYC(homePos[i].x, homePos[i].y + 50.0, 0);
+			fbXPlanarMover[i].MoveToPosition('Move +Y', targetPos[i], 200, 1000, 1000, 10000);
+		END_FOR
+		nExecutingSequence := 11;
+
+	11: // Wait for all movers to reach target
+		bMoversInPos := TRUE;
+		bMoverError := FALSE;
+		FOR i := 1 TO moverCount DO
+			aErrorID[i]    := fbXPlanarMover[i].P_MoveToPosition.ErrorID;
+			aCmdMode[i]    := fbXPlanarMover[i].P_CommandMode;
+			aState[i]      := fbXPlanarMover[i].P_State;
+			aErrObjType[i] := fbXPlanarMover[i].P_MoveToPosition.stInfo.nObjectType;
+			aErrObjID[i]   := fbXPlanarMover[i].P_MoveToPosition.stInfo.nObjectID;
+
+			bMoversInPos := bMoversInPos AND fbXPlanarMover[i].P_MoveToPosition.Done;
+			IF fbXPlanarMover[i].P_MoveToPosition.Error THEN
+				bMoverError := TRUE;
+			END_IF
+		END_FOR
+		IF bMoversInPos THEN
+			nExecutingSequence := 20;
+		ELSIF bMoverError THEN
+			nExecutingSequence := 15;
+		END_IF
+
+	15: // Move #1 FAILED — inspect aErrorID / aErrObjType / aErrObjID / homePos
+		;
+
+	20: // Command move: return to home position
+		FOR i := 1 TO moverCount DO
+			targetPos[i].SetValuesXYC(homePos[i].x, homePos[i].y, 0);
+			fbXPlanarMover[i].MoveToPosition('Move home', targetPos[i], 200, 1000, 1000, 10000);
+		END_FOR
+		nExecutingSequence := 21;
+
+	21: // Wait for all movers to reach target
+		bMoversInPos := TRUE;
+		bMoverError := FALSE;
+		FOR i := 1 TO moverCount DO
+			aErrorID[i]    := fbXPlanarMover[i].P_MoveToPosition.ErrorID;
+			aCmdMode[i]    := fbXPlanarMover[i].P_CommandMode;
+			aState[i]      := fbXPlanarMover[i].P_State;
+			aErrObjType[i] := fbXPlanarMover[i].P_MoveToPosition.stInfo.nObjectType;
+			aErrObjID[i]   := fbXPlanarMover[i].P_MoveToPosition.stInfo.nObjectID;
+
+			bMoversInPos := bMoversInPos AND fbXPlanarMover[i].P_MoveToPosition.Done;
+			IF fbXPlanarMover[i].P_MoveToPosition.Error THEN
+				bMoverError := TRUE;
+			END_IF
+		END_FOR
+		IF bMoversInPos THEN
+			nExecutingSequence := 30;
+		ELSIF bMoverError THEN
+			nExecutingSequence := 25;
+		END_IF
+
+	25: // Move #2 FAILED — inspect aErrorID / aErrObjType / aErrObjID / homePos
+		;
+
+	30: // Cycle complete: loop back for continuous back-and-forth motion
+		nExecutingSequence := 10;
+
+	// ------------ B: OnTrack (po MoverRecovery) ------------
+
+	50: // Komenda: oba movery na koniec biezacego tracka w petli sieci
+		fTrackLen := fbTrackStandard[nTargetTrack].GetLength();
+		FOR i := 1 TO moverCount DO
+			fbXPlanarMover[i].MoveOnTrack('Around loop', fbTrackStandard[nTargetTrack],
+				fTrackLen, 250, 1250, 12500, 230, MC_DIRECTION.mcDirectionPositive);
+		END_FOR
+		nExecutingSequence := 51;
+
+	51: // Czekaj: przedni Done, tylny w kolejce -> nastepny track
+		bMoversInPos := TRUE;
+		bMoverError := FALSE;
+		FOR i := 1 TO moverCount DO
+			aTrackErrID[i] := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+			bMoversInPos := bMoversInPos AND
+				(fbXPlanarMover[i].P_MoveOnTrack.Done OR
+				 (fbXPlanarMover[i].P_MoveOnTrack.Active AND fbXPlanarMover[i].P_IsQueuing));
+			bMoverError := bMoverError OR fbXPlanarMover[i].P_MoveOnTrack.Error;
+		END_FOR
+		IF bMoverError THEN
+			nExecutingSequence := 55;
+		ELSIF bMoversInPos THEN
+			// nastepny track w petli: 1 -> 2 -> 3 -> 1
+			IF nTargetTrack >= maxTrackCount THEN
+				nTargetTrack := 1;
+			ELSE
+				nTargetTrack := nTargetTrack + 1;
+			END_IF
+			nExecutingSequence := 50;
+		END_IF
+
+	55: // MoveOnTrack FAILED — inspect aTrackErrID / nTargetTrack
+		;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoverRecovery" Id="{b3f3a2eb-0b10-4fb5-92ce-9d16feacf67c}">
+      <Declaration><![CDATA[METHOD MoverRecovery : BOOL
+VAR_INPUT
+	bReset : BOOL;
+END_VAR
+VAR
+	i : UDINT;
+	t : UDINT;
+END_VAR
+VAR_INST
+	stOptionsJoinTrack : ST_JoinTrackOptions;
+	bMoversJoined : BOOL;
+	bMoverError   : BOOL;
+	aJoinErrorID  : ARRAY[1..maxNumMover] OF UDINT;   // diagnostics
+
+	// wybor najblizszego tracka dla kazdego movera
+	nTargetTrack : ARRAY[1..maxNumMover] OF UDINT;
+	fBestDist    : LREAL;
+	fDist        : LREAL;
+	fPosOnTrack  : LREAL;
+	moverXY      : PositionXYC;
+	xyOnTrack    : PositionXYC;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	MoverRecovery := FALSE;
+	nRecoverySequence := 0;
+END_IF
+
+CASE nRecoverySequence OF
+	0: // Init
+		bMoversJoined := FALSE;
+		bMoverError := FALSE;
+		IF NOT bReset THEN
+			nRecoverySequence := 10;
+		END_IF
+
+	10: // Kazdy mover -> najblizszy track, potem JoinTrack
+		FOR i := 1 TO moverCount DO
+			fBestDist := 1.0E9;
+			nTargetTrack[i] := 1;
+			moverXY.SetValuesXYC(fbXPlanarMover[i].P_ActPosition.x, fbXPlanarMover[i].P_ActPosition.y, 0);
+
+			FOR t := 1 TO maxTrackCount DO
+				fPosOnTrack := fbTrackStandard[t].GetTrackPositionAt(moverXY);      // najblizszy punkt tracka t (1D)
+				fbTrackStandard[t].GetMoverPositionAt(fPosOnTrack, xyOnTrack);      // jego XY
+				fDist := SQRT(EXPT(moverXY.x - xyOnTrack.x, 2) + EXPT(moverXY.y - xyOnTrack.y, 2));
+				IF fDist < fBestDist THEN
+					fBestDist := fDist;
+					nTargetTrack[i] := t;
+				END_IF
+			END_FOR
+		END_FOR
+
+		stOptionsJoinTrack.useOrientation := TRUE;
+		FOR i := 1 TO moverCount DO
+			fbXPlanarMover[i].JoinTrack('Join nearest', fbTrackStandard[nTargetTrack[i]], 250, 1250, 12500, stOptionsJoinTrack);
+		END_FOR
+		nRecoverySequence := 11;
+
+	11: // Joining tracks
+		bMoversJoined := TRUE;
+		bMoverError := FALSE;
+		FOR i := 1 TO moverCount DO
+			aJoinErrorID[i] := fbXPlanarMover[i].P_JoinTrack.ErrorID;
+			bMoversJoined := bMoversJoined AND fbXPlanarMover[i].P_JoinTrack.Done;
+			bMoverError := bMoverError OR fbXPlanarMover[i].P_JoinTrack.Error;
+		END_FOR
+		IF bMoversJoined THEN
+			nRecoverySequence := 20;
+		ELSIF bMoverError THEN
+			nRecoverySequence := 15;
+		END_IF
+
+	15: // JoinTrack FAILED - inspect aJoinErrorID
+		;
+
+	20: // Done
+		MoverRecovery := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Starting" Id="{f59f7d91-d449-4346-9fd5-b71952c2bfb9}">
+      <Declaration><![CDATA[METHOD Starting : BOOL
+VAR_INPUT
+	bReset : BOOL;
+END_VAR
+VAR
+	i : UDINT;
+END_VAR
+VAR_INST
+	// --- diagnostyka bledu enable ---
+	nErrorID       : UDINT;    // surowy kod bledu
+	sErrorHex      : STRING;   // ten sam kod w HEX (do szukania w InfoSys)
+	nErrObjType    : UDINT;    // typ obiektu, ktory zawinil
+	nErrObjID      : UDINT;    // ktory konkretnie (np. mover 2)
+	stStartCheck   : ARRAY[1..maxNumMover] OF ST_CheckStartConditionFeedback;  // czemu pozycja zla
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	Starting := FALSE;
+	nStartingSequence := 0;
+END_IF
+
+CASE nStartingSequence OF
+	0: // Init
+		Execute(bReset := TRUE);
+		MoverRecovery(bReset := TRUE);
+		IF NOT bReset THEN
+			nStartingSequence := 10;
+		END_IF
+
+	10: // Enable collision avoidance group
+		IF fbXPlanarSystem.EnableGroup() THEN
+			nStartingSequence := 11;
+		END_IF
+
+	11: // Wait for group enabled
+		IF fbXPlanarSystem.P_EnableGroup.Done THEN
+			nStartingSequence := 20;
+		ELSIF fbXPlanarSystem.P_EnableGroup.Error THEN
+			nErrorID := fbXPlanarSystem.P_EnableGroup.ErrorID;
+			nStartingSequence := 15;
+		END_IF
+
+	15: // EnableGroup FAILED
+		;
+
+	20: // Add environment (surface boundaries) to group
+		IF fbXPlanarSystem.AddEnvironmentToGroup() THEN
+			nStartingSequence := 21;
+		END_IF
+
+	21: // Wait for environment added
+		IF fbXPlanarSystem.P_AddEnviromentToGroup.Done THEN
+			nStartingSequence := 30;
+		ELSIF fbXPlanarSystem.P_AddEnviromentToGroup.Error THEN
+			nErrorID := fbXPlanarSystem.P_AddEnviromentToGroup.ErrorID;
+			nStartingSequence := 25;
+		END_IF
+
+	25: // AddEnvironmentToGroup FAILED
+		;
+
+	30: // Enable tracks
+		IF fbXPlanarSystem.EnableTracks() THEN
+			nStartingSequence := 31;
+		END_IF
+
+	31: // Wait for tracks enabled
+		IF fbXPlanarSystem.P_EnableTracks.Done THEN
+			nStartingSequence := 40;
+		ELSIF fbXPlanarSystem.P_EnableTracks.Error THEN
+			nErrorID := fbXPlanarSystem.P_EnableTracks.ErrorID;
+			nStartingSequence := 35;
+		END_IF
+
+	35: // EnableTracks FAILED
+		;
+
+	40: // Add tracks to collision avoidance group
+		IF fbXPlanarSystem.AddTracksToGroup() THEN
+			nStartingSequence := 41;
+		END_IF
+
+	41: // Wait for tracks added
+		IF fbXPlanarSystem.P_AddTracksToGroup.Done THEN
+			nStartingSequence := 50;
+		ELSIF fbXPlanarSystem.P_AddTracksToGroup.Error THEN
+			nErrorID := fbXPlanarSystem.P_AddTracksToGroup.ErrorID;
+			nStartingSequence := 45;
+		END_IF
+
+	45: // AddTracksToGroup FAILED
+		;
+
+	50: // Reset movers (clears leftover state — keeps restart working)
+		IF fbXPlanarSystem.ResetMovers() THEN
+			nStartingSequence := 51;
+		END_IF
+
+	51: // Wait for reset
+		IF fbXPlanarSystem.P_ResetMovers.Done THEN
+			nStartingSequence := 52;
+		ELSIF fbXPlanarSystem.P_ResetMovers.Error THEN
+			nErrorID := fbXPlanarSystem.P_ResetMovers.ErrorID;
+			nStartingSequence := 55;
+		END_IF
+
+	52: // Enable movers
+		IF fbXPlanarSystem.EnableMovers() THEN
+			nStartingSequence := 53;
+		END_IF
+
+	53: // Wait for movers enabled
+		IF fbXPlanarSystem.P_EnableMovers.Done THEN
+			nStartingSequence := 60;
+		ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+			nErrorID  := fbXPlanarSystem.P_EnableMovers.ErrorID;
+			nErrObjID := fbXPlanarSystem.P_EnableMovers.stInfo.nObjectID;
+			nStartingSequence := 55;
+		END_IF
+
+	55: // Mover reset/enable FAILED
+		;
+
+	60: // Add movers to collision avoidance group
+		IF fbXPlanarSystem.AddMoversToGroup() THEN
+			nStartingSequence := 61;
+		END_IF
+
+	61: // Wait for movers added to group
+		IF fbXPlanarSystem.P_AddMoversToGroup.Done THEN
+			nStartingSequence := 70;
+		ELSIF fbXPlanarSystem.P_AddMoversToGroup.Error THEN
+			nErrorID  := fbXPlanarSystem.P_AddMoversToGroup.ErrorID;
+			nErrObjID := fbXPlanarSystem.P_AddMoversToGroup.stInfo.nObjectID;
+			nStartingSequence := 65;
+		END_IF
+
+	65: // AddMoversToGroup FAILED — nErrObjID shows which mover
+		;
+
+	70: // Homing: movers join the track (physical movement!)
+		IF MoverRecovery(bReset := FALSE) THEN
+			nStartingSequence := 80;
+		END_IF
+
+	80: // Done
+		Starting := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Startup" Id="{8252e625-fcad-434e-bcac-dc951253175d}">
+      <Declaration><![CDATA[METHOD Startup : BOOL
+VAR
+	i : UDINT;
+END_VAR
+VAR_INST
+	aTrackTable     : ARRAY[1..maxTrackCount] OF FB_TrackTable;
+	nTrackIdx       : UDINT;
+
+	nStartFromTrack : UDINT;
+	nEndAtTrack     : UDINT;
+	bCloseLoop      : BOOL;
+
+	// diagnostics
+	nErrorID        : UDINT;
+	sBuildInfo      : STRING;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE nStartupSequence OF
+	0: // Init
+		nStartupSequence := nStartupSequence + 1;
+		IF fbXPlanarSystem.DisableTracks() THEN
+			nStartupSequence := 5;
+		END_IF
+
+	1: // Assign mover references to the system
+		FOR i := 1 TO moverCount DO
+			fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
+		END_FOR
+		nStartupSequence := nStartupSequence + 1;
+
+	2: // Assign track references to the system
+		FOR i := 1 TO maxTrackCount DO
+			fbXPlanarSystem.SetTrackStandard(i, fbTrackStandard[i]);
+		END_FOR
+		nStartupSequence := nStartupSequence + 8;
+
+	5: // Czekaj na wyłączenie tracków
+		IF fbXPlanarSystem.P_DisableTracks.Done THEN
+			nStartupSequence := 1;
+		ELSIF fbXPlanarSystem.P_DisableTracks.Error THEN
+			nErrorID := fbXPlanarSystem.P_DisableTracks.ErrorID;
+			nStartupSequence := 1;   
+		END_IF
+		
+	10: // Build track geometries
+		nTrackIdx := 0;
+		nStartupSequence := nStartupSequence + 1;
+
+	11: // Start with an empty table
+		nTrackIdx := nTrackIdx + 1;
+		IF nTrackIdx > maxTrackCount THEN
+			// All tracks are built
+			nStartupSequence := nStartupSequence + 19;
+		ELSE
+			aTrackTable[nTrackIdx].ClearTrackTable();      // clear PLC-side table
+			fbTrackStandard[nTrackIdx].Clear();            // clear NC-side geometry
+			nStartupSequence := nStartupSequence + 1;
+		END_IF
+
+	12:
+		CASE nTrackIdx OF
+			1:
+				nStartFromTrack := 0;
+				nEndAtTrack     := 0;
+				bCloseLoop      := FALSE;
+				// lewy bok (w gore)
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_Start, E_PointOption.none, 60, 60, 0);
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_End,   E_PointOption.none, 60, 420, 0);
+				// gorny bok (w prawo)
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_Start, E_PointOption.none, 60.1, 420, 0);
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_End,   E_PointOption.none, 660, 420, 0);
+				// prawy bok (w dol, do y=180)
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_Start, E_PointOption.none, 660, 419.9, 0);
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_End,   E_PointOption.none, 660, 180, 0);
+				// wciecie prawe (w lewo, do x=540)
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_Start, E_PointOption.none, 659.9, 180, 0);
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_End,   E_PointOption.none, 540, 180, 0);
+				// krawedz srodkowa (w gore, do y=300)
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_Start, E_PointOption.none, 540, 180.1, 0);
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_End,   E_PointOption.none, 540, 300, 0);
+				// nad dziura srodkowa (w lewo, do x=180)
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_Start, E_PointOption.none, 539.9, 300, 0);
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_End,   E_PointOption.none, 180, 300, 0);
+				// lewa krawedz dziury (w dol, do y=60)
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_Start, E_PointOption.none, 180, 299.9, 0);
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_End,   E_PointOption.none, 180, 60, 0);
+				// dol lewej kolumny (w lewo, domyka do 60,60)
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_Start, E_PointOption.none, 179.9, 60, 0);
+				aTrackTable[nTrackIdx].AddPoint(E_PointType.Line_End,   E_PointOption.none, 60, 60, 0);
+		END_CASE
+		nStartupSequence := nStartupSequence + 1;
+		
+	13: // Set additional design info (track network relations)
+		IF nStartFromTrack > 0 THEN
+			aTrackTable[nTrackIdx].P_StartFromTrack := fbTrackStandard[nStartFromTrack];
+		END_IF
+		IF nEndAtTrack > 0 THEN
+			aTrackTable[nTrackIdx].P_EndAtTrack := fbTrackStandard[nEndAtTrack];
+		END_IF
+		IF bCloseLoop AND nStartFromTrack = 0 AND nEndAtTrack = 0 THEN
+			aTrackTable[nTrackIdx].P_CloseTheLoop := TRUE;
+		END_IF
+		nStartupSequence := nStartupSequence + 1;
+
+	14: // Check track plausibility (detect layout inconsistencies)
+		IF aTrackTable[nTrackIdx].CheckTrackTable() <> 0 THEN
+			IF aTrackTable[nTrackIdx].P_TrackTableCheckResult THEN
+				nStartupSequence := nStartupSequence + 6;   // valid -> 20
+			ELSE
+				nStartupSequence := nStartupSequence + 1;   // invalid -> 15
+			END_IF
+		END_IF
+
+	15: // Geometry INVALID - segments do not connect or are out of range
+		sBuildInfo := aTrackTable[nTrackIdx].P_InfoText;
+		;
+
+	20: // Build track geometry command
+		IF fbTrackStandard[nTrackIdx].BuildTrackExt(aTrackTable[nTrackIdx]) THEN
+			nStartupSequence := nStartupSequence + 1;
+		END_IF
+
+	21: // Building track
+		IF fbTrackStandard[nTrackIdx].P_BuildTrackExt.Done THEN
+			nStartupSequence := nStartupSequence - 10;      // -> 11, next track
+		ELSIF fbTrackStandard[nTrackIdx].P_BuildTrackExt.Error THEN
+			nErrorID   := fbTrackStandard[nTrackIdx].P_BuildTrackExt.ErrorID;
+			sBuildInfo := fbTrackStandard[nTrackIdx].P_BuildTrackExtInfoText;
+			nStartupSequence := nStartupSequence + 4;       // -> 25
+		END_IF
+
+	25: // Build FAILED - nErrorID / sBuildInfo hold the reason
+		;
+
+	30: // Done
+		Startup := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

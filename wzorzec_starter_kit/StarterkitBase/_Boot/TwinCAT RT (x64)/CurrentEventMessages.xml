@@ -1,0 +1,2068 @@
+<?xml version="1.0"?>
+<TcEventSources Version="2">
+	<Translations>
+		<Text TxtId="[Event ID: 0x{0,X}] Activate mover transfer failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Actual position is outside of movement area. Initiating mover stop"/>
+		<Text TxtId="[Event ID: 0x{0,X}] BTN '{1}' was identified multiple times."/>
+		<Text TxtId="[Event ID: 0x{0,X}] C setpoint is unreachable at this position. Initiating mover stop."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Canceled mover transfer because of interrupted DC synchronization."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Canceling Mover transfer not possible. Relevant data is currently exchanged."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Commanded Part OID from NC (0x{1,X}) not found."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Connection has been interrupted"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Coordinated mover communication failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not cancel mover transfer"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not create multicomputing command (HRESULT: 0x{1,X})."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not determine NC cycle time. Initiating mover stop"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not enter movement area"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not finish mover adoption"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not finish mover adoption."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not process all responses ({1} of {2})"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not reach defined start height"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not reserve mover for system transfer."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Could not reset Tile"/>
+		<Text TxtId="[Event ID: 0x{0,X}] DC link voltage of {1} tile(s) is not ok, e.g. tile 0x{2,X}. Coordinated mover communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] DC synchronization interrupted during mover transfer."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Decoding of the message from the mover failed. Mover communication failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Defined external feedback parametrization set could not be found."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Defined parametrization set could not be found. Hence, parameters haven't been changed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Determined mover orientation is uncertain."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Disabling time invalid. Must be between 0.1 s and 4.0 s."/>
+		<Text TxtId="[Event ID: 0x{0,X}] During payload identification process the force or power limits by the tile were exceeded and the result would be meaningless."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Enabling height invalid. Must be between 0.5 mm and 5.0 mm."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Enabling time invalid. Must be between 0.1 s and 4.0 s."/>
+		<Text TxtId="[Event ID: 0x{0,X}] EtherCAT communication is lost. System is shut down."/>
+		<Text TxtId="[Event ID: 0x{0,X}] External feedback deviation too large on axis {1}."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Failed to retrieve external feedback interface. Check the external feedback OID parameter is correct."/>
+		<Text TxtId="[Event ID: 0x{0,X}] FB Inputs have not changed since last cycle."/>
+		<Text TxtId="[Event ID: 0x{0,X}] FB Inputs implausible switch position (expected: {1}, actual: {2})."/>
+		<Text TxtId="[Event ID: 0x{0,X}] FB Inputs were missed for one cycle."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Feedback error"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Finishing mover submission failed"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Hardware error"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Identified BTN '{1}' is not configured."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Implausible mover position. Mover was removed from current movement area."/>
+		<Text TxtId="[Event ID: 0x{0,X}] In TwinCAT Measurement Bode Plot an NC2 axis has been chosen to be measured that was previously not linked in the mover tmc."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Initialization failed"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Invalid basic inertia. Basic inertia is set to standard inertia (plain mover)."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Invalid controller parameters of axis {1}. Controller parameters are set to default."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Invalid external feedback observer parameters of axis {1}. Observer parameters are set to default."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Invalid feedforward parameters of axis {1}. Feedforward parameters are set to default."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Invalid Kalman filter parameters of axis {1}. Kalman filter parameters are set to default."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Invalid mover feedback. Mover was removed from current movement area."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Invalid observer parameters of axis {1}. Observer parameters are set to default."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Invalid payload inertia. Payload inertia is set to zero."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Invalid tile firmware. Firmware version must at least be 4. Communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Maximum force limit parameters are below zero. Parameters stay the same."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Maximum force limit parameters are equal to zero in at least 1 DOF. Parameters stay the same."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Maximum force limit parameters exceed the maximum limit. Parameters stay the same."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Minimum force limit parameters are below zero. Parameters stay the same."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Minimum force limit parameters are equal to zero in at least 1 DOF. Parameters stay the same."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Minimum force limit parameters are greater than the maximum force parameters. Parameters stay the same."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Minimum force limit parameters exceed the maximum limit. Parameters stay the same."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mismatch of Submovers positions."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover 0x{1,X} is not able to identify."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover bumper exceeds the tile area. Mover orientation cannot be determined."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover cannot be reenabled right now because the current NC setpoints are out of range."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover cannot be reset because part does not reset."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover cannot enable because the part and the tiles could not be enabled. Switching into error state."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover communication failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover communication not possible. Either no ID bumper is configured or the configured mover type does not allow communication."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover communication of mover 0x{1,X} failed. Coordinated mover communication failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover file transfer failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover has an error. Communication attempt is aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover is activated. Communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover is between to XPlanar systems and mover transfer is not activated. Communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover is not allowed to leave movement area when it is activated. Disable mover first!"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover is not assigned to any movement area. Enabling is not possible."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover is on part with error. Switching into error state."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover is rotated and cannot be orientated. Communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover is rotated. Enabling is not possible."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover orientation determination failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Mover uses deactivated part. Switching into error state."/>
+		<Text TxtId="[Event ID: 0x{0,X}] NC mapping error"/>
+		<Text TxtId="[Event ID: 0x{0,X}] No free capacity"/>
+		<Text TxtId="[Event ID: 0x{0,X}] No free transfer variables left. Please check configuration of XPlanarPeer."/>
+		<Text TxtId="[Event ID: 0x{0,X}] No memory can be assigned the software coupling."/>
+		<Text TxtId="[Event ID: 0x{0,X}] No movers were found on the system. Coordinated mover communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] No rotation feedback available. Initiating mover stop."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Observer error. Invalid observer parameters seem to be configured."/>
+		<Text TxtId="[Event ID: 0x{0,X}] One of submovers touch the power limit, and the coupling is disabled."/>
+		<Text TxtId="[Event ID: 0x{0,X}] One or more Parts used by the mover have an error. Communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] One tile of this part has an error. The part, its tiles and its movers are shutting down."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Part 0x{1,X} has an error. {2} tiles of this part have an error. Coordinated mover communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Part redetection is not possible."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Peers with the same target musst be assigned to the same task"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Position offset out of allowed range ({1} axis)"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Position setpoints are unreachable (axis = {1}; position setpoint = {2,f}; actual position = {3,f}). Initiating mover stop"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Power supply temperature ({1,f} °C) exceeds the limit of {2,f} °C. System is shut down."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Preparation for mover communication of mover 0x{1,X} failed. Coordinated mover communication failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Preparation of adoption system failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Reception of the message from the mover failed. Mover communication failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Reconnected system (System ID: {1}) is not the same as the initially connected system (System ID: {2})"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Removed Mover from movement area due to lost EtherCAT connection of one or more used Tiles"/>
+		<Text TxtId="[Event ID: 0x{0,X}] Software coupling cannot be initialized. Check parameters and movers' positions."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Submission setup failed (HRESULT: 0x{1,X})."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Submover has an error in software coupling."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Submovers are in different movement areas."/>
+		<Text TxtId="[Event ID: 0x{0,X}] System could not be switched on. Communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Target system reported an error. Communication has been terminated."/>
+		<Text TxtId="[Event ID: 0x{0,X}] The active index is not available."/>
+		<Text TxtId="[Event ID: 0x{0,X}] The configured BTN '{1}' was not identified on the system."/>
+		<Text TxtId="[Event ID: 0x{0,X}] The determined orientation of mover 0x{1,X} is uncertain. Coordinated mover communication failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] The number of submovers is not supported for the coupling."/>
+		<Text TxtId="[Event ID: 0x{0,X}] The setpoints for the software coupling are invalid."/>
+		<Text TxtId="[Event ID: 0x{0,X}] The submover's control is off."/>
+		<Text TxtId="[Event ID: 0x{0,X}] There is either no payload on the mover to be detected or the payload is too light (less than 0.1 kg)."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Tile DC link voltage too low. Communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Tile hardware warning (Value of CoE register 0x81430: 0x{1,X})."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Tile temperature {1} ({2,f} °C) exceeds the limit of {3,f} °C. System is shut down."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Transmission of the message to the mover failed. Mover communication failed."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Wrong mover firmware. Firmware version must be greater than 3. Mover orientation cannot be determined."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Wrong mover type. Mover 0x{1,X} is a mover type that cannot communicate."/>
+		<Text TxtId="[Event ID: 0x{0,X}] Wrong mover type. Mover 0x{1,X} is a mover type which orientation cannot be determined yet."/>
+		<Text TxtId="[Event ID: 0x{0,X}] {1} mover(s) are activated, e.g. mover 0x{2,X}. Coordinated mover communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] {1} mover(s) have an error, e.g. mover 0x{2,X}. Coordinated mover communication aborted."/>
+		<Text TxtId="[Event ID: 0x{0,X}] {1} tile(s) have an invalid firmware version, e.g. tile 0x{2,X}. Firmware must be at least version 4. Coordinated mover communication aborted."/>
+		<Text TxtId="A fragment timeout has occurred.">
+			<Text LcId="1031">Fragment Timeout aufgetreten.</Text>
+		</Text>
+		<Text TxtId="Access denied – secure ADS access denied.">
+			<Text LcId="1031">Zugriff Verweigert – Secure ADS Zugriff verweigert.</Text>
+		</Text>
+		<Text TxtId="Access denied.">
+			<Text LcId="1031">Zugriff verweigert.</Text>
+		</Text>
+		<Text TxtId="Adc error">
+			<Text LcId="1031">Adc-Fehler</Text>
+		</Text>
+		<Text TxtId="AdsTransMode is not supported.">
+			<Text LcId="1031">AdsTransMode wird nicht unterstützt.</Text>
+		</Text>
+		<Text TxtId="Allocation locked – memory error.">
+			<Text LcId="1031">Zuweisung gesperrt - Speicherfehler.</Text>
+		</Text>
+		<Text TxtId="AMS Sync error.">
+			<Text LcId="1031">AMS Sync Fehler.</Text>
+		</Text>
+		<Text TxtId="AMS Sync Timeout.">
+			<Text LcId="1031">AMS Sync Timeout.</Text>
+		</Text>
+		<Text TxtId="AMS Sync Win32 error.">
+			<Text LcId="1031">AMS Sync Win32 Fehler.</Text>
+		</Text>
+		<Text TxtId="APS4322-7000 Drive">
+			<Text LcId="1031">APS4322-7000 Drive</Text>
+		</Text>
+		<Text TxtId="Assignment of ExternalFeedbackParametrizationSet failed!"/>
+		<Text TxtId="BTN '{0}' was found at position {1}/{2} and assigned to mover object 0x{3,X}."/>
+		<Text TxtId="channel {0} tripped">
+			<Text LcId="1031">Kanal {0} ausgelöst</Text>
+		</Text>
+		<Text TxtId="Class ID is invalid.">
+			<Text LcId="1031">Class-ID ist ungültig.</Text>
+		</Text>
+		<Text TxtId="Command rejected! Empty interface would have been used ..."/>
+		<Text TxtId="Communication in progress..."/>
+		<Text TxtId="Context – forward to dispatch level.">
+			<Text LcId="1031">Kontext – Weiterleitung zum Dispatch-Level.</Text>
+		</Text>
+		<Text TxtId="Context – forward to passive level.">
+			<Text LcId="1031">Kontext – Weiterleitung zum Passiv-Level.</Text>
+		</Text>
+		<Text TxtId="Context – forward to real-time.">
+			<Text LcId="1031">Kontext – Weiterleitung zur Echtzeit.</Text>
+		</Text>
+		<Text TxtId="Control handed over to adoption system"/>
+		<Text TxtId="Cooling down time still active, channel {0}">
+			<Text LcId="1031">Abkühlphase noch aktiv, Kanal {0}</Text>
+		</Text>
+		<Text TxtId="Coordinated mover communication finished."/>
+		<Text TxtId="Coordinated mover communication started to determine orientations of all movers without turning."/>
+		<Text TxtId="Coordinated mover communication started to determine orientations of all movers."/>
+		<Text TxtId="Coordinated mover communication started to identify and assign movers if possible."/>
+		<Text TxtId="Coordinated mover communication started to identify and find all configured movers."/>
+		<Text TxtId="Coordinated mover communication started to read BTN of all movers."/>
+		<Text TxtId="Demo license prohibited.">
+			<Text LcId="1031">Demo-Lizenz untersagt.</Text>
+		</Text>
+		<Text TxtId="Determined NC cycle time: {0} s"/>
+		<Text TxtId="Determined target with SystemID: {0}"/>
+		<Text TxtId="Device (server) is in invalid state.">
+			<Text LcId="1031">Gerät (Server) ist im ungültigen Zustand.</Text>
+		</Text>
+		<Text TxtId="Device has a timeout.">
+			<Text LcId="1031">Gerät hat einen Timeout.</Text>
+		</Text>
+		<Text TxtId="Device is busy.">
+			<Text LcId="1031">Gerät ist beschäftigt.</Text>
+		</Text>
+		<Text TxtId="Device is not initialized.">
+			<Text LcId="1031">Gerät ist nicht initialisiert.</Text>
+		</Text>
+		<Text TxtId="Device is not ready to operate.">
+			<Text LcId="1031">Gerät ist nicht betriebsbereit.</Text>
+		</Text>
+		<Text TxtId="Disabling of external feedback failed!"/>
+		<Text TxtId="EL9222-6600 Overcurrent protection 24V DC, 2Ch., max. 4A, adjustable">
+			<Text LcId="1031">EL9222-6600 Überstromschutz 24V DC, 2K., max. 4A, einstellbar</Text>
+		</Text>
+		<Text TxtId="EL9222-9482 Overcurrent protection 24V DC, 2Ch., 8A/2A">
+			<Text LcId="1031">EL9222-9482 Überstromschutz 24V DC, 2K., 8A/2A</Text>
+		</Text>
+		<Text TxtId="Enabling of external feedback failed!"/>
+		<Text TxtId="Error acknowledged!"/>
+		<Text TxtId="Error in Win32 subsystem">
+			<Text LcId="1031">Fehler im Win32 Subsystem.</Text>
+		</Text>
+		<Text TxtId="exceeding the maximum sum of current  (max. {0} A)">
+			<Text LcId="1031">Überschreitung des maximalen Summenstroms (max. {0} A)</Text>
+		</Text>
+		<Text TxtId="Exception at system startup.">
+			<Text LcId="1031">Exception beim Systemstart.</Text>
+		</Text>
+		<Text TxtId="fan not spinning/fan not connected">
+			<Text LcId="1031">Lüfter defekt/Kein Lüfter angeschlossen</Text>
+		</Text>
+		<Text TxtId="Finished mover submission"/>
+		<Text TxtId="General device error.">
+			<Text LcId="1031">Allgemeiner Gerätefehler.</Text>
+		</Text>
+		<Text TxtId="General Error"/>
+		<Text TxtId="Hash table overflow.">
+			<Text LcId="1031">Überlauf der Hash-Tabelle.</Text>
+		</Text>
+		<Text TxtId="Host unreachable.">
+			<Text LcId="1031">Host nicht erreichbar.</Text>
+		</Text>
+		<Text TxtId="Index out of Bounds! Object is not existing or not initialized..."/>
+		<Text TxtId="Initialization of Group {0} failed!"/>
+		<Text TxtId="Initialization of MC-Environment {0} failed!"/>
+		<Text TxtId="Initialization of McMover {0} failed!"/>
+		<Text TxtId="Initialization of MovementArea {0} failed!"/>
+		<Text TxtId="Initialization of Mover {0} failed!"/>
+		<Text TxtId="Initialization of ParametrizationSet {0} failed!"/>
+		<Text TxtId="Initialization of Part {0} failed!"/>
+		<Text TxtId="Initialization of Tile {0} failed!"/>
+		<Text TxtId="Initialization of Track {0} failed!"/>
+		<Text TxtId="Initialization of Xpu {0} failed!"/>
+		<Text TxtId="Insufficient memory.">
+			<Text LcId="1031">Nicht genügend Speicher.</Text>
+		</Text>
+		<Text TxtId="Interface query failed.">
+			<Text LcId="1031">Interface Abfrage fehlgeschlagen.</Text>
+		</Text>
+		<Text TxtId="Internal error">
+			<Text LcId="1031">Interner Fehler</Text>
+		</Text>
+		<Text TxtId="Internal error in Ads sync.">
+			<Text LcId="1031">Interner Fehler in Ads-Sync.</Text>
+		</Text>
+		<Text TxtId="Internal error.">
+			<Text LcId="1031">Interner Fehler.</Text>
+		</Text>
+		<Text TxtId="internal hardware error ({0})">
+			<Text LcId="1031">Interner Hardwarefehler ({0})</Text>
+		</Text>
+		<Text TxtId="Invalid alignment.">
+			<Text LcId="1031">Ungültiges Alignment.</Text>
+		</Text>
+		<Text TxtId="Invalid AMS fragment.">
+			<Text LcId="1031">Ungültiges AMS Fragment.</Text>
+		</Text>
+		<Text TxtId="Invalid AMS length.">
+			<Text LcId="1031">Ungültige AMS-Länge.</Text>
+		</Text>
+		<Text TxtId="Invalid AMS Net ID.">
+			<Text LcId="1031">Ungültige AMS Net ID.</Text>
+		</Text>
+		<Text TxtId="Invalid AMS port.">
+			<Text LcId="1031">Ungültiger AMS-Port.</Text>
+		</Text>
+		<Text TxtId="Invalid array index.">
+			<Text LcId="1031">Ungültiger Array-Index.</Text>
+		</Text>
+		<Text TxtId="Invalid certificate.">
+			<Text LcId="1031">Zertifikat ungültig.</Text>
+		</Text>
+		<Text TxtId="Invalid client timeout value.">
+			<Text LcId="1031">Ungültiger Client Timeout-Wert.</Text>
+		</Text>
+		<Text TxtId="Invalid data value(s).">
+			<Text LcId="1031">Ungültige Daten-Werte.</Text>
+		</Text>
+		<Text TxtId="Invalid function ID.">
+			<Text LcId="1031">Funktions-ID ungültig.</Text>
+		</Text>
+		<Text TxtId="Invalid index group.">
+			<Text LcId="1031">Ungültige Index-Gruppe.</Text>
+		</Text>
+		<Text TxtId="Invalid index offset.">
+			<Text LcId="1031">Ungültiger Index-Offset.</Text>
+		</Text>
+		<Text TxtId="Invalid operating system context. This can result from use of ADS function blocks in different tasks.">
+			<Text LcId="1031">Ungültiger Kontext vom Betriebssystem. Kann durch Verwendung von ADS Bausteinen in unterschiedlichen Tasks auftreten.</Text>
+		</Text>
+		<Text TxtId="Invalid OTCID (0x{0,X})"/>
+		<Text TxtId="Invalid parameter value(s).">
+			<Text LcId="1031">Ungültige Parameter-Werte.</Text>
+		</Text>
+		<Text TxtId="Invalid platform level.">
+			<Text LcId="1031">Ungültiger Plattform Level.</Text>
+		</Text>
+		<Text TxtId="Invalid response received">
+			<Text LcId="1031">Ungültige Antwort erhalten.</Text>
+		</Text>
+		<Text TxtId="Invalid signature.">
+			<Text LcId="1031">Ungültige Signatur.</Text>
+		</Text>
+		<Text TxtId="Invalid symbol version. This can occur due to an online change. Create a new handle.">
+			<Text LcId="1031">Symbol-Version ist ungültig. Kann durch einen Online-Change auftreten. Erzeuge einen neuen Handle.</Text>
+		</Text>
+		<Text TxtId="Invalid task ID.">
+			<Text LcId="1031">Ungültige Task-ID.</Text>
+		</Text>
+		<Text TxtId="Invoke ID is already in use.">
+			<Text LcId="1031">Die Invoke-ID ist bereits in Benutzung.</Text>
+		</Text>
+		<Text TxtId="Key not found in hash table.">
+			<Text LcId="1031">Schlüssel in der Hash-Tabelle nicht gefunden.</Text>
+		</Text>
+		<Text TxtId="License file is read twice.">
+			<Text LcId="1031">Lizenz-Datei zweimal gelesen.</Text>
+		</Text>
+		<Text TxtId="License is exceeded.">
+			<Text LcId="1031">Lizenz überschritten.</Text>
+		</Text>
+		<Text TxtId="License is expired.">
+			<Text LcId="1031">Lizenz abgelaufen.</Text>
+		</Text>
+		<Text TxtId="License is invalid.">
+			<Text LcId="1031">Lizenz ungültig.</Text>
+		</Text>
+		<Text TxtId="License not limited in time.">
+			<Text LcId="1031">Lizenz nicht zeitlich begrenzt.</Text>
+		</Text>
+		<Text TxtId="License not valid for this system ID.">
+			<Text LcId="1031">Lizenz nicht gültig für diese System-ID.</Text>
+		</Text>
+		<Text TxtId="License problem: System ID is invalid.">
+			<Text LcId="1031">Lizenzproblem: System-ID ist ungültig.</Text>
+		</Text>
+		<Text TxtId="License problem: Time in the future.">
+			<Text LcId="1031">Lizenzproblem: Zeitpunkt in der Zukunft.</Text>
+		</Text>
+		<Text TxtId="License time period is too long.">
+			<Text LcId="1031">Lizenz-Zeitraum ist zu lang.</Text>
+		</Text>
+		<Text TxtId="Locked memory cannot be allocated.">
+			<Text LcId="1031">Lockierter Speicher kann nicht zugewiesen werden.</Text>
+		</Text>
+		<Text TxtId="Low installation level – TwinCAT 2 license error.">
+			<Text LcId="1031">Installations-Level ist zu niedrig – TwinCAT 2 Lizenzfehler.</Text>
+		</Text>
+		<Text TxtId="Mailbox full – the ADS message could not be sent. Reducing the number of ADS messages per cycle will help.">
+			<Text LcId="1031">Postfach voll – Es konnte die ADS Nachricht nicht versendet werden. Reduzieren der Anzahl der ADS Nachrichten pro Zyklus bringt Abhilfe.</Text>
+		</Text>
+		<Text TxtId="Manages all XPlanar event logger messages"/>
+		<Text TxtId="Missing license.">
+			<Text LcId="1031">Fehlende Lizenz.</Text>
+		</Text>
+		<Text TxtId="module overtemperature">
+			<Text LcId="1031">Modul-Übertemperatur</Text>
+		</Text>
+		<Text TxtId="More Environments({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More ExtFeedbackParametrizationSets({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More Groups({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More McMover({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More MovementAreas({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More Mover({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More MoverCouplings({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More ParametrizationSets({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More Parts({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More PeerObjects({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More SubDevices({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More Tiles({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More Tracks({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="More Xplanar Xpus({0}) found than parameterized in &quot;Param_TcIoXPlanarEnvironment&quot;!"/>
+		<Text TxtId="Mover adoption initiated for Mover-OID 0x{0,X} of system {1}"/>
+		<Text TxtId="Mover adoption is done"/>
+		<Text TxtId="Mover communication finished successfully."/>
+		<Text TxtId="Mover communication started."/>
+		<Text TxtId="Mover detectec at TransferArea. Enable mover transfer for feedback update."/>
+		<Text TxtId="Mover file transfer finished successfully."/>
+		<Text TxtId="Mover file transfer started."/>
+		<Text TxtId="Mover orientation determination finished successfully."/>
+		<Text TxtId="Mover orientation determination started."/>
+		<Text TxtId="Mover redetection started"/>
+		<Text TxtId="Mover submission initiated"/>
+		<Text TxtId="Mover with object ID 0x{0,X} was removed from the system."/>
+		<Text TxtId="Mover-OID 0x{0,X} from system {1} requested mover adoption of Mover-OID 0x{2,X}"/>
+		<Text TxtId="No AMS address.">
+			<Text LcId="1031">Keine AMS Adresse.</Text>
+		</Text>
+		<Text TxtId="No debugging available.">
+			<Text LcId="1031">Kein Debugging verfügbar.</Text>
+		</Text>
+		<Text TxtId="No further notification handles.">
+			<Text LcId="1031">Keine weiteren Notification Handles.</Text>
+		</Text>
+		<Text TxtId="No index map for AMS Sync available.">
+			<Text LcId="1031">Keine Index-Map für AMS Sync vorhanden.</Text>
+		</Text>
+		<Text TxtId="No IO.">
+			<Text LcId="1031">Kein IO.</Text>
+		</Text>
+		<Text TxtId="No memory.">
+			<Text LcId="1031">Kein Speicher.</Text>
+		</Text>
+		<Text TxtId="No real-time.">
+			<Text LcId="1031">Keine Echtzeit.</Text>
+		</Text>
+		<Text TxtId="No symbols in the cache.">
+			<Text LcId="1031">Keine Symbole im Cache.</Text>
+		</Text>
+		<Text TxtId="Not found (files, ...).">
+			<Text LcId="1031">Nicht gefunden (Dateien,...).</Text>
+		</Text>
+		<Text TxtId="Notification client is not registered.">
+			<Text LcId="1031">Notification-Client nicht registriert. </Text>
+		</Text>
+		<Text TxtId="Notification handle is invalid.">
+			<Text LcId="1031">Notification Handle ist ungültig.</Text>
+		</Text>
+		<Text TxtId="Notification size too large.">
+			<Text LcId="1031">Größe der Notification zu groß.</Text>
+		</Text>
+		<Text TxtId="Object already exists.">
+			<Text LcId="1031">Objekt ist bereits vorhanden.</Text>
+		</Text>
+		<Text TxtId="Object ID is invalid.">
+			<Text LcId="1031">Object-ID ist ungültig.</Text>
+		</Text>
+		<Text TxtId="Objects do not match.">
+			<Text LcId="1031">Objekte stimmen nicht überein.</Text>
+		</Text>
+		<Text TxtId="Outside the valid range.">
+			<Text LcId="1031">Außerhalb des gültigen Bereiches.</Text>
+		</Text>
+		<Text TxtId="Overcurrent error">
+			<Text LcId="1031">Überstromfehler</Text>
+		</Text>
+		<Text TxtId="Overcurrent error at sensor '{0}'">
+			<Text LcId="1031"><![CDATA[Überstromfehler an Sensor '{0}']]></Text>
+		</Text>
+		<Text TxtId="Overcurrent error setpoint values {0}, {1}, {2}">
+			<Text LcId="1031">Überstromfehler-Setpoints {0}, {1}, {2}</Text>
+		</Text>
+		<Text TxtId="Overcurrent error values (raw) {0}, {1}, {2}">
+			<Text LcId="1031">Überstromfehler-Werte (raw) {0}, {1}, {2}</Text>
+		</Text>
+		<Text TxtId="Overcurrent error values {0}, {1}, {2}">
+			<Text LcId="1031">Überstromfehler-Werte {0}, {1}, {2}</Text>
+		</Text>
+		<Text TxtId="Overtemperature error at sensor '{0}', temperature: {1} °C">
+			<Text LcId="1031"><![CDATA[Übertemperatur-Fehler an Sensor '{0}', Temperatur: {1} °C]]></Text>
+		</Text>
+		<Text TxtId="Overtemperature in device">
+			<Text LcId="1031">Übertemperatur im Gerät</Text>
+		</Text>
+		<Text TxtId="Overtemperature IT-modell powersupply">
+			<Text LcId="1031">Übertemperatur IT-Modell Netzteil</Text>
+		</Text>
+		<Text TxtId="Overtemperature warning at sensor '{0}', temperature: {1} °C">
+			<Text LcId="1031"><![CDATA[Übertemperatur-Warnung an Sensor '{0}', Temperatur: {1} °C]]></Text>
+		</Text>
+		<Text TxtId="Overvoltage DC-Link">
+			<Text LcId="1031">Überspannung DC-Zwischenkreis</Text>
+		</Text>
+		<Text TxtId="Overvoltage detected, channel {0} tripped">
+			<Text LcId="1031">Überspannung erkannt, Kanal {0} ausgelöst</Text>
+		</Text>
+		<Text TxtId="Parameter is not supported by this tile type ({0})"/>
+		<Text TxtId="Parameter size is not correct.">
+			<Text LcId="1031">Parametergröße ist nicht korrekt.</Text>
+		</Text>
+		<Text TxtId="Parameter-value is not supported by this variant of terminal, channel {0}">
+			<Text LcId="1031">Parameter-Wert wird nicht von dieser Klemmenvariante unterstützt, Kanal {0}</Text>
+		</Text>
+		<Text TxtId="Parameter-value not allowed and was reduced automatically, channel {0}">
+			<Text LcId="1031">Parameter-Wert nicht erlaubt und wurde verkleinert, Kanal {0}</Text>
+		</Text>
+		<Text TxtId="PD-Watchdog">
+			<Text LcId="1031">PD-Watchdog</Text>
+		</Text>
+		<Text TxtId="Polling list is empty.">
+			<Text LcId="1031">Polling-Liste ist leer.</Text>
+		</Text>
+		<Text TxtId="Port already connected.">
+			<Text LcId="1031">Port bereits verbunden.</Text>
+		</Text>
+		<Text TxtId="Port disabled – TwinCAT system service not started.">
+			<Text LcId="1031">Port deaktiviert – TwinCAT System Service nicht gestartet.</Text>
+		</Text>
+		<Text TxtId="Port is not open.">
+			<Text LcId="1031">Port nicht geöffnet.</Text>
+		</Text>
+		<Text TxtId="Port not connected.">
+			<Text LcId="1031">Port nicht verbunden.</Text>
+		</Text>
+		<Text TxtId="Preparing movers for communication."/>
+		<Text TxtId="Public key not known from OEM.">
+			<Text LcId="1031">Public Key vom OEM nicht bekannt.</Text>
+		</Text>
+		<Text TxtId="Reading or writing is not permitted.">
+			<Text LcId="1031">Lesen oder Schreiben ist nicht gestattet.</Text>
+		</Text>
+		<Text TxtId="Rearrange movers."/>
+		<Text TxtId="Reconnected to target"/>
+		<Text TxtId="Registration of FB_ExternalFeedback failed!"/>
+		<Text TxtId="Request is aborted.">
+			<Text LcId="1031">Anforderung wird abgebrochen.</Text>
+		</Text>
+		<Text TxtId="Request pending.">
+			<Text LcId="1031">Anforderung steht aus.</Text>
+		</Text>
+		<Text TxtId="Requested mover submission to Mover-OID 0x{0,X} of system {1}"/>
+		<Text TxtId="Reverse current detected, channel {0}">
+			<Text LcId="1031">Rückwärtseinspeisung erkannt, Kanal {0}</Text>
+		</Text>
+		<Text TxtId="Service contains an invalid parameter.">
+			<Text LcId="1031">Dienst enthält einen ungültigen Parameter. </Text>
+		</Text>
+		<Text TxtId="Service is not supported by the server.">
+			<Text LcId="1031">Service wird vom Server nicht unterstützt.</Text>
+		</Text>
+		<Text TxtId="Signal warning.">
+			<Text LcId="1031">Signal-Warnung.</Text>
+		</Text>
+		<Text TxtId="Symbol is not active.">
+			<Text LcId="1031">Symbol ist nicht aktiv.</Text>
+		</Text>
+		<Text TxtId="Symbol was not found.">
+			<Text LcId="1031">Symbol nicht gefunden.</Text>
+		</Text>
+		<Text TxtId="Sync port is locked.">
+			<Text LcId="1031">Sync Port ist verriegelt.</Text>
+		</Text>
+		<Text TxtId="Syntax error in file or command.">
+			<Text LcId="1031">Syntax-Fehler in Datei oder Befehl.</Text>
+		</Text>
+		<Text TxtId="Target computer not found – AMS route was not found. "/>
+		<Text TxtId="Target port not found – ADS server is not started or is not reachable.">
+			<Text LcId="1031">Ziel-Port nicht gefunden – ADS Server ist nicht gestartet oder erreichbar.</Text>
+		</Text>
+		<Text TxtId="TcGeneralAdsEventClass"/>
+		<Text TxtId="TCP send error.">
+			<Text LcId="1031">TCP Sendefehler.</Text>
+		</Text>
+		<Text TxtId="TcRouterEventClass"/>
+		<Text TxtId="TcSystemEventClass"/>
+		<Text TxtId="The debug mailbox has reached the maximum number of possible messages.">
+			<Text LcId="1031">Das Debug Postfach hat die maximale Anzahl der möglichen Meldungen erreicht.</Text>
+		</Text>
+		<Text TxtId="The mailbox has reached the maximum number for fragmented messages.">
+			<Text LcId="1031">Das Postfach hat die maximale Anzahl für fragmentierte Nachrichten erreicht.</Text>
+		</Text>
+		<Text TxtId="The mailbox has reached the maximum number of possible messages.">
+			<Text LcId="1031">Das Postfach hat die maximale Anzahl der möglichen Meldungen erreicht.</Text>
+		</Text>
+		<Text TxtId="The maximum number of ports has been reached.">
+			<Text LcId="1031">Die maximale Portanzahl ist erreicht.</Text>
+		</Text>
+		<Text TxtId="The port is invalid.">
+			<Text LcId="1031">Der Port ist ungültig.</Text>
+		</Text>
+		<Text TxtId="The port is not registered.">
+			<Text LcId="1031">Der Port ist nicht registriert.</Text>
+		</Text>
+		<Text TxtId="The port is removed.">
+			<Text LcId="1031">Port wird entfernt.</Text>
+		</Text>
+		<Text TxtId="The port number is already assigned.">
+			<Text LcId="1031">Die Portnummer ist bereits vergeben.</Text>
+		</Text>
+		<Text TxtId="The port type is unknown.">
+			<Text LcId="1031">Der Porttyp ist unbekannt.</Text>
+		</Text>
+		<Text TxtId="The router memory size could not be changed.">
+			<Text LcId="1031">Die Größe des Routerspeichers konnte nicht geändert werden.</Text>
+		</Text>
+		<Text TxtId="This tile type has no subdevices!"/>
+		<Text TxtId="Timeout has occurred – the remote terminal is not responding in the specified ADS timeout.">
+			<Text LcId="1031">Timeout ist aufgetreten – Die Gegenstelle antwortet nicht im vorgegebenen ADS Timeout.</Text>
+		</Text>
+		<Text TxtId="TLS send error – secure ADS connection failed.">
+			<Text LcId="1031">TLS Sendefehler – Secure ADS Verbindung fehlgeschlagen.</Text>
+		</Text>
+		<Text TxtId="Took control of arriving mover"/>
+		<Text TxtId="TwinCAT Router is not active.">
+			<Text LcId="1031">Der TwinCAT Router ist nicht aktiv.</Text>
+		</Text>
+		<Text TxtId="TwinCAT Router is not initialised.">
+			<Text LcId="1031">Der TwinCAT Router ist nicht initialisiert.</Text>
+		</Text>
+		<Text TxtId="Undervoltage DC-Link">
+			<Text LcId="1031">Unterspannung DC-Zwischenkreis</Text>
+		</Text>
+		<Text TxtId="Undervoltage detected, channel {0}">
+			<Text LcId="1031">Unterspannung erkannt, Kanal {0}</Text>
+		</Text>
+		<Text TxtId="Undervoltage Us/Us not connected">
+			<Text LcId="1031">Unterspannung Us/Us nicht angeschlossen</Text>
+		</Text>
+		<Text TxtId="Unknown AMS command.">
+			<Text LcId="1031">Unbekannter AMS-Befehl.</Text>
+		</Text>
+		<Text TxtId="Unknown command ID.">
+			<Text LcId="1031">Unbekannte Befehl-ID.</Text>
+		</Text>
+		<Text TxtId="Variable connection is already in use.">
+			<Text LcId="1031">Variablen-Verbindung bereits im Einsatz.</Text>
+		</Text>
+		<Text TxtId="Win32 error.">
+			<Text LcId="1031">Win32 Fehler.</Text>
+		</Text>
+		<Text TxtId="Writing dump file: {0}"/>
+		<Text TxtId="Wrong HMSG.">
+			<Text LcId="1031">Falsches HMSG.</Text>
+		</Text>
+		<Text TxtId="Wrong interface is requested.">
+			<Text LcId="1031">Falsches Interface angefordert. </Text>
+		</Text>
+		<Text TxtId="XPlanar driver version ({0}.{1}.{2}.{3}) is not matching with Tc3_XplanarUtility ({4}.{5}.{6}.{7}) Plc-Library! Some functions may not work properly..."/>
+		<Text TxtId="XPlanarEvents"/>
+		<Text TxtId="XPlanarUtilityEvents"/>
+	</Translations>
+	<Source>
+		<GUID>{28111931-0002-0000-5230-06240A251200}</GUID>
+		<Name>EL9222-9482 Overcurrent protection 24V DC, 2Ch., 8A/2A</Name>
+		<Event>
+			<Id>5632</Id>
+			<Message>Cooling down time still active, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>17937</Id>
+			<Message>exceeding the maximum sum of current  (max. {0} A)</Message>
+		</Event>
+		<Event>
+			<Id>17938</Id>
+			<Message>Undervoltage detected, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>17939</Id>
+			<Message>Parameter-value is not supported by this variant of terminal, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>17940</Id>
+			<Message>Parameter-value not allowed and was reduced automatically, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>18190</Id>
+			<Message>Overtemperature in device</Message>
+		</Event>
+		<Event>
+			<Id>33151</Id>
+			<Message>internal hardware error ({0})</Message>
+		</Event>
+		<Event>
+			<Id>34337</Id>
+			<Message>Overvoltage detected, channel {0} tripped</Message>
+		</Event>
+		<Event>
+			<Id>34338</Id>
+			<Message>Reverse current detected, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>34339</Id>
+			<Message>channel {0} tripped</Message>
+		</Event>
+		<Property>
+			<Name>DisplayTxtId</Name>
+			<Value>true</Value>
+		</Property>
+	</Source>
+	<Source>
+		<GUID>{28111931-0002-0000-5230-0624C8191200}</GUID>
+		<Name>EL9222-6600 Overcurrent protection 24V DC, 2Ch., max. 4A, adjustable</Name>
+		<Event>
+			<Id>5632</Id>
+			<Message>Cooling down time still active, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>17937</Id>
+			<Message>exceeding the maximum sum of current  (max. {0} A)</Message>
+		</Event>
+		<Event>
+			<Id>17938</Id>
+			<Message>Undervoltage detected, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>17939</Id>
+			<Message>Parameter-value is not supported by this variant of terminal, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>17940</Id>
+			<Message>Parameter-value not allowed and was reduced automatically, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>18190</Id>
+			<Message>Overtemperature in device</Message>
+		</Event>
+		<Event>
+			<Id>33151</Id>
+			<Message>internal hardware error ({0})</Message>
+		</Event>
+		<Event>
+			<Id>34337</Id>
+			<Message>Overvoltage detected, channel {0} tripped</Message>
+		</Event>
+		<Event>
+			<Id>34338</Id>
+			<Message>Reverse current detected, channel {0}</Message>
+		</Event>
+		<Event>
+			<Id>34339</Id>
+			<Message>channel {0} tripped</Message>
+		</Event>
+		<Property>
+			<Name>DisplayTxtId</Name>
+			<Value>true</Value>
+		</Property>
+	</Source>
+	<Source>
+		<GUID>{28111931-0002-0000-293C-C477581B1200}</GUID>
+		<Name>APS4322-7000 Drive</Name>
+		<Event>
+			<Id>5122</Id>
+			<Message><![CDATA[Overtemperature warning at sensor '{0}', temperature: {1} °C]]></Message>
+		</Event>
+		<Event>
+			<Id>5123</Id>
+			<Message><![CDATA[Overtemperature error at sensor '{0}', temperature: {1} °C]]></Message>
+		</Event>
+		<Event>
+			<Id>5124</Id>
+			<Message><![CDATA[Overcurrent error at sensor '{0}']]></Message>
+		</Event>
+		<Event>
+			<Id>5125</Id>
+			<Message>Overcurrent error values (raw) {0}, {1}, {2}</Message>
+		</Event>
+		<Event>
+			<Id>5126</Id>
+			<Message>Overcurrent error values {0}, {1}, {2}</Message>
+		</Event>
+		<Event>
+			<Id>5127</Id>
+			<Message>Overcurrent error setpoint values {0}, {1}, {2}</Message>
+		</Event>
+		<Event>
+			<Id>16641</Id>
+			<Message>module overtemperature</Message>
+		</Event>
+		<Event>
+			<Id>16643</Id>
+			<Message>Undervoltage Us/Us not connected</Message>
+		</Event>
+		<Event>
+			<Id>16650</Id>
+			<Message>fan not spinning/fan not connected</Message>
+		</Event>
+		<Event>
+			<Id>17425</Id>
+			<Message>Undervoltage DC-Link</Message>
+		</Event>
+		<Event>
+			<Id>17426</Id>
+			<Message>Overvoltage DC-Link</Message>
+		</Event>
+		<Event>
+			<Id>17439</Id>
+			<Message>Overtemperature IT-modell powersupply</Message>
+		</Event>
+		<Event>
+			<Id>33028</Id>
+			<Message>module overtemperature</Message>
+		</Event>
+		<Event>
+			<Id>33029</Id>
+			<Message>PD-Watchdog</Message>
+		</Event>
+		<Event>
+			<Id>33151</Id>
+			<Message>Internal error</Message>
+		</Event>
+		<Event>
+			<Id>33795</Id>
+			<Message>Adc error</Message>
+		</Event>
+		<Event>
+			<Id>33796</Id>
+			<Message>Overcurrent error</Message>
+		</Event>
+		<Event>
+			<Id>33798</Id>
+			<Message>Undervoltage DC-Link</Message>
+		</Event>
+		<Event>
+			<Id>33799</Id>
+			<Message>Overvoltage DC-Link</Message>
+		</Event>
+		<Event>
+			<Id>33860</Id>
+			<Message>Overtemperature IT-modell powersupply</Message>
+		</Event>
+		<Property>
+			<Name>DisplayTxtId</Name>
+			<Value>true</Value>
+		</Property>
+	</Source>
+	<Source>
+		<GUID>{F8223362-FE60-4A13-B374-B549FABA1E66}</GUID>
+		<Name>XPlanarUtilityEvents</Name>
+		<Event>
+			<Id>#x11000001</Id>
+			<Message>Error acknowledged!</Message>
+		</Event>
+		<Event>
+			<Id>#x21000001</Id>
+			<Message>XPlanar driver version ({0}.{1}.{2}.{3}) is not matching with Tc3_XplanarUtility ({4}.{5}.{6}.{7}) Plc-Library! Some functions may not work properly...</Message>
+		</Event>
+		<Event>
+			<Id>#x3100001</Id>
+			<Message>General Error</Message>
+		</Event>
+		<Event>
+			<Id>#x31000002</Id>
+			<Message>Index out of Bounds! Object is not existing or not initialized...</Message>
+		</Event>
+		<Event>
+			<Id>#x31000003</Id>
+			<Message>Command rejected! Empty interface would have been used ...</Message>
+		</Event>
+		<Event>
+			<Id>#x31000004</Id>
+			<Message>Invalid OTCID (0x{0,X})</Message>
+		</Event>
+		<Event>
+			<Id>#x31001001</Id>
+			<Message><![CDATA[More Xplanar Xpus({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31001002</Id>
+			<Message><![CDATA[More Tracks({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31001003</Id>
+			<Message><![CDATA[More Groups({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31001004</Id>
+			<Message><![CDATA[More Environments({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31001005</Id>
+			<Message>Initialization of Xpu {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x31001006</Id>
+			<Message>Initialization of Track {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x31001007</Id>
+			<Message>Initialization of Group {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x31001008</Id>
+			<Message>Initialization of MC-Environment {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x31001009</Id>
+			<Message><![CDATA[More McMover({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>822087690</Id>
+			<Message>Initialization of McMover {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x31002001</Id>
+			<Message><![CDATA[More Parts({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31002002</Id>
+			<Message><![CDATA[More Tiles({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31002003</Id>
+			<Message><![CDATA[More Mover({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31002004</Id>
+			<Message><![CDATA[More MoverCouplings({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31002005</Id>
+			<Message><![CDATA[More MovementAreas({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31002006</Id>
+			<Message><![CDATA[More ParametrizationSets({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31002007</Id>
+			<Message>Initialization of Part {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x31002008</Id>
+			<Message>Initialization of MovementArea {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x31002009</Id>
+			<Message>Initialization of Tile {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x3100200A</Id>
+			<Message>Initialization of Mover {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x3100200B</Id>
+			<Message>Initialization of ParametrizationSet {0} failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x3100200C</Id>
+			<Message><![CDATA[More ExtFeedbackParametrizationSets({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x3100200D</Id>
+			<Message><![CDATA[More PeerObjects({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31006001</Id>
+			<Message>This tile type has no subdevices!</Message>
+		</Event>
+		<Event>
+			<Id>#x31006002</Id>
+			<Message><![CDATA[More SubDevices({0}) found than parameterized in "Param_TcIoXPlanarEnvironment"!]]></Message>
+		</Event>
+		<Event>
+			<Id>#x31006003</Id>
+			<Message>Parameter is not supported by this tile type ({0})</Message>
+		</Event>
+		<Event>
+			<Id>#x3100C001</Id>
+			<Message>Registration of FB_ExternalFeedback failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x3100C002</Id>
+			<Message>Assignment of ExternalFeedbackParametrizationSet failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x3100C003</Id>
+			<Message>Disabling of external feedback failed!</Message>
+		</Event>
+		<Event>
+			<Id>#x3100C004</Id>
+			<Message>Enabling of external feedback failed!</Message>
+		</Event>
+	</Source>
+	<Source>
+		<GUID>{7D760066-D373-4A0C-B0F1-328B1620B0F0}</GUID>
+		<Name>TcGeneralAdsEventClass</Name>
+		<Event>
+			<Id>1792</Id>
+			<Message>General device error.</Message>
+		</Event>
+		<Event>
+			<Id>1793</Id>
+			<Message>Service is not supported by the server.</Message>
+		</Event>
+		<Event>
+			<Id>1794</Id>
+			<Message>Invalid index group.</Message>
+		</Event>
+		<Event>
+			<Id>1795</Id>
+			<Message>Invalid index offset.</Message>
+		</Event>
+		<Event>
+			<Id>1796</Id>
+			<Message>Reading or writing is not permitted.</Message>
+		</Event>
+		<Event>
+			<Id>1797</Id>
+			<Message>Parameter size is not correct.</Message>
+		</Event>
+		<Event>
+			<Id>1798</Id>
+			<Message>Invalid data value(s).</Message>
+		</Event>
+		<Event>
+			<Id>1799</Id>
+			<Message>Device is not ready to operate.</Message>
+		</Event>
+		<Event>
+			<Id>1800</Id>
+			<Message>Device is busy.</Message>
+		</Event>
+		<Event>
+			<Id>1801</Id>
+			<Message>Invalid operating system context. This can result from use of ADS function blocks in different tasks.</Message>
+		</Event>
+		<Event>
+			<Id>1802</Id>
+			<Message>Insufficient memory.</Message>
+		</Event>
+		<Event>
+			<Id>1803</Id>
+			<Message>Invalid parameter value(s).</Message>
+		</Event>
+		<Event>
+			<Id>1804</Id>
+			<Message>Not found (files, ...).</Message>
+		</Event>
+		<Event>
+			<Id>1805</Id>
+			<Message>Syntax error in file or command.</Message>
+		</Event>
+		<Event>
+			<Id>1806</Id>
+			<Message>Objects do not match.</Message>
+		</Event>
+		<Event>
+			<Id>1807</Id>
+			<Message>Object already exists.</Message>
+		</Event>
+		<Event>
+			<Id>1808</Id>
+			<Message>Symbol was not found.</Message>
+		</Event>
+		<Event>
+			<Id>1809</Id>
+			<Message>Invalid symbol version. This can occur due to an online change. Create a new handle.</Message>
+		</Event>
+		<Event>
+			<Id>1810</Id>
+			<Message>Device (server) is in invalid state.</Message>
+		</Event>
+		<Event>
+			<Id>1811</Id>
+			<Message>AdsTransMode is not supported.</Message>
+		</Event>
+		<Event>
+			<Id>1812</Id>
+			<Message>Notification handle is invalid.</Message>
+		</Event>
+		<Event>
+			<Id>1813</Id>
+			<Message>Notification client is not registered.</Message>
+		</Event>
+		<Event>
+			<Id>1814</Id>
+			<Message>No further notification handles.</Message>
+		</Event>
+		<Event>
+			<Id>1815</Id>
+			<Message>Notification size too large.</Message>
+		</Event>
+		<Event>
+			<Id>1816</Id>
+			<Message>Device is not initialized.</Message>
+		</Event>
+		<Event>
+			<Id>1817</Id>
+			<Message>Device has a timeout.</Message>
+		</Event>
+		<Event>
+			<Id>1818</Id>
+			<Message>Interface query failed.</Message>
+		</Event>
+		<Event>
+			<Id>1819</Id>
+			<Message>Wrong interface is requested.</Message>
+		</Event>
+		<Event>
+			<Id>1820</Id>
+			<Message>Class ID is invalid.</Message>
+		</Event>
+		<Event>
+			<Id>1821</Id>
+			<Message>Object ID is invalid.</Message>
+		</Event>
+		<Event>
+			<Id>1822</Id>
+			<Message>Request pending.</Message>
+		</Event>
+		<Event>
+			<Id>1823</Id>
+			<Message>Request is aborted.</Message>
+		</Event>
+		<Event>
+			<Id>1824</Id>
+			<Message>Signal warning.</Message>
+		</Event>
+		<Event>
+			<Id>1825</Id>
+			<Message>Invalid array index.</Message>
+		</Event>
+		<Event>
+			<Id>1826</Id>
+			<Message>Symbol is not active.</Message>
+		</Event>
+		<Event>
+			<Id>1827</Id>
+			<Message>Access denied.</Message>
+		</Event>
+		<Event>
+			<Id>1828</Id>
+			<Message>Missing license.</Message>
+		</Event>
+		<Event>
+			<Id>1829</Id>
+			<Message>License is expired.</Message>
+		</Event>
+		<Event>
+			<Id>1830</Id>
+			<Message>License is exceeded.</Message>
+		</Event>
+		<Event>
+			<Id>1831</Id>
+			<Message>License is invalid.</Message>
+		</Event>
+		<Event>
+			<Id>1832</Id>
+			<Message>License problem: System ID is invalid.</Message>
+		</Event>
+		<Event>
+			<Id>1833</Id>
+			<Message>License not limited in time.</Message>
+		</Event>
+		<Event>
+			<Id>1834</Id>
+			<Message>License problem: Time in the future.</Message>
+		</Event>
+		<Event>
+			<Id>1835</Id>
+			<Message>License time period is too long.</Message>
+		</Event>
+		<Event>
+			<Id>1836</Id>
+			<Message>Exception at system startup.</Message>
+		</Event>
+		<Event>
+			<Id>1837</Id>
+			<Message>License file is read twice.</Message>
+		</Event>
+		<Event>
+			<Id>1838</Id>
+			<Message>Invalid signature.</Message>
+		</Event>
+		<Event>
+			<Id>1839</Id>
+			<Message>Invalid certificate.</Message>
+		</Event>
+		<Event>
+			<Id>1840</Id>
+			<Message>Public key not known from OEM.</Message>
+		</Event>
+		<Event>
+			<Id>1841</Id>
+			<Message>License not valid for this system ID.</Message>
+		</Event>
+		<Event>
+			<Id>1842</Id>
+			<Message>Demo license prohibited.</Message>
+		</Event>
+		<Event>
+			<Id>1843</Id>
+			<Message>Invalid function ID.</Message>
+		</Event>
+		<Event>
+			<Id>1844</Id>
+			<Message>Outside the valid range.</Message>
+		</Event>
+		<Event>
+			<Id>1845</Id>
+			<Message>Invalid alignment.</Message>
+		</Event>
+		<Event>
+			<Id>1846</Id>
+			<Message>Invalid platform level.</Message>
+		</Event>
+		<Event>
+			<Id>1847</Id>
+			<Message>Context – forward to passive level.</Message>
+		</Event>
+		<Event>
+			<Id>1848</Id>
+			<Message>Context – forward to dispatch level.</Message>
+		</Event>
+		<Event>
+			<Id>1849</Id>
+			<Message>Context – forward to real-time.</Message>
+		</Event>
+		<Event>
+			<Id>1857</Id>
+			<Message>Service contains an invalid parameter.</Message>
+		</Event>
+		<Event>
+			<Id>1858</Id>
+			<Message>Polling list is empty.</Message>
+		</Event>
+		<Event>
+			<Id>1859</Id>
+			<Message>Variable connection is already in use.</Message>
+		</Event>
+		<Event>
+			<Id>1860</Id>
+			<Message>Invoke ID is already in use.</Message>
+		</Event>
+		<Event>
+			<Id>1861</Id>
+			<Message>Timeout has occurred – the remote terminal is not responding in the specified ADS timeout.</Message>
+		</Event>
+		<Event>
+			<Id>1862</Id>
+			<Message>Error in Win32 subsystem</Message>
+		</Event>
+		<Event>
+			<Id>1863</Id>
+			<Message>Invalid client timeout value.</Message>
+		</Event>
+		<Event>
+			<Id>1864</Id>
+			<Message>Port is not open.</Message>
+		</Event>
+		<Event>
+			<Id>1865</Id>
+			<Message>No AMS address.</Message>
+		</Event>
+		<Event>
+			<Id>1872</Id>
+			<Message>Internal error in Ads sync.</Message>
+		</Event>
+		<Event>
+			<Id>1873</Id>
+			<Message>Hash table overflow.</Message>
+		</Event>
+		<Event>
+			<Id>1874</Id>
+			<Message>Key not found in hash table.</Message>
+		</Event>
+		<Event>
+			<Id>1875</Id>
+			<Message>No symbols in the cache.</Message>
+		</Event>
+		<Event>
+			<Id>1876</Id>
+			<Message>Invalid response received</Message>
+		</Event>
+		<Event>
+			<Id>1877</Id>
+			<Message>Sync port is locked.</Message>
+		</Event>
+	</Source>
+	<Source>
+		<GUID>{E759605A-2341-48FC-9F3F-C8FA405C4B24}</GUID>
+		<Name>TcRouterEventClass</Name>
+		<Event>
+			<Id>1280</Id>
+			<Message>Locked memory cannot be allocated.</Message>
+		</Event>
+		<Event>
+			<Id>1281</Id>
+			<Message>The router memory size could not be changed.</Message>
+		</Event>
+		<Event>
+			<Id>1282</Id>
+			<Message>The mailbox has reached the maximum number of possible messages.</Message>
+		</Event>
+		<Event>
+			<Id>1283</Id>
+			<Message>The debug mailbox has reached the maximum number of possible messages.</Message>
+		</Event>
+		<Event>
+			<Id>1284</Id>
+			<Message>The port type is unknown.</Message>
+		</Event>
+		<Event>
+			<Id>1285</Id>
+			<Message>TwinCAT Router is not initialised.</Message>
+		</Event>
+		<Event>
+			<Id>1286</Id>
+			<Message>The port number is already assigned.</Message>
+		</Event>
+		<Event>
+			<Id>1287</Id>
+			<Message>The port is not registered.</Message>
+		</Event>
+		<Event>
+			<Id>1288</Id>
+			<Message>The maximum number of ports has been reached.</Message>
+		</Event>
+		<Event>
+			<Id>1289</Id>
+			<Message>The port is invalid.</Message>
+		</Event>
+		<Event>
+			<Id>1290</Id>
+			<Message>TwinCAT Router is not active.</Message>
+		</Event>
+		<Event>
+			<Id>1291</Id>
+			<Message>The mailbox has reached the maximum number for fragmented messages.</Message>
+		</Event>
+		<Event>
+			<Id>1292</Id>
+			<Message>A fragment timeout has occurred.</Message>
+		</Event>
+		<Event>
+			<Id>1293</Id>
+			<Message>The port is removed.</Message>
+		</Event>
+	</Source>
+	<Source>
+		<GUID>{BB2A9999-102E-421A-8D3D-B0660E07B1FE}</GUID>
+		<Name>TcSystemEventClass</Name>
+		<Event>
+			<Id>1</Id>
+			<Message>Internal error.</Message>
+		</Event>
+		<Event>
+			<Id>2</Id>
+			<Message>No real-time.</Message>
+		</Event>
+		<Event>
+			<Id>3</Id>
+			<Message>Allocation locked – memory error.</Message>
+		</Event>
+		<Event>
+			<Id>4</Id>
+			<Message>Mailbox full – the ADS message could not be sent. Reducing the number of ADS messages per cycle will help.</Message>
+		</Event>
+		<Event>
+			<Id>5</Id>
+			<Message>Wrong HMSG.</Message>
+		</Event>
+		<Event>
+			<Id>6</Id>
+			<Message>Target port not found – ADS server is not started or is not reachable.</Message>
+		</Event>
+		<Event>
+			<Id>7</Id>
+			<Message>Target computer not found – AMS route was not found. </Message>
+		</Event>
+		<Event>
+			<Id>8</Id>
+			<Message>Unknown command ID.</Message>
+		</Event>
+		<Event>
+			<Id>9</Id>
+			<Message>Invalid task ID.</Message>
+		</Event>
+		<Event>
+			<Id>10</Id>
+			<Message>No IO.</Message>
+		</Event>
+		<Event>
+			<Id>11</Id>
+			<Message>Unknown AMS command.</Message>
+		</Event>
+		<Event>
+			<Id>12</Id>
+			<Message>Win32 error.</Message>
+		</Event>
+		<Event>
+			<Id>13</Id>
+			<Message>Port not connected.</Message>
+		</Event>
+		<Event>
+			<Id>14</Id>
+			<Message>Invalid AMS length.</Message>
+		</Event>
+		<Event>
+			<Id>15</Id>
+			<Message>Invalid AMS Net ID.</Message>
+		</Event>
+		<Event>
+			<Id>16</Id>
+			<Message>Low installation level – TwinCAT 2 license error.</Message>
+		</Event>
+		<Event>
+			<Id>17</Id>
+			<Message>No debugging available.</Message>
+		</Event>
+		<Event>
+			<Id>18</Id>
+			<Message>Port disabled – TwinCAT system service not started.</Message>
+		</Event>
+		<Event>
+			<Id>19</Id>
+			<Message>Port already connected.</Message>
+		</Event>
+		<Event>
+			<Id>20</Id>
+			<Message>AMS Sync Win32 error.</Message>
+		</Event>
+		<Event>
+			<Id>21</Id>
+			<Message>AMS Sync Timeout.</Message>
+		</Event>
+		<Event>
+			<Id>22</Id>
+			<Message>AMS Sync error.</Message>
+		</Event>
+		<Event>
+			<Id>23</Id>
+			<Message>No index map for AMS Sync available.</Message>
+		</Event>
+		<Event>
+			<Id>24</Id>
+			<Message>Invalid AMS port.</Message>
+		</Event>
+		<Event>
+			<Id>25</Id>
+			<Message>No memory.</Message>
+		</Event>
+		<Event>
+			<Id>26</Id>
+			<Message>TCP send error.</Message>
+		</Event>
+		<Event>
+			<Id>27</Id>
+			<Message>Host unreachable.</Message>
+		</Event>
+		<Event>
+			<Id>28</Id>
+			<Message>Invalid AMS fragment.</Message>
+		</Event>
+		<Event>
+			<Id>29</Id>
+			<Message>TLS send error – secure ADS connection failed.</Message>
+		</Event>
+		<Event>
+			<Id>30</Id>
+			<Message>Access denied – secure ADS access denied.</Message>
+		</Event>
+	</Source>
+	<Source>
+		<GUID>{13066D61-08C3-495B-AA41-2259D07198C3}</GUID>
+		<Name>XPlanarEvents</Name>
+		<Event>
+			<Id>#x13170000</Id>
+			<Message>Writing dump file: {0}</Message>
+		</Event>
+		<Event>
+			<Id>#x13170001</Id>
+			<Message>Mover redetection started</Message>
+		</Event>
+		<Event>
+			<Id>#x13170005</Id>
+			<Message>Determined target with SystemID: {0}</Message>
+		</Event>
+		<Event>
+			<Id>#x13170006</Id>
+			<Message>Reconnected to target</Message>
+		</Event>
+		<Event>
+			<Id>#x13170007</Id>
+			<Message>Coordinated mover communication started to identify and find all configured movers.</Message>
+		</Event>
+		<Event>
+			<Id>#x13170008</Id>
+			<Message>Coordinated mover communication finished.</Message>
+		</Event>
+		<Event>
+			<Id>#x13170009</Id>
+			<Message><![CDATA[BTN '{0}' was found at position {1}/{2} and assigned to mover object 0x{3,X}.]]></Message>
+		</Event>
+		<Event>
+			<Id>#x1317000A</Id>
+			<Message>Mover with object ID 0x{0,X} was removed from the system.</Message>
+		</Event>
+		<Event>
+			<Id>#x1317000B</Id>
+			<Message>Coordinated mover communication started to identify and assign movers if possible.</Message>
+		</Event>
+		<Event>
+			<Id>#x1317000C</Id>
+			<Message>Coordinated mover communication started to read BTN of all movers.</Message>
+		</Event>
+		<Event>
+			<Id>#x1317000D</Id>
+			<Message>Coordinated mover communication started to determine orientations of all movers.</Message>
+		</Event>
+		<Event>
+			<Id>#x1317000E</Id>
+			<Message>Coordinated mover communication started to determine orientations of all movers without turning.</Message>
+		</Event>
+		<Event>
+			<Id>#x1317000F</Id>
+			<Message>Preparing movers for communication.</Message>
+		</Event>
+		<Event>
+			<Id>#x13170010</Id>
+			<Message>Communication in progress...</Message>
+		</Event>
+		<Event>
+			<Id>#x13170011</Id>
+			<Message>Rearrange movers.</Message>
+		</Event>
+		<Event>
+			<Id>#x13175000</Id>
+			<Message>Determined NC cycle time: {0} s</Message>
+		</Event>
+		<Event>
+			<Id>#x13175001</Id>
+			<Message>Mover communication started.</Message>
+		</Event>
+		<Event>
+			<Id>#x13175002</Id>
+			<Message>Mover communication finished successfully.</Message>
+		</Event>
+		<Event>
+			<Id>#x13175003</Id>
+			<Message>Mover orientation determination started.</Message>
+		</Event>
+		<Event>
+			<Id>#x13175004</Id>
+			<Message>Mover orientation determination finished successfully.</Message>
+		</Event>
+		<Event>
+			<Id>#x13175005</Id>
+			<Message>Mover file transfer started.</Message>
+		</Event>
+		<Event>
+			<Id>#x13175006</Id>
+			<Message>Mover file transfer finished successfully.</Message>
+		</Event>
+		<Event>
+			<Id>#x13175007</Id>
+			<Message>Requested mover submission to Mover-OID 0x{0,X} of system {1}</Message>
+		</Event>
+		<Event>
+			<Id>#x13175008</Id>
+			<Message>Took control of arriving mover</Message>
+		</Event>
+		<Event>
+			<Id>#x13175009</Id>
+			<Message>Control handed over to adoption system</Message>
+		</Event>
+		<Event>
+			<Id>#x1317500A</Id>
+			<Message>Mover submission initiated</Message>
+		</Event>
+		<Event>
+			<Id>#x1317500B</Id>
+			<Message>Mover adoption initiated for Mover-OID 0x{0,X} of system {1}</Message>
+		</Event>
+		<Event>
+			<Id>#x1317500C</Id>
+			<Message>Finished mover submission</Message>
+		</Event>
+		<Event>
+			<Id>#x1317500E</Id>
+			<Message>Mover detectec at TransferArea. Enable mover transfer for feedback update.</Message>
+		</Event>
+		<Event>
+			<Id>#x1317500D</Id>
+			<Message>Mover adoption is done</Message>
+		</Event>
+		<Event>
+			<Id>#x1317B007</Id>
+			<Message>Mover-OID 0x{0,X} from system {1} requested mover adoption of Mover-OID 0x{2,X}</Message>
+		</Event>
+		<Event>
+			<Id>#x23175000</Id>
+			<Message><![CDATA[[Event ID: 0x{0,X}] Defined parametrization set could not be found. Hence, parameters haven't been changed.]]></Message>
+		</Event>
+		<Event>
+			<Id>#x23175001</Id>
+			<Message>[Event ID: 0x{0,X}] Implausible mover position. Mover was removed from current movement area.</Message>
+		</Event>
+		<Event>
+			<Id>#x23175002</Id>
+			<Message>[Event ID: 0x{0,X}] Invalid basic inertia. Basic inertia is set to standard inertia (plain mover).</Message>
+		</Event>
+		<Event>
+			<Id>#x23175003</Id>
+			<Message>[Event ID: 0x{0,X}] Invalid payload inertia. Payload inertia is set to zero.</Message>
+		</Event>
+		<Event>
+			<Id>#x23175009</Id>
+			<Message>[Event ID: 0x{0,X}] Invalid mover feedback. Mover was removed from current movement area.</Message>
+		</Event>
+		<Event>
+			<Id>#x2317500C</Id>
+			<Message>[Event ID: 0x{0,X}] Invalid controller parameters of axis {1}. Controller parameters are set to default.</Message>
+		</Event>
+		<Event>
+			<Id>#x2317500D</Id>
+			<Message>[Event ID: 0x{0,X}] Invalid feedforward parameters of axis {1}. Feedforward parameters are set to default.</Message>
+		</Event>
+		<Event>
+			<Id>#x2317500E</Id>
+			<Message>[Event ID: 0x{0,X}] Invalid observer parameters of axis {1}. Observer parameters are set to default.</Message>
+		</Event>
+		<Event>
+			<Id>#x2317500F</Id>
+			<Message>[Event ID: 0x{0,X}] DC synchronization interrupted during mover transfer.</Message>
+		</Event>
+		<Event>
+			<Id>#x23175010</Id>
+			<Message>[Event ID: 0x{0,X}] Canceling Mover transfer not possible. Relevant data is currently exchanged.</Message>
+		</Event>
+		<Event>
+			<Id>#x23175012</Id>
+			<Message>[Event ID: 0x{0,X}] Failed to retrieve external feedback interface. Check the external feedback OID parameter is correct.</Message>
+		</Event>
+		<Event>
+			<Id>#x23175013</Id>
+			<Message>[Event ID: 0x{0,X}] Invalid external feedback observer parameters of axis {1}. Observer parameters are set to default.</Message>
+		</Event>
+		<Event>
+			<Id>#x23175014</Id>
+			<Message>[Event ID: 0x{0,X}] There is either no payload on the mover to be detected or the payload is too light (less than 0.1 kg).</Message>
+		</Event>
+		<Event>
+			<Id>#x23175015</Id>
+			<Message>[Event ID: 0x{0,X}] During payload identification process the force or power limits by the tile were exceeded and the result would be meaningless.</Message>
+		</Event>
+		<Event>
+			<Id>#x23175016</Id>
+			<Message>[Event ID: 0x{0,X}] Position offset out of allowed range ({1} axis)</Message>
+		</Event>
+		<Event>
+			<Id>#x23175018</Id>
+			<Message>[Event ID: 0x{0,X}] Defined external feedback parametrization set could not be found.</Message>
+		</Event>
+		<Event>
+			<Id>#x23175019</Id>
+			<Message>[Event ID: 0x{0,X}] Invalid Kalman filter parameters of axis {1}. Kalman filter parameters are set to default.</Message>
+		</Event>
+		<Event>
+			<Id>#x23176002</Id>
+			<Message>[Event ID: 0x{0,X}] Tile hardware warning (Value of CoE register 0x81430: 0x{1,X}).</Message>
+		</Event>
+		<Event>
+			<Id>#x23176003</Id>
+			<Message>[Event ID: 0x{0,X}] FB Inputs have not changed since last cycle.</Message>
+		</Event>
+		<Event>
+			<Id>#x23176004</Id>
+			<Message>[Event ID: 0x{0,X}] FB Inputs were missed for one cycle.</Message>
+		</Event>
+		<Event>
+			<Id>#x23176005</Id>
+			<Message>[Event ID: 0x{0,X}] FB Inputs implausible switch position (expected: {1}, actual: {2}).</Message>
+		</Event>
+		<Event>
+			<Id>#x2317A001</Id>
+			<Message>[Event ID: 0x{0,X}] Enabling time invalid. Must be between 0.1 s and 4.0 s.</Message>
+		</Event>
+		<Event>
+			<Id>#x2317A002</Id>
+			<Message>[Event ID: 0x{0,X}] Disabling time invalid. Must be between 0.1 s and 4.0 s.</Message>
+		</Event>
+		<Event>
+			<Id>#x2317A003</Id>
+			<Message>[Event ID: 0x{0,X}] Enabling height invalid. Must be between 0.5 mm and 5.0 mm.</Message>
+		</Event>
+		<Event>
+			<Id>#x2317B002</Id>
+			<Message>[Event ID: 0x{0,X}] Connection has been interrupted</Message>
+		</Event>
+		<Event>
+			<Id>#x3317001C</Id>
+			<Message>[Event ID: 0x{0,X}] No free capacity</Message>
+		</Event>
+		<Event>
+			<Id>#x3317001D</Id>
+			<Message>[Event ID: 0x{0,X}] Reconnected system (System ID: {1}) is not the same as the initially connected system (System ID: {2})</Message>
+		</Event>
+		<Event>
+			<Id>#x33170023</Id>
+			<Message>[Event ID: 0x{0,X}] Preparation of adoption system failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x33170024</Id>
+			<Message>[Event ID: 0x{0,X}] Could not create multicomputing command (HRESULT: 0x{1,X}).</Message>
+		</Event>
+		<Event>
+			<Id>#x33170025</Id>
+			<Message>[Event ID: 0x{0,X}] Submission setup failed (HRESULT: 0x{1,X}).</Message>
+		</Event>
+		<Event>
+			<Id>#x33170026</Id>
+			<Message>[Event ID: 0x{0,X}] Could not reserve mover for system transfer.</Message>
+		</Event>
+		<Event>
+			<Id>#x33170027</Id>
+			<Message>[Event ID: 0x{0,X}] Could not finish mover adoption.</Message>
+		</Event>
+		<Event>
+			<Id>#x33170028</Id>
+			<Message>[Event ID: 0x{0,X}] Target system reported an error. Communication has been terminated.</Message>
+		</Event>
+		<Event>
+			<Id>#x33170029</Id>
+			<Message>[Event ID: 0x{0,X}] Could not process all responses ({1} of {2})</Message>
+		</Event>
+		<Event>
+			<Id>#x3317002B</Id>
+			<Message>[Event ID: 0x{0,X}] Mover 0x{1,X} is not able to identify.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317002C</Id>
+			<Message>[Event ID: 0x{0,X}] {1} mover(s) have an error, e.g. mover 0x{2,X}. Coordinated mover communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317002D</Id>
+			<Message><![CDATA[[Event ID: 0x{0,X}] The configured BTN '{1}' was not identified on the system.]]></Message>
+		</Event>
+		<Event>
+			<Id>#x3317002E</Id>
+			<Message>[Event ID: 0x{0,X}] Coordinated mover communication failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x33170035</Id>
+			<Message>[Event ID: 0x{0,X}] Wrong mover type. Mover 0x{1,X} is a mover type that cannot communicate.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317003C</Id>
+			<Message><![CDATA[[Event ID: 0x{0,X}] BTN '{1}' was identified multiple times.]]></Message>
+		</Event>
+		<Event>
+			<Id>#x3317003D</Id>
+			<Message>[Event ID: 0x{0,X}] {1} tile(s) have an invalid firmware version, e.g. tile 0x{2,X}. Firmware must be at least version 4. Coordinated mover communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317003E</Id>
+			<Message>[Event ID: 0x{0,X}] DC link voltage of {1} tile(s) is not ok, e.g. tile 0x{2,X}. Coordinated mover communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317003F</Id>
+			<Message>[Event ID: 0x{0,X}] Part 0x{1,X} has an error. {2} tiles of this part have an error. Coordinated mover communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x33170040</Id>
+			<Message>[Event ID: 0x{0,X}] {1} mover(s) are activated, e.g. mover 0x{2,X}. Coordinated mover communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x33170044</Id>
+			<Message><![CDATA[[Event ID: 0x{0,X}] Identified BTN '{1}' is not configured.]]></Message>
+		</Event>
+		<Event>
+			<Id>#x3317004B</Id>
+			<Message>[Event ID: 0x{0,X}] No movers were found on the system. Coordinated mover communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317004C</Id>
+			<Message>[Event ID: 0x{0,X}] Wrong mover type. Mover 0x{1,X} is a mover type which orientation cannot be determined yet.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317004D</Id>
+			<Message>[Event ID: 0x{0,X}] Preparation for mover communication of mover 0x{1,X} failed. Coordinated mover communication failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317004E</Id>
+			<Message>[Event ID: 0x{0,X}] Mover communication of mover 0x{1,X} failed. Coordinated mover communication failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317004F</Id>
+			<Message>[Event ID: 0x{0,X}] The determined orientation of mover 0x{1,X} is uncertain. Coordinated mover communication failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x33172000</Id>
+			<Message>[Event ID: 0x{0,X}] Peers with the same target musst be assigned to the same task</Message>
+		</Event>
+		<Event>
+			<Id>#x33175001</Id>
+			<Message>[Event ID: 0x{0,X}] Could not reach defined start height</Message>
+		</Event>
+		<Event>
+			<Id>#x33175007</Id>
+			<Message>[Event ID: 0x{0,X}] Initialization failed</Message>
+		</Event>
+		<Event>
+			<Id>#x33175008</Id>
+			<Message>[Event ID: 0x{0,X}] Actual position is outside of movement area. Initiating mover stop</Message>
+		</Event>
+		<Event>
+			<Id>#x33175009</Id>
+			<Message>[Event ID: 0x{0,X}] NC mapping error</Message>
+		</Event>
+		<Event>
+			<Id>#x3317500A</Id>
+			<Message>[Event ID: 0x{0,X}] Feedback error</Message>
+		</Event>
+		<Event>
+			<Id>#x3317500B</Id>
+			<Message>[Event ID: 0x{0,X}] Could not determine NC cycle time. Initiating mover stop</Message>
+		</Event>
+		<Event>
+			<Id>#x3317500C</Id>
+			<Message>[Event ID: 0x{0,X}] Position setpoints are unreachable (axis = {1}; position setpoint = {2,f}; actual position = {3,f}). Initiating mover stop</Message>
+		</Event>
+		<Event>
+			<Id>#x3317500F</Id>
+			<Message>[Event ID: 0x{0,X}] Could not enter movement area</Message>
+		</Event>
+		<Event>
+			<Id>#x33175010</Id>
+			<Message>[Event ID: 0x{0,X}] Observer error. Invalid observer parameters seem to be configured.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175011</Id>
+			<Message>[Event ID: 0x{0,X}] Mover is rotated. Enabling is not possible.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175012</Id>
+			<Message>[Event ID: 0x{0,X}] Maximum force limit parameters exceed the maximum limit. Parameters stay the same.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175013</Id>
+			<Message>[Event ID: 0x{0,X}] Minimum force limit parameters exceed the maximum limit. Parameters stay the same.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175014</Id>
+			<Message>[Event ID: 0x{0,X}] Minimum force limit parameters are greater than the maximum force parameters. Parameters stay the same.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175015</Id>
+			<Message>[Event ID: 0x{0,X}] Maximum force limit parameters are below zero. Parameters stay the same.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175016</Id>
+			<Message>[Event ID: 0x{0,X}] Minimum force limit parameters are below zero. Parameters stay the same.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175017</Id>
+			<Message>[Event ID: 0x{0,X}] Maximum force limit parameters are equal to zero in at least 1 DOF. Parameters stay the same.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175018</Id>
+			<Message>[Event ID: 0x{0,X}] Minimum force limit parameters are equal to zero in at least 1 DOF. Parameters stay the same.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317501A</Id>
+			<Message>[Event ID: 0x{0,X}] C setpoint is unreachable at this position. Initiating mover stop.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317501B</Id>
+			<Message>[Event ID: 0x{0,X}] No rotation feedback available. Initiating mover stop.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317501D</Id>
+			<Message>[Event ID: 0x{0,X}] Mover is not assigned to any movement area. Enabling is not possible.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317501F</Id>
+			<Message>[Event ID: 0x{0,X}] Mover is not allowed to leave movement area when it is activated. Disable mover first!</Message>
+		</Event>
+		<Event>
+			<Id>#x33175022</Id>
+			<Message>[Event ID: 0x{0,X}] Commanded Part OID from NC (0x{1,X}) not found.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175023</Id>
+			<Message>[Event ID: 0x{0,X}] Mover is on part with error. Switching into error state.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175024</Id>
+			<Message>[Event ID: 0x{0,X}] Mover uses deactivated part. Switching into error state.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175026</Id>
+			<Message>[Event ID: 0x{0,X}] Mover cannot enable because the part and the tiles could not be enabled. Switching into error state.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175027</Id>
+			<Message>[Event ID: 0x{0,X}] Mover has an error. Communication attempt is aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175028</Id>
+			<Message>[Event ID: 0x{0,X}] Invalid tile firmware. Firmware version must at least be 4. Communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175029</Id>
+			<Message>[Event ID: 0x{0,X}] Tile DC link voltage too low. Communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317502A</Id>
+			<Message>[Event ID: 0x{0,X}] System could not be switched on. Communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317502B</Id>
+			<Message>[Event ID: 0x{0,X}] Mover communication failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317502C</Id>
+			<Message>[Event ID: 0x{0,X}] Mover file transfer failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317502E</Id>
+			<Message>[Event ID: 0x{0,X}] Mover cannot be reset because part does not reset.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175030</Id>
+			<Message>[Event ID: 0x{0,X}] Mover orientation determination failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175031</Id>
+			<Message>[Event ID: 0x{0,X}] One or more Parts used by the mover have an error. Communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175032</Id>
+			<Message>[Event ID: 0x{0,X}] Mover communication not possible. Either no ID bumper is configured or the configured mover type does not allow communication.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175033</Id>
+			<Message>[Event ID: 0x{0,X}] Mover is activated. Communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175034</Id>
+			<Message>[Event ID: 0x{0,X}] Determined mover orientation is uncertain.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175035</Id>
+			<Message>[Event ID: 0x{0,X}] Mover cannot be reenabled right now because the current NC setpoints are out of range.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175036</Id>
+			<Message>[Event ID: 0x{0,X}] Could not cancel mover transfer</Message>
+		</Event>
+		<Event>
+			<Id>#x33175037</Id>
+			<Message>[Event ID: 0x{0,X}] Finishing mover submission failed</Message>
+		</Event>
+		<Event>
+			<Id>#x33175038</Id>
+			<Message>[Event ID: 0x{0,X}] Could not finish mover adoption</Message>
+		</Event>
+		<Event>
+			<Id>#x33175039</Id>
+			<Message>[Event ID: 0x{0,X}] Removed Mover from movement area due to lost EtherCAT connection of one or more used Tiles</Message>
+		</Event>
+		<Event>
+			<Id>#x3317503A</Id>
+			<Message>[Event ID: 0x{0,X}] External feedback deviation too large on axis {1}.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317503C</Id>
+			<Message>[Event ID: 0x{0,X}] Activate mover transfer failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317503D</Id>
+			<Message>[Event ID: 0x{0,X}] Canceled mover transfer because of interrupted DC synchronization.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175041</Id>
+			<Message>[Event ID: 0x{0,X}] Mover is between to XPlanar systems and mover transfer is not activated. Communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175042</Id>
+			<Message>[Event ID: 0x{0,X}] Mover bumper exceeds the tile area. Mover orientation cannot be determined.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175043</Id>
+			<Message>[Event ID: 0x{0,X}] Wrong mover firmware. Firmware version must be greater than 3. Mover orientation cannot be determined.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175044</Id>
+			<Message>[Event ID: 0x{0,X}] Transmission of the message to the mover failed. Mover communication failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175045</Id>
+			<Message>[Event ID: 0x{0,X}] Reception of the message from the mover failed. Mover communication failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175046</Id>
+			<Message>[Event ID: 0x{0,X}] Decoding of the message from the mover failed. Mover communication failed.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175047</Id>
+			<Message>[Event ID: 0x{0,X}] Mover is rotated and cannot be orientated. Communication aborted.</Message>
+		</Event>
+		<Event>
+			<Id>#x33175100</Id>
+			<Message>[Event ID: 0x{0,X}] In TwinCAT Measurement Bode Plot an NC2 axis has been chosen to be measured that was previously not linked in the mover tmc.</Message>
+		</Event>
+		<Event>
+			<Id>#x33176002</Id>
+			<Message>[Event ID: 0x{0,X}] EtherCAT communication is lost. System is shut down.</Message>
+		</Event>
+		<Event>
+			<Id>#x33176004</Id>
+			<Message>[Event ID: 0x{0,X}] Power supply temperature ({1,f} °C) exceeds the limit of {2,f} °C. System is shut down.</Message>
+		</Event>
+		<Event>
+			<Id>#x33176005</Id>
+			<Message>[Event ID: 0x{0,X}] Tile temperature {1} ({2,f} °C) exceeds the limit of {3,f} °C. System is shut down.</Message>
+		</Event>
+		<Event>
+			<Id>#x33176007</Id>
+			<Message>[Event ID: 0x{0,X}] Hardware error</Message>
+		</Event>
+		<Event>
+			<Id>#x3317600B</Id>
+			<Message>[Event ID: 0x{0,X}] Could not reset Tile</Message>
+		</Event>
+		<Event>
+			<Id>#x33178006</Id>
+			<Message>[Event ID: 0x{0,X}] One tile of this part has an error. The part, its tiles and its movers are shutting down.</Message>
+		</Event>
+		<Event>
+			<Id>#x33178009</Id>
+			<Message>[Event ID: 0x{0,X}] Part redetection is not possible.</Message>
+		</Event>
+		<Event>
+			<Id>#x33179008</Id>
+			<Message>[Event ID: 0x{0,X}] Submovers are in different movement areas.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317900E</Id>
+			<Message>[Event ID: 0x{0,X}] Mismatch of Submovers positions.</Message>
+		</Event>
+		<Event>
+			<Id>#x33179100</Id>
+			<Message><![CDATA[[Event ID: 0x{0,X}] Software coupling cannot be initialized. Check parameters and movers' positions.]]></Message>
+		</Event>
+		<Event>
+			<Id>#x33179101</Id>
+			<Message>[Event ID: 0x{0,X}] Submover has an error in software coupling.</Message>
+		</Event>
+		<Event>
+			<Id>#x33179102</Id>
+			<Message>[Event ID: 0x{0,X}] No memory can be assigned the software coupling.</Message>
+		</Event>
+		<Event>
+			<Id>#x33179103</Id>
+			<Message>[Event ID: 0x{0,X}] The number of submovers is not supported for the coupling.</Message>
+		</Event>
+		<Event>
+			<Id>#x33179104</Id>
+			<Message><![CDATA[[Event ID: 0x{0,X}] The submover's control is off.]]></Message>
+		</Event>
+		<Event>
+			<Id>#x33179105</Id>
+			<Message>[Event ID: 0x{0,X}] The setpoints for the software coupling are invalid.</Message>
+		</Event>
+		<Event>
+			<Id>#x33179106</Id>
+			<Message>[Event ID: 0x{0,X}] One of submovers touch the power limit, and the coupling is disabled.</Message>
+		</Event>
+		<Event>
+			<Id>#x33179108</Id>
+			<Message>[Event ID: 0x{0,X}] The active index is not available.</Message>
+		</Event>
+		<Event>
+			<Id>#x3317B01C</Id>
+			<Message>[Event ID: 0x{0,X}] No free transfer variables left. Please check configuration of XPlanarPeer.</Message>
+		</Event>
+		<Detail>
+			<Name>Comment</Name>
+			<Text>Manages all XPlanar event logger messages</Text>
+		</Detail>
+	</Source>
+</TcEventSources>

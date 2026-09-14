@@ -1,0 +1,31 @@
+# --- TwinCAT Project Artifacts ---
+*.tpy
+*.u_e
+*.compileinfo
+*.bak
+*.tsproj.bak
+*.xti.bak
+*.plcproj.bak
+# This folder contains compiled PLC code and should not be versioned
+_Config/PLC/*
+_Boot/*
+
+# --- TwinCAT Measurement (Scope) ---
+*.svd
+*.svf
+
+# --- Visual Studio Files ---
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.ncb
+*.userprefs
+*.sln.docstates
+
+# --- TwinCAT User Specific ---
+# Keeps your local IDE settings out of the repo
+LineIDs.xml
+*.dbg
+*.wad

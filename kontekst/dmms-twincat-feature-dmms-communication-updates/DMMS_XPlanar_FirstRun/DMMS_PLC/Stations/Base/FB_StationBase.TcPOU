@@ -1,0 +1,394 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_StationBase" Id="{2d0c860d-5211-414b-ba0b-04cb8f828be8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_StationBase IMPLEMENTS I_Station
+
+
+VAR
+	stMoveOnTrackParameters 	: ST_MoveOnTrackOptions; 
+	stMoveRotateOptions	: ST_MoveCOptions; 	
+	stStationPosition	: ST_StationPosition;	
+	eProcessMode		: E_ProcessMode;
+	StationPosition     : PositionXYC;	
+	stMoveToPositionOptions: ST_MoveToPositionOptions;
+	stJoinTrackOptions: ST_JoinTrackOptions;
+	stLeaveTrackOptions: ST_LeaveTrackOptions;
+	
+	idx  				: UDINT;
+	nStateInit			: UDINT;
+	nStateClear 		: UDINT;
+	nStateProcess		: UDINT;
+	bStationInitDone	: BOOL;	
+	
+	
+	// Lists for Stations
+	fbList_Station		: FB_List;
+	fbList_InputW		: FB_List;		
+	fbList_InputS		: FB_List;	
+	fbList_InputE		: FB_List;		
+	fbList_InputN		: FB_List;	
+	
+	// History info for debugging purpose
+	strInfo				: STRING;	
+	fbHistoryInfo		: FB_HistoryInfo;	
+	
+	
+	nProcessRequest		: DINT;
+	nProcessClearence	: DINT;
+	nProcessState		: DINT;
+	
+	fStationPositionOnTrack		: LREAL;	
+	
+	// =========================
+	nStationIndex				: UINT;
+	
+	nPreviousStationIndexInputW : UINT;	
+	nTrackIndexInputW 			: UINT;		
+	nPreviousStationIndexInputS : UINT;	
+	nTrackIndexInputS 			: UINT;		
+	nPreviousStationIndexInputE : UINT;	
+	nTrackIndexInputE 			: UINT;		
+	nPreviousStationIndexInputN : UINT;	
+	nTrackIndexInputN 			: UINT;		
+	
+	nNextStationIndexOutputW 	: UINT;	
+	nTrackIndexOutputW 			: UINT;		
+	nNextStationIndexOutputS 	: UINT;	
+	nTrackIndexOutputS 			: UINT;		
+	nNextStationIndexOutputE 	: UINT;	
+	nTrackIndexOutputE 			: UINT;		
+	nNextStationIndexOutputN 	: UINT;	
+	nTrackIndexOutputN 			: UINT;
+	
+	fStationPosition_X 			: LREAL;
+	fStationPosition_Y 			: LREAL;
+	fInRangeDistance			: LREAL;	
+	
+	fSendAwayDistanceOutputW    : LREAL;	  
+    fSendAwayDistanceOutputS    : LREAL;
+	fSendAwayDistanceOutputE    : LREAL;	
+	fSendAwayDistanceOutputN    : LREAL;
+	
+	fSendAwayPositionOutputW	: LREAL;
+	fSendAwayPositionOutputS	: LREAL;
+	fSendAwayPositionOutputE	: LREAL;
+	fSendAwayPositionOutputN	: LREAL;	
+	
+	nStationTrackIndex			: UINT;
+	nStationTaskList              :ARRAY[1..200] OF  UDINT; 
+
+	position					: PositionXYC;
+END_VAR
+
+
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="Properties" Id="{fd0777f5-fc91-4b83-836b-3df138db01e0}" />
+    <Method Name="Clear" Id="{4c408367-064c-402d-970b-be8f83eec97f}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+VAR_INPUT
+END_VAR
+
+
+VAR_INST
+
+	nStateClear : UINT;
+
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+	CASE nStateClear OF 
+		
+	0:	// Enter
+		            Clear := FALSE;
+		  nProcessRequest := 0;
+		nProcessClearence := 0;
+		    nProcessState := 0;	  
+			  
+		nStateClear := nStateClear +10;
+		
+	10: // Clear Station-List
+		IF fbList_Station.ClearList() THEN
+			nStateClear := nStateClear +10;	
+		END_IF
+		
+	20: // Clear InputW-List
+		IF fbList_InputW.ClearList() THEN
+			nStateClear := nStateClear +10;	
+		END_IF
+	
+	30: // Clear InputE-List
+		IF fbList_InputE.ClearList() THEN
+			nStateClear := nStateClear +10;	
+		END_IF	
+	
+	40: // Clear InputS-List
+		IF fbList_InputS.ClearList() THEN
+			nStateClear := nStateClear +10;	
+		END_IF		
+	
+	50: // Clear InputN-List
+		IF fbList_InputN.ClearList() THEN
+			nStateClear := nStateClear +10;	
+		END_IF
+	
+	60:	nStateClear := 100;	
+		
+		
+	100:  // Done
+		nStateClear := 0;
+		      Clear := TRUE;
+		
+	END_CASE
+	
+
+
+	
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cycle" Id="{797df6f0-b770-4dee-8c02-4a52ac49eae5}">
+      <Declaration><![CDATA[METHOD Cycle : BOOL
+VAR_INPUT
+END_VAR
+VAR
+	nForCounter : INT;
+END_VAR
+
+
+VAR_INST
+	
+	fTestValueX	: LREAL;
+	fTestValueY : LREAL;	
+	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[;
+
+
+	
+	
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Init" Id="{85cd9382-c88a-4b80-9e3d-de78cce941af}">
+      <Declaration><![CDATA[METHOD Init : BOOL
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+	  nStateInit := 0;
+	nStateProcess := 0;
+	 eProcessMode := E_ProcessMode.None;
+
+	Init := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="P_bInitDone" Id="{170fcc51-70b8-40e7-8501-42641c79dd41}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_bInitDone : BOOL]]></Declaration>
+      <Get Name="Get" Id="{d9b8fa73-a40a-4e02-a707-987591016094}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_bInitDone := bStationInitDone;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_eProcessMode" Id="{a54e278b-d4a2-4042-b6f6-2faa9d3150a4}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_eProcessMode : E_ProcessMode]]></Declaration>
+      <Get Name="Get" Id="{2d664a2f-5618-4f32-864a-2b78419db8d4}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_eProcessMode := eProcessMode;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{da929ff5-0a0a-43f0-b0fd-4a7332f4a163}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[eProcessMode := P_eProcessMode;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_List_Station" Id="{3671176d-73b2-4e4e-b189-17340f7a85ec}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_List_Station : I_List]]></Declaration>
+      <Get Name="Get" Id="{35e420ae-5ee2-43c4-8018-524c39f926db}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_List_Station := fbList_Station;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_List_Switch_Input_E" Id="{82605b03-ce95-4909-86ba-594ecd6e3795}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_List_Switch_Input_E : I_List]]></Declaration>
+      <Get Name="Get" Id="{4841efdc-0d89-457a-ba5a-c71197c1a8f2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_List_Switch_Input_E := fbList_InputE;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_List_Switch_Input_N" Id="{499ed030-b0e7-4dd9-88fd-d75590656591}" FolderPath="Properties\">
+      <Declaration><![CDATA[{warning 'Add property implementation'}
+PROPERTY P_List_Switch_Input_N : I_List
+]]></Declaration>
+      <Get Name="Get" Id="{9e04b48f-2188-4c67-85b2-402b3e4920c2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_List_Switch_Input_N := fbList_InputN;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_List_Switch_Input_S" Id="{ce1be437-a7e0-466f-95d5-40b68723035a}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_List_Switch_Input_S : I_List]]></Declaration>
+      <Get Name="Get" Id="{fe5495c0-2c20-49e5-87b6-79da5cfd19da}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_List_Switch_Input_S := fbList_InputS;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_List_Switch_Input_W" Id="{41e14359-4087-4409-aa1f-5e851e1896f0}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_List_Switch_Input_W : I_List]]></Declaration>
+      <Get Name="Get" Id="{f84852de-8fb1-48db-bf90-81dca3b69d94}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_List_Switch_Input_W := fbList_InputW;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_nErrorCode" Id="{4695a954-7f43-4461-9ea0-ed2a17d7feef}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_nErrorCode : UDINT]]></Declaration>
+      <Get Name="Get" Id="{3bfef907-5a1d-4fbc-8e70-173f2d934fdb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_Position" Id="{6fa15b1b-62e2-4bcd-948c-68774bb7cd41}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_Position : ST_StationPosition]]></Declaration>
+      <Get Name="Get" Id="{e4f1bd5d-1a08-4b5b-946c-d545bafad611}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_Position := stStationPosition;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_ProcessClearance" Id="{89046516-3382-4aba-9276-635fdf14ed66}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_ProcessClearance : DINT]]></Declaration>
+      <Get Name="Get" Id="{2a88829c-57bb-44c8-a204-1ae062ca71c0}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ProcessClearance := nProcessClearence;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_ProcessRequest" Id="{6ac380ee-8832-4c4c-97a8-197f9b499c3b}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_ProcessRequest : UDINT]]></Declaration>
+      <Get Name="Get" Id="{df7ccd5e-4155-464a-a8a5-2efbf0b8422f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ProcessRequest := nProcessRequest;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{02fa14bf-51b1-4bb5-b432-e7b9dc57f354}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[nProcessRequest := P_ProcessRequest;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_ProcessState" Id="{bc88e717-95c4-49d8-8348-42122813a034}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_ProcessState : UDINT]]></Declaration>
+      <Get Name="Get" Id="{5b1a7d6f-291b-4705-83c7-530bb8e1d4f9}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ProcessState := nProcessState;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{bc1e3dd3-dac7-42d8-99c3-e55c1cafdb1d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[nProcessState := P_ProcessState;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_StationTaskList" Id="{e2530656-5473-4313-8444-ebeb2bb306db}" FolderPath="Properties\">
+      <Declaration><![CDATA[PROPERTY P_StationTaskList : array[1..200] of UDINT]]></Declaration>
+      <Get Name="Get" Id="{11a0ae5e-75b6-4460-bfc7-b0a295ba884c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ P_StationTaskList := nStationTaskList;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{f8c6877e-bcc7-4e3a-ad37-ce80d731078b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[nStationTaskList := P_StationTaskList;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Process" Id="{aa10b277-24cb-4f44-9514-ef81c196a6e7}">
+      <Declaration><![CDATA[METHOD Process : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

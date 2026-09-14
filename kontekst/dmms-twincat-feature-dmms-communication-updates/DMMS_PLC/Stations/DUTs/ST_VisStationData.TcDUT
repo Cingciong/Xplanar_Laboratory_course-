@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_VisStationData" Id="{2e774a98-6b8d-4d42-93f6-10605078d290}">
+    <Declaration><![CDATA[TYPE ST_VisStationData :
+
+STRUCT
+	
+	bInit		: BOOL;
+	fPosition_X	: LREAL;
+	fPosition_Y : LREAL;
+
+END_STRUCT
+
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

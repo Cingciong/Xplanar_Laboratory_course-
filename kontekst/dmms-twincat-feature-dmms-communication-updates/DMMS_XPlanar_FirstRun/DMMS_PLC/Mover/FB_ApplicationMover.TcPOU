@@ -1,0 +1,505 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_ApplicationMover" Id="{40b5c66d-1fb4-4d55-9f96-3f23301af31f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ApplicationMover IMPLEMENTS I_MoverApplication
+VAR
+	ipMoverStandard	: I_XPlanarMoverStandard;
+	
+	stProductData	: ST_ProductData;
+	eMoverType 		: ST_EMoverLoadType;
+	
+	nMoverIndex		: INT;
+	sMoverID 		: STRING(13) := '00001111';
+	
+	nTrackId		: UDINT;
+	
+	// customer Data
+	bIsLoaded		: BOOL;	
+	stControlData	:ST_ControlData;
+	stMoverConfiguration: ST_MoverConfiguration;
+	stProcessTask: St_ProcessTask;
+	
+	
+				
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Cycle" Id="{3db1001d-9da7-43c7-a358-11235832af95}">
+      <Declaration><![CDATA[METHOD Cycle
+
+
+VAR_INST
+	nTestCounter	: UINT;
+	index: UDINT;
+	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF std <> 0 THEN
+
+	std.cycle();
+		
+		// comunication data 
+		
+	IF communication.RunAplicationComm THEN 
+		FOR index:=1 TO GVL.gc_nMaxNumberMovers DO 
+			
+			IF communication.g_Com_Movers[index].IN.id= THIS^.P_MoverID THEN 
+				
+				Communication.g_Com_Movers[index].OUT.Id:=THIS^.P_MoverID;
+				Communication.g_Com_Movers[index].OUT.TrackID:=THIS^.P_TrackId;
+				
+			IF communication.g_Com_Movers[index].IN.MoverType=1 THEN 
+				eMoverType :=ST_EMoverLoadType.Wellplate ;
+			ELSIF communication.g_Com_Movers[index].IN.MoverType=2 THEN 
+				eMoverType :=ST_EMoverLoadType.Gripper ;
+			ELSIF communication.g_Com_Movers[index].IN.MoverType=3 THEN 
+				eMoverType :=ST_EMoverLoadType.PipetteTips ;
+			END_IF	
+				
+				//Position 
+				Communication.g_Com_Movers[index].OUT.Avaiable:=(THIS^.std.P_State=3);
+				Communication.g_Com_Movers[index].OUT.position.vec := THIS^.std.P_ActPosition;
+	
+				Communication.g_Com_Movers[index].OUT.Position.vec.x:=THIS^.std.P_ActPosition.x;
+				Communication.g_Com_Movers[index].OUT.Position.vec.y:=THIS^.std.P_ActPosition.y;
+				Communication.g_Com_Movers[index].OUT.Position.vec.c:=THIS^.std.P_ActPosition.c;
+				
+				//configuration
+				stMoverConfiguration.MoverType:= Communication.g_Com_Movers[index].IN.MoverType;
+				communication.g_Com_Movers[index].out.MoverType:= THIS^.stMoverConfiguration.MoverType;
+	
+				stMoverConfiguration.WellplateData:=Communication.g_Com_Movers[index].IN.WellplateData;
+				
+				//ControlData
+				stControlData.StatusWord:= THIS^.std.P_State;
+				Communication.g_Com_Movers[index].OUT.Status_Word:= stControlData.StatusWord;
+				stControlData.ControlWord:= communication.g_Com_Movers[index].IN.ControlWord;
+				
+				//Process Task 
+				Communication.g_Com_Movers[index].OUT.LastTask:= stProcessTask.LastTask;
+				Communication.g_Com_Movers[index].OUT.CurrentTask:= stProcessTask.CurrentTask;
+				Communication.g_Com_Movers[index].OUT.CurrentTaskFinished:= stProcessTask.CurrentTaskFinished;
+				stProcessTask.TaskToProcessed:=Communication.g_Com_Movers[index].IN.TaskToProcessed;
+			
+				
+		
+					IF Communication.g_Com_Movers[index].IN.Reset THEN
+						
+						ipMoverStandard.Reset(slogMessage:='mover reset');
+						
+					END_IF
+
+			
+			
+			
+			END_IF
+		END_FOR
+	END_IF
+	
+	
+END_IF
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ManualMovement" Id="{7865894f-0036-4baf-a267-0db1d28c8243}">
+      <Declaration><![CDATA[METHOD ManualMovement : BOOL
+VAR_INPUT
+	bReset: bool;
+END_VAR
+
+VAR_INST
+	nTestCounter	: UINT;
+	index: UDINT;
+	Com_Index: UDINT;
+	nMovementSequence : UDINT;
+	
+	
+END_VAR
+
+VAR
+	ManMovements: 	ST_ManualMovements;
+	targetPos 						:  PositionXYC;
+	fTargetPosOnTrack 				: LREAL;
+	stOptionsJoinTrack				: ST_JoinTrackOptions;
+	stMoveOnTrackOptions			: ST_MoveOnTrackOptions;
+	stMoveToPositionOptions			: ST_MoveToPositionOptions;
+	bMoversJoined 					: BOOL;
+	bMoverError						: BOOL;
+	bMoversInPos					: BOOL;
+	strInfo							: STRING;
+	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	IF communication.RunAplicationComm THEN 
+		FOR index:=1 TO GVL.gc_nMaxNumberMovers DO 
+			
+			IF communication.g_Com_Movers[index].IN.id= THIS^.P_MoverID THEN
+				
+				ManMovements:= communication.g_Com_Movers[index].ManualMovements;
+				Com_Index:=index;
+				
+			END_IF
+			
+		END_FOR
+		
+	END_IF
+	
+	
+	
+	IF bReset OR  Communication.g_Com_GlobalState.IN.Stop   OR Communication.g_Com_GlobalState.IN.Reset THEN 
+	ManualMovement := FALSE;
+	nMovementSequence := 0;
+END_IF
+
+CASE nMovementSequence OF
+	
+
+0: //init
+		
+ 	// wait for enabling  process 
+			 IF Communication.g_Com_GlobalState.IN.Start AND NOT Communication.g_Com_GlobalState.IN.EOC_Stop  AND Com_Index <>0 THEN 
+				IF Communication.g_Com_GlobalState.IN.ProgramType =2 THEN 
+					  nMovementSequence := 100;
+				
+					   ELSIF Communication.g_Com_GlobalState.IN.ProgramType =3 THEN 
+					  nMovementSequence := 200;
+				END_IF								
+					 
+			 END_IF
+			 
+
+
+
+
+100:	 // position test 
+	
+		// leave track
+		IF ipMoverStandard.P_CommandMode= MC_PLANAR_MOVER_COMMAND_MODE.OnTrack AND  NOT ipMoverStandard.P_Busy THEN
+
+			ipMoverStandard.LeaveTrackInPosition( strInfo, FALSE);
+			nMovementSequence := nMovementSequence +1;
+		ELSE 
+			nMovementSequence := 110;
+		END_IF
+
+
+101:
+			IF ipMoverStandard.P_LeaveTrackInPosition.Done THEN
+				P_TrackId:=0;
+				nMovementSequence := 110;
+			ELSIF ipMoverStandard.P_LeaveTrackInPosition.Error THEN
+				nMovementSequence := nMovementSequence +4;
+			END_IF	
+				
+
+
+110://setup state 
+		IF NOT ManMovements.FreeMove.move_position_CMD_enable THEN 
+				ManMovements.FreeMove.move_position_CMD_done:= FALSE;
+				communication.g_Com_Movers[Com_Index].ManualMovements:=ManMovements;
+		END_IF
+						nMovementSequence := nMovementSequence +  1;					  
+				
+111: 	//execute command 
+stMoveToPositionOptions.useOrientation:= TRUE;
+	targetPos.x:=	ManMovements.FreeMove.move_position.x ;
+	targetPos.y:=	ManMovements.FreeMove.move_position.y;
+	targetPos.C:=	ManMovements.FreeMove.move_position.C;
+					 // targetpos.ShiftByXy(ManMovements.move_position.x,ManMovements.move_position.y);
+				
+	
+
+
+			IF  ManMovements.FreeMove.move_position_CMD_enable AND NOT ManMovements.FreeMove.move_position_CMD_done  THEN 
+					ipMoverStandard.MoveToPositionEXt('move to XY', targetPos, 100, 2500, 2500, 25000,stMoveToPositionOptions);
+					nMovementSequence := nMovementSequence +  1;
+			ELSE
+				nMovementSequence := 0;
+			END_IF
+				
+		
+	
+	
+112: 	// check commad result 
+
+		
+		IF ipMoverStandard.P_MoveToPositionExt.Done THEN
+			ManMovements.FreeMove.move_position_CMD_done:= TRUE;
+			communication.g_Com_Movers[Com_Index].ManualMovements:=ManMovements;
+			nMovementSequence :=  0;
+		ELSIF ipMoverStandard.P_MoveToPositionExt.Error THEN
+			nMovementSequence := nMovementSequence +  3;
+		END_IF				
+		
+		
+200:
+		 IF NOT ManMovements.MoveTrack.move_track_CMD_done THEN 
+				IF ManMovements.MoveTrack.join_track AND ManMovements.MoveTrack.move_track_no<>0 THEN 
+					nMovementSequence := 210;
+				ELSIF ManMovements.MoveTrack.leave_track THEN
+					nMovementSequence := 220;
+				ELSIF ManMovements.MoveTrack.move_track AND ManMovements.MoveTrack.move_track_no<>0 THEN 
+					nMovementSequence := 230;
+				ELSE
+					nMovementSequence := 0;
+				END_IF
+		END_IF
+		
+		IF NOT ManMovements.MoveTrack.move_track_CMD_enable THEN 
+			ManMovements.MoveTrack.move_track_CMD_done := FALSE;
+			communication.g_Com_Movers[Com_Index].ManualMovements:=ManMovements;
+		END_IF
+
+210:	
+		stOptionsJoinTrack.useOrientation := TRUE;
+	
+		IF (ipMoverStandard.P_CommandMode<> MC_PLANAR_MOVER_COMMAND_MODE.OnTrack OR  INT_TO_UDINT(ManMovements.MoveTrack.move_track_no)<>P_TrackId)
+			AND NOT ipMoverStandard.P_Busy
+			AND ManMovements.MoveTrack.move_track_CMD_enable THEN
+			ipMoverStandard.JoinTrack('Joining track', GVL.g_Tracks[ManMovements.MoveTrack.move_track_no].std, 250, 1250, 12500, stOptionsJoinTrack);
+				nMovementSequence := nMovementSequence + 1;
+			ELSE 
+				nMovementSequence := 0;
+		END_IF
+	
+	
+		
+211:
+	
+			bMoversJoined := ipMoverStandard.P_JoinTrack.Done;
+			bMoverError :=  ipMoverStandard.P_JoinTrack.Error;			
+		
+	IF bMoversJoined THEN
+		ManMovements.MoveTrack.move_track_CMD_done:=TRUE;
+		communication.g_Com_Movers[Com_Index].ManualMovements:=ManMovements;
+		P_TrackId:=INT_TO_UDINT(ManMovements.MoveTrack.move_track_no);
+		nMovementSequence := 0;
+	ELSIF bMoverError THEN
+ 			nMovementSequence := nMovementSequence + 4;
+	END_IF
+
+		
+	
+		
+220:
+		
+		IF ipMoverStandard.P_CommandMode= MC_PLANAR_MOVER_COMMAND_MODE.OnTrack AND  NOT ipMoverStandard.P_Busy AND ManMovements.MoveTrack.move_track_CMD_enable  THEN
+
+			ipMoverStandard.LeaveTrackInPosition( strInfo, FALSE);
+			nMovementSequence := nMovementSequence +1;
+		ELSE 
+			nMovementSequence := 0;
+		END_IF
+
+
+221:
+			IF ipMoverStandard.P_LeaveTrackInPosition.Done THEN
+				ManMovements.MoveTrack.move_track_CMD_done:=TRUE;
+				communication.g_Com_Movers[Com_Index].ManualMovements:=ManMovements;
+				P_TrackId:=0;
+				nMovementSequence := 0;
+			ELSIF ipMoverStandard.P_LeaveTrackInPosition.Error THEN
+				nMovementSequence := nMovementSequence +4;
+			END_IF	
+			
+230:
+
+		
+		stMoveOnTrackOptions.gap := 120;
+		fTargetPosOnTrack:=ManMovements.MoveTrack.move_track_position;
+		stMoveOnTrackOptions.dynamicMode := MC_DYNAMICS_REDUCTION_MODE.AccelerationLimitedVelocity;
+		stMoveOnTrackOptions.direction := MC_DIRECTION.mcDirectionShortestWay;
+		IF   NOT ipMoverStandard.P_Busy AND ManMovements.MoveTrack.move_track_CMD_enable  THEN
+				 ipMoverStandard.MoveOnTrackEXT('move on track', GVL.g_Tracks[ManMovements.MoveTrack.move_track_no].std, fTargetPosOnTrack,
+								300, 3000, 15000, stMoveOnTrackOptions);
+				nMovementSequence := nMovementSequence +1;
+		 END_IF
+		 
+
+
+	231:
+			bMoversInPos :=  ipMoverStandard.P_MoveOnTrackExt.Done;
+			bMoverError := ipMoverStandard.P_MoveOnTrackExt.Error;
+	
+		
+		IF bMoversInPos THEN
+			ManMovements.MoveTrack.move_track_CMD_done:=TRUE;
+			communication.g_Com_Movers[Com_Index].ManualMovements:=ManMovements;
+			nMovementSequence := 0;
+		ELSIF bMoverError THEN
+			nMovementSequence := nMovementSequence +  3;
+		END_IF
+			
+			
+			
+	END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="P_ControlData" Id="{2455e71b-fb83-4044-b907-3e616e6c3fda}">
+      <Declaration><![CDATA[PROPERTY P_ControlData : Reference to ST_ControlData]]></Declaration>
+      <Get Name="Get" Id="{9b17cc24-af14-47f7-bb6d-635fc676933d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ControlData := stControlData;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{9340ef7c-3967-4a37-992a-4da9010b0d18}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[stControlData := P_ControlData;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_MoverConfiguration" Id="{cfe16262-f9ee-41e2-9e7e-647c990c55f5}">
+      <Declaration><![CDATA[PROPERTY P_MoverConfiguration : Reference to  ST_MoverConfiguration]]></Declaration>
+      <Get Name="Get" Id="{75c82f30-bcc9-4d22-bae8-67a779aac687}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_MoverConfiguration := stMoverConfiguration;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{e3a6a65f-4430-4204-90e3-609c1eb17e7e}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[stMoverConfiguration := P_MoverConfiguration;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_MoverID" Id="{ceaf460d-d28b-4605-a088-d68a1efdefde}">
+      <Declaration><![CDATA[PROPERTY P_MoverID : STRING]]></Declaration>
+      <Get Name="Get" Id="{246c1b7c-a7c3-415e-a7a1-5fdd75505ec4}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_MoverID := sMoverID;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{a48c6801-c6b0-48e8-befc-74830e92c1cc}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[sMoverID := P_MoverID;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_MoverIndex" Id="{8b0bebb8-d22b-43e1-ab25-8038159fc710}">
+      <Declaration><![CDATA[PROPERTY P_MoverIndex : INT]]></Declaration>
+      <Get Name="Get" Id="{6f9fc754-362d-4beb-b50e-e77684f8d50a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_MoverIndex := nMoverIndex;
+
+
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{e9f36281-f830-4039-8a28-5be43aca55c3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[nMoverIndex := P_MoverIndex;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_ProcessTask" Id="{15a1423a-be1f-4d14-88f2-a95cd229bed9}">
+      <Declaration><![CDATA[PROPERTY P_ProcessTask : ST_ProcessTask]]></Declaration>
+      <Get Name="Get" Id="{7bdaac9d-2cac-4616-96a6-38473a7bb3f5}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ProcessTask := stProcessTask;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{0c0cce35-0525-420c-b754-e161c1a641f3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[stProcessTask := P_ProcessTask;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_ProductData" Id="{2fbfbc33-cad6-4c1a-b194-3c225a2cf1a2}">
+      <Declaration><![CDATA[PROPERTY P_ProductData : Reference to ST_ProductData]]></Declaration>
+      <Get Name="Get" Id="{4bf4c121-923d-40dd-9c53-7ec22e020235}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ProductData REF= stProductData;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{d33adc77-a2c9-4f4a-8e6a-c148905050cb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[stProductData := P_ProductData;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_TrackId" Id="{bb3a46f6-fd72-439f-b5bc-ae327bc94714}">
+      <Declaration><![CDATA[PROPERTY P_TrackId : UDINT]]></Declaration>
+      <Get Name="Get" Id="{46b8b84e-3f2c-4789-b5d6-57d0e1a81c42}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_TrackId := nTrackId;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{d5f18ced-3aa1-4f6f-8451-8cfd636c29e7}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[nTrackId := P_TrackId;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="std" Id="{74c2e056-88c5-47b5-acb8-9968b5751165}">
+      <Declaration><![CDATA[PROPERTY std : I_XPlanarMoverStandard]]></Declaration>
+      <Get Name="Get" Id="{fdfe9a14-b3ed-40dd-b13f-11a53d96eb71}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF ipMoverStandard <> 0 THEN
+	std := ipMoverStandard;	
+END_IF
+
+
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{75695d29-ba0d-4136-a3f2-f10c3a65b76b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ipMoverStandard := std;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+  </POU>
+</TcPlcObject>

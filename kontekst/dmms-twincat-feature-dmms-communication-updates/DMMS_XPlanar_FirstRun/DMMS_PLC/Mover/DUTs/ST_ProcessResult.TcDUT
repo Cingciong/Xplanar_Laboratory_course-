@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ProcessResult" Id="{ec5c7ec2-883e-404f-a3f6-8d63ad30af4f}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ProcessResult :
+STRUCT
+	
+	Done:BOOL;
+	OK:BOOL;
+	Damage:BOOL;
+	NOK:BOOL;
+	NOK_Resaon: INT;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

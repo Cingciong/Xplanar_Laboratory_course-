@@ -1,0 +1,1526 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_MotionSystem" Id="{dd017a89-cfb4-4eee-9c9f-e68b29c1e31d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MotionSystem
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	fbXPlanarSystem	: FB_XPlanarSystem;
+	stMoverDetectionInfos   : ST_TcIoMoverDetectionInfos;
+	fbTcIoXPlanarEnv	:FB_TcIoXPlanarEnvironment  ; 
+	ipXpu	: I_TcIoXPlanarProcessingUnit;
+
+	
+	fbMover					: ARRAY [1..GVL.gc_nMaxNumberMovers] OF FB_ApplicationMover;
+	fbXPlanarMover : ARRAY [1..GVL.gc_nMaxNumberMovers] OF FB_XPlanarMoverStandard; 
+	
+	nStartupSequence : UDINT;
+	nStartingSequence : UDINT;
+	nExecutingSequence : UDINT;
+	nResettingSequence 	: UDINT;
+	nRecoverySequence : UDINT;
+	
+	// Helper
+	bDone 					: BOOL;
+	idx						: UDINT;
+	nForCounter 			: UDINT;	
+	nErrorID				: UDINT;
+	bMoverError				: BOOL;	
+	
+	// TRACKS
+	fbTrackPuncherWellplate		: FB_PuncherWellplateTrack;
+	fbTrackBufferPuncher		: FB_PuncherBufferTrack;
+	fbPuncherSeperate			: FB_PuncherSeperateTrack;
+	fbTrackStradeFirstSeg		: FB_StradeFirstSegTrack;
+	fbTrackStradeSecondSeg		: FB_StradeSecondSegTrack;
+	fbTrackPipettePreBuffer		: FB_PipettePreBufferTrack;
+	fbTrackPipette				: FB_PipetteTrack;
+	fbTrackPipettePostBuffer	: FB_PipettePostBufferTrack;
+	fbTrackPipetteBufferCon		: FB_PipetteBufferConTrack;
+	fbTrackUserInteraction		: FB_UserInteractionTrack;
+	fbCloseLoopTrack			: FB_CloseLoopTrack;
+
+	
+	// STATIONS
+	fbPuncherStation : FB_PuncherStation;
+	fbPuncherSeparateStation : FB_PuncherSeparateStation;
+	fbPuncherBufferStation : FB_PuncherBufferStation;
+	
+	bAssignmentComplete 		: BOOL;
+	
+
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Cycle" Id="{6d935deb-455d-44fd-9f30-2d2642d5855b}">
+      <Declaration><![CDATA[METHOD Cycle
+VAR_INPUT
+END_VAR
+
+VAR
+	index	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+fbXPlanarSystem.Cycle();
+
+IF bAssignmentComplete THEN
+
+	FOR index := 1 TO  MoverCount DO
+		fbXPlanarMover[index].Cycle();
+		GVL.g_Movers[index].Cycle();
+		fbMover[index].Cycle();
+	END_FOR
+
+	FOR index := 1 TO GVL.gc_NumberTracks DO
+		GVL.g_Tracks[index].Cycle();
+	END_FOR
+	IF DEBUG.IBN_bool[1] THEN
+		FOR index := 1 TO GVL.gc_NumberStations DO
+			GVL.g_Stations[index].Cycle();
+		END_FOR
+	END_IF
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Execute" Id="{b5304708-1eb5-44ee-ae7f-58671e35ca7d}">
+      <Declaration><![CDATA[METHOD Execute : BOOL
+VAR_INPUT
+	bReset : BOOL;
+END_VAR
+
+VAR
+	index : UDINT;
+	com_index:UDINT;
+	stMoveOnTrackOptions: ST_MoveOnTrackOptions;
+END_VAR
+
+VAR_INST
+	
+	stOptionsJoinTrack				: ST_JoinTrackOptions;
+	bMoversJoined 					: BOOL;
+	nMoverToTurnBack				: UDINT;
+	nTrackToCheck					:UDINT; 
+	nDistanceToTrack				:LREAL;
+	nDistanceToTargetTrack			: ARRAY[1..moverCount] OF REAL;
+	nTargetTrack					: ARRAY[1..moverCount] OF UDINT;
+	bMoversinPos					:BOOL;
+	bMoverError						:BOOL;
+	stMoverConf					:ST_MoverConfiguration;
+	
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset OR  Communication.g_Com_GlobalState.IN.EOC_Stop   THEN
+	Execute := FALSE;
+	nExecutingSequence := 0;
+END_IF
+
+CASE nExecutingSequence OF
+	
+
+0: //init
+		bMoversinPos := FALSE;
+		bMoverError := FALSE;
+ 	// wait for enabling  process 
+			 IF Communication.g_Com_GlobalState.IN.Start AND NOT Communication.g_Com_GlobalState.IN.EOC_Stop THEN 
+				 IF Communication.g_Com_GlobalState.IN.ProgramType =1 THEN 
+				 nExecutingSequence := 10;
+			
+				 Communication.g_Com_GlobalState.OUT.ProgramType:=1;
+				 
+				 ELSIF Communication.g_Com_GlobalState.IN.ProgramType =2 THEN 
+					  nExecutingSequence := 20;
+					   Communication.g_Com_GlobalState.OUT.InCycle:=FALSE; 
+						Communication.g_Com_GlobalState.OUT.ProgramType:=2;
+				
+					   ELSIF Communication.g_Com_GlobalState.IN.ProgramType =3 THEN 
+					  nExecutingSequence := 30;
+					  	Communication.g_Com_GlobalState.OUT.InCycle:=FALSE; 
+						Communication.g_Com_GlobalState.OUT.ProgramType:=3;
+						
+				END_IF								
+					 
+			 END_IF
+			 
+
+			 
+10:			 // auto cycle 
+			// check all movers join to track
+			
+			FOR index := 1 TO gvl. g_nMoverCount DO
+			IF fbXPlanarMover[index].P_CommandMode<> MC_PLANAR_MOVER_COMMAND_MODE.OnTrack THEN 
+				
+					nExecutingSequence := nExecutingSequence + 1;
+					index:=nMoverToTurnBack;
+				RETURN ;
+			END_IF
+			END_FOR 
+			nExecutingSequence := nExecutingSequence + 5;
+	
+11: // look for for nearest track 
+
+	
+	FOR index := 1 TO  gvl.g_nMoverCount DO
+		nDistanceToTargetTrack[index]:= 999999;
+		
+		FOR nTrackToCheck :=1 TO GVL.gc_NumberTracks DO 
+		nDistanceToTrack := fbXPlanarMover[ index].GetDistanceToTrack(GVL.g_Tracks[nTrackToCheck].std);
+		
+		IF nDistanceToTrack < nDistanceToTargetTrack[index] AND nDistanceToTrack<> -1 THEN 
+			nDistanceToTargetTrack[index]:=nDistanceToTrack;
+			nTargetTrack[index] :=nTrackToCheck;
+		END_IF
+		
+		END_FOR
+	END_FOR
+	
+	nExecutingSequence := nExecutingSequence + 1;
+	
+12: // join to track
+
+		stOptionsJoinTrack.useOrientation := TRUE;
+		
+
+		
+	FOR index := 1 TO gvl.g_nMoverCount DO
+// 		
+// 		IF fbXPlanarMover[index].P_CommandMode<> MC_PLANAR_MOVER_COMMAND_MODE.OnTrack THEN
+// 			IF  GVL.g_Movers[index].P_MoverConfiguration.MoverType= ST_EMoverLoadType.Wellplate THEN 
+
+				fbXPlanarMover[index].JoinTrack('Joining track', GVL.g_Tracks[nTargetTrack[index]].std, 250, 1250, 12500, stOptionsJoinTrack);
+			
+// 			ELSIF  GVL.g_Movers[index].P_MoverConfiguration.MoverType= ST_EMoverLoadType.Gripper THEN 
+// 					
+// 				fbXPlanarMover[index].JoinTrack('Joining track', GVL.g_Tracks[11].std, 250, 1250, 12500, stOptionsJoinTrack);
+// 			
+// 			ELSIF  GVL.g_Movers[index].P_MoverConfiguration.MoverType= ST_EMoverLoadType.PipetteTips THEN 
+// 					
+// 				fbXPlanarMover[index].JoinTrack('Joining track', GVL.g_Tracks[7].std, 250, 1250, 12500, stOptionsJoinTrack);
+// 			
+// 			END_IF
+// 		END_IF
+// 		
+		END_FOR
+	
+			nExecutingSequence := nExecutingSequence + 1;
+		
+	13:
+		bMoversJoined := TRUE;
+		bMoverError := FALSE;
+	FOR index := 1 TO moverCount DO
+			
+			bMoversJoined := bMoversJoined AND fbXPlanarMover[index].P_JoinTrack.Done;
+			IF  fbXPlanarMover[index].P_JoinTrack.Done THEN 
+				gvl.g_Movers[index].P_TrackId:=nTargetTrack[index];
+			END_IF
+			bMoverError := bMoverError OR fbXPlanarMover[index].P_JoinTrack.Error;	
+			 	
+		END_FOR
+		
+	IF bMoversJoined THEN
+			nExecutingSequence := 10;
+	ELSIF bMoverError THEN
+ 			nExecutingSequence := nExecutingSequence + 4;
+	END_IF
+			
+14: 	//send mover to station 
+	  	  
+		FOR index := 1 TO gvl.g_nMoverCount DO
+			 IF fbXPlanarMover[index].P_TrackId= GVL.TrackPuncherWellplate 
+			AND GVL.g_Movers[index].P_MoverConfiguration.MoverType= ST_EMoverLoadType.Wellplate
+			
+			  THEN 
+				 fbPuncherStation.P_List_Switch_Input_W.AddMover(GVL.g_Movers[index].std);
+			 END_IF
+
+			  IF GVL.g_Movers[index].P_MoverConfiguration.MoverType= ST_EMoverLoadType.Gripper THEN 
+				 fbPuncherSeparateStation.P_List_Switch_Input_N.AddMover(GVL.g_Movers[index].std);
+			  END_IF
+			  
+			 
+		END_FOR
+
+	
+			nExecutingSequence := nExecutingSequence+1;
+
+15: 		// set process mode 
+		 	 FOR index := 1 TO GVL.gc_NumberStations DO
+ 			GVL.g_Stations[index].P_eProcessMode := E_ProcessMode.Production;		   
+	 	   END_FOR
+			
+				nExecutingSequence := nExecutingSequence+1;
+
+16:			//process method
+			Communication.g_Com_GlobalState.OUT.InCycle:=TRUE; 
+			fbPuncherStation.Process();
+			fbPuncherSeparateStation.Process();
+			
+			nExecutingSequence := 0;
+
+20,30: 
+
+		 	 FOR index := 1 TO GVL.gc_NumberStations DO
+ 			GVL.g_Stations[index].P_eProcessMode := E_ProcessMode.None;		   
+	 	   END_FOR
+	
+
+		FOR index := 1 TO gvl. g_nMoverCount DO
+		
+		GVL.g_Movers[index].ManualMovement(FALSE);
+		END_FOR
+
+	nExecutingSequence := 0;
+
+// test movement
+
+	
+// 	 FOR index := 1 TO GVL.gc_NumberStations DO
+// 			GVL.g_Stations[index].P_eProcessMode := E_ProcessMode.Production;		   
+// 	   END_FOR
+// 		
+// 	 
+// 
+// 	nExecutingSequence := nExecutingSequence +10;
+// 
+// 	10:
+// 	  
+// 	   
+//   IF fbXPlanarMover[nTestID].P_Enable.Done THEN 
+// 		stMoveOnTrackOptions.gap := 120;
+// 		stMoveOnTrackOptions.direction := MC_DIRECTION.mcDirectionShortestWay;
+// 		stMoveOnTrackOptions.dynamicMode := MC_DYNAMICS_REDUCTION_MODE.AccelerationLimitedVelocity;
+// 
+// 					
+// 				fTargetPosOnTrack[1]:= GVL.g_Tracks[9].P_TrackLength;			
+// 				fbXPlanarMover[nTestID].MoveOnTrackExt('move on track', GVL.g_Tracks[9].std, fTargetPosOnTrack[1],
+// 								500, 2500, 50000, stMoveOnTrackOptions);
+// 		nExecutingSequence := nExecutingSequence +1;
+// 		 
+// 	END_IF
+// 
+// 	11:
+// 		bMoversInPos := TRUE;
+// 		bMoverError := FALSE;
+// 		
+// 		
+// 			bMoversInPos := bMoversInPos AND fbXPlanarMover[nTestID].P_MoveOnTrackExt.Done;
+// 			bMoverError := bMoverError OR fbXPlanarMover[nTestID].P_MoveOnTrackExt.Error;
+// 	
+// 		
+// 		IF bMoversInPos THEN
+// 			nExecutingSequence := nExecutingSequence + 9;
+// 		ELSIF bMoverError THEN
+// 			nExecutingSequence := nExecutingSequence +  4;
+// 		END_IF
+// 
+// 	20:
+// 		FOR nForCounter:=1 TO GVL.gc_NumberStations DO
+// 		IF GVL.g_Stations[nForCounter] <> 0 THEN
+// 			GVL.g_Stations[nForCounter].Process();
+// 			
+// 			IF GVL.g_Stations[nForCounter].P_nErrorCode > 0 THEN
+// 				nProcessFeedback := GVL.g_Stations[nForCounter].P_nErrorCode;
+// 			END_IF
+// 		END_IF
+// 	END_FOR	
+// 		nExecutingSequence := nExecutingSequence +10;
+// 		
+// 	30:
+// 		stMoveOnTrackOptions.gap := 120;
+// 		stMoveOnTrackOptions.direction := MC_DIRECTION.mcDirectionShortestWay;
+// 		stMoveOnTrackOptions.dynamicMode := MC_DYNAMICS_REDUCTION_MODE.AccelerationLimitedVelocity;
+// 		
+// 		fTargetPosOnTrack[1] := GVL.g_Tracks[7].P_TrackLength;;
+// 		fbXPlanarMover[nTestID].MoveOnTrackExt('move on track', GVL.g_Tracks[7].std, fTargetPosOnTrack[1],
+// 												500, 2500, 50000, stMoveOnTrackOptions
+// 		);
+// 		nExecutingSequence := nExecutingSequence +1;
+// 	31:
+// 		// Movers moving on track
+// 			bMoversInPos := TRUE;
+// 			bMoverError := FALSE;
+// 		
+// 					bMoversInPos := bMoversInPos AND	fbXPlanarMover[nTestID].P_MoveOnTrackExt.Done;
+// 					bMoverError := bMoverError OR fbXPlanarMover[nTestID].P_MoveOnTrackExt.Error;
+// 	
+// 			IF bMoversInPos THEN
+// 			nExecutingSequence := nExecutingSequence + 9;
+// 			ELSIF bMoverError THEN
+// 			nExecutingSequence := nExecutingSequence + 4;
+// 			END_IF
+// 
+// 
+// 	40: 
+// 
+// 		stMoveOnTrackOptions.gap := 120;
+// 		stMoveOnTrackOptions.direction := MC_DIRECTION.mcDirectionShortestWay;
+// 		stMoveOnTrackOptions.dynamicMode := MC_DYNAMICS_REDUCTION_MODE.AccelerationLimitedVelocity;
+// 		
+// 		fTargetPosOnTrack[1] := GVL.g_Tracks[8].P_TrackLength;;
+// 		fbXPlanarMover[nTestID].MoveOnTrackExt('move on track', GVL.g_Tracks[8].std, fTargetPosOnTrack[1],
+// 												500, 2500, 50000, stMoveOnTrackOptions	);									
+// 												
+// 												
+// 		nExecutingSequence := nExecutingSequence +1;
+// 	41:
+// 		// Movers moving on track
+// 			bMoversInPos := TRUE;
+// 			bMoverError := FALSE;
+// 		
+// 					bMoversInPos := bMoversInPos AND	fbXPlanarMover[nTestID].P_MoveOnTrackExt.Done;
+// 					bMoverError := bMoverError OR fbXPlanarMover[nTestID].P_MoveOnTrackExt.Error;
+// 	
+// 			IF bMoversInPos THEN
+// 			nExecutingSequence := nExecutingSequence + 9;
+// 			ELSIF bMoverError THEN
+// 			nExecutingSequence := nExecutingSequence + 4;
+// 			END_IF
+// 	
+// 	
+// 
+// 	50:
+// 		Execute := FALSE; // must be aborted manually
+// 		nExecutingSequence := 0; // endless loop
+	
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoverPreparation" Id="{76ead553-912a-422b-ba13-cbfd2eb23365}">
+      <Declaration><![CDATA[METHOD MoverPreparation : BOOL
+VAR_INPUT
+	bReset 	: BOOL;
+END_VAR
+
+
+VAR_INST
+	
+	nStatePreparation		: DINT;
+	
+	
+	operationMode				: XPlanarOperationMode; 
+	
+	idx2						: UDINT;
+
+	nTileDcLinkVoltage			: LREAL;
+	bTilePowerOK				: BOOL;
+	bTilePowerOverview			: ARRAY[1..GVL.gc_MaxNumberTiles] OF BOOL;
+	bPowerOK					: BOOL;
+	bPowerMissing				: BOOL;
+	nTileCount					: UDINT;
+	nTileToCheck				: UINT;
+	bWithBumperID				: BOOL;	
+	nMoverAccessoryIdCount		: ARRAY[1..GVL.gc_nMaxNumberMovers] OF UDINT;	
+	
+	stStartCheck 				: ST_CheckStartConditionFeedback;
+	nLimitExceeded_MoverID		: UDINT;
+	bLimitExceeded_Angle 		: BOOL;
+	bLimitExceeded_PositionX 	: BOOL;
+	bLimitExceeded_PositionY 	: BOOL;	
+	fCurrentAngleDeviation		: LREAL;
+	fCurrentPositionDeviationX	: LREAL;
+	fCurrentPositionDeviationY	: LREAL;	
+
+	sTextTemp					: STRING;
+
+	eMoverAccessoryID			: MoverAccessoryID;
+
+	
+	moverCoordComStatus			: CoordinatedMoverCommStatus;
+	moverComStatus				: MoverCommunicationStatus;
+	
+	bMoverCommunicationProblem  : ARRAY[1..GVL.gc_nMaxNumberMovers] OF BOOL;
+	bCommunicationProblem		: BOOL;
+	
+	nMoverToCorrect				: UDINT;
+	fMoverOrientationRead		: LREAL;
+	fMoverOrientationCorrect	: LREAL;
+	bDoRotationCorrection		: BOOL;
+	CorrectionPos				: PositionXYC;
+	
+	bDeterminedMoverID				: BOOL;
+	bDerterminedMoverOrientation 	: BOOL;
+	
+	fPosX							: LREAL;
+	fPosY							: LREAL;
+	fPosC							: LREAL;
+	
+	nCommunicationRetryCounter		: UINT;
+	
+	nMoverToCheck					: UINT;
+	
+	nMoverID_ErrorCode				: DWORD;
+	
+	MoverType						: XPlanarMoverType;
+	bMoverCanDeterminOrientation	: BOOL;
+	
+			// Helper
+	bDone 					: BOOL;
+	idx						: UDINT;
+	nForCounter 			: UDINT;	
+	nErrorID				: UDINT;
+	bMoverError				: BOOL;	
+END_VAR
+VAR
+	sBtn: STRING(13);
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	nStatePreparation := 0;
+	MoverPreparation := TRUE;
+END_IF
+
+
+	CASE nStatePreparation OF
+		
+	0:  nStatePreparation := 10;
+	
+
+	10: // 1st: Check if the system is in simulation mode or not
+		// Simulation > OperationMode = 1
+		//     Normal > OperationMode = 0
+	    operationMode := fbXPlanarSystem.ipDriver.TcIoXpu(1).GetOperationMode();	
+		IF operationMode = 0 THEN
+			bPowerMissing := FALSE;
+			nStatePreparation := nStatePreparation + 10;
+		ELSE
+			nStatePreparation := 500;
+		END_IF
+	
+		
+	20: // 2nd: Check power of each tile
+		(*IF NOT bPowerMissing THEN
+			ipVisuMessage.SetInfoMessage('Checking tile power', 'MoverPreparation', nStatePreparation);
+		ELSE
+			ipVisuMessage.SetErrorMessage('Tile power missing!', 'MoverPreparation', nStatePreparation, 0);	
+		END_IF*)
+		
+		    bPowerOK := TRUE;
+		nTileToCheck := 0;
+		  nTileCount := fbXPlanarSystem.ipDriver.TcIoXpu(1).GetTileCount();
+		
+		nStatePreparation := nStatePreparation + 1;
+		
+	21:
+		nTileToCheck := nTileToCheck +1;
+		IF nTileToCheck <= nTileCount THEN
+			nStatePreparation := nStatePreparation + 1;
+		ELSE
+			IF bPowerOK THEN
+				nStatePreparation := nStatePreparation + 9;
+			ELSE
+				bPowerMissing := TRUE;
+				nStatePreparation := nStatePreparation - 1;
+			END_IF
+		END_IF
+		
+	22:
+		nTileDcLinkVoltage := fbXPlanarSystem.ipDriver.TcIoXpu(1).TcIoTile(1,nTileToCheck).GetDcLinkVoltage(); 
+		IF nTileDcLinkVoltage > 6.0 THEN
+			bTilePowerOK := TRUE;
+		ELSE
+			bTilePowerOK := FALSE;	
+		END_IF
+		bPowerOK := bPowerOK AND bTilePowerOK;
+		bTilePowerOverview[nTileToCheck] := bPowerOK;
+		nStatePreparation := nStatePreparation - 1;
+		
+		
+		
+	30:// 3rd: Mover re-detection, in case a mover was removed inbetween
+	
+		// Check if a mover has been lost...
+		IF fbXPlanarSystem.CheckValidMovers() THEN
+			//ipVisuMessage.SetInfoMessage('Mover re-detection', 'MoverPreparation', nStatePreparation);
+		
+		nStatePreparation := nStatePreparation + 1;
+		END_IF
+	
+	31:
+		IF fbXPlanarSystem.P_CheckValidMovers.bDone THEN
+			IF fbXPlanarSystem.P_CheckValidMovers.bMoverLost THEN
+				         bDeterminedMoverID := FALSE;
+				bDerterminedMoverOrientation := FALSE;
+				nStatePreparation := nStatePreparation + 1;
+			ELSE
+				nStatePreparation := nStatePreparation + 9;
+			END_IF
+		END_IF
+				
+		bDeterminedMoverID := FALSE;
+		bDerterminedMoverOrientation := FALSE;		
+		
+		
+	32: // Starting mover re-detection
+		IF fbXPlanarSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+			IF fbXPlanarSystem.ipDriver.TcIoXpu(1).SetStartMoverRedetection() THEN	
+				nStatePreparation := nStatePreparation +1;
+			END_IF
+		END_IF
+	
+	33: // Checking if all movers have been found on the XPlanar surface
+		stMoverDetectionInfos := fbXPlanarSystem.ipDriver.TcIoXpu(1).GetMoverDetectionInfos();
+		gvl.g_nMoverCount := stMoverDetectionInfos.APM4220Detected ;
+		
+		
+		IF stMoverDetectionInfos.APM4220Detected = stMoverDetectionInfos.APM4220Expected THEN
+			nStatePreparation := nStatePreparation +7;
+		ELSE
+			sTextTemp := 'Mover Missing!  Expected:';
+			sTextTemp := CONCAT(sTextTemp, UDINT_TO_STRING(stMoverDetectionInfos.APM4220Expected));
+			sTextTemp := CONCAT(sTextTemp, '  Detected:');
+			sTextTemp := CONCAT(sTextTemp, UDINT_TO_STRING(stMoverDetectionInfos.APM4220Detected));
+			
+			//ipVisuMessage.SetErrorMessage(sTextTemp, 'MoverPreparation', nStatePreparation, 0);	
+		END_IF
+	
+	
+	 40: // 4th: Checking the position of each mover before enabeling
+	 	//ipVisuMessage.SetInfoMessage('Check mover position', 'MoverPreparation', nStatePreparation);
+		stMoverDetectionInfos := fbXPlanarSystem.ipDriver.TcIoXpu(1).GetMoverDetectionInfos();	 	
+		gvl.g_nMoverCount := stMoverDetectionInfos.APM4220Detected ;
+		
+		bDone := TRUE;
+		FOR idx:=1 TO GVL.g_nMoverCount DO
+			stStartCheck := GVL.g_Movers[idx].std.CheckStartConditions();
+			IF NOT stStartCheck.bPositionOK THEN
+				bDone := FALSE;
+				EXIT;
+			END_IF			
+		END_FOR
+	
+		IF bDone THEN
+			nStatePreparation := nStatePreparation + 2;
+		ELSE
+			nStatePreparation := nStatePreparation + 1;
+		END_IF
+			
+	 41: // Position-Check failed:
+		 // Except for rotation-points between four quadrants the angle limit of the c-axis is +/- 10.0°
+		 // At rotation-points the max position deviation is +/-1mm in x/y-direction  	
+				nLimitExceeded_MoverID := stStartCheck.nMoverID;
+				  bLimitExceeded_Angle := stStartCheck.bAngleLimitExceeded;
+			  bLimitExceeded_PositionX := stStartCheck.bPositionXLimitExceeded;
+			  bLimitExceeded_PositionY := stStartCheck.bPositionYLimitExceeded;	
+				fCurrentAngleDeviation := stStartCheck.fCurrentAngleDeviation;
+			fCurrentPositionDeviationX := stStartCheck.fCurrentPositionDeviationX;
+			fCurrentPositionDeviationY := stStartCheck.fCurrentPositionDeviationY;
+	
+			sTextTemp := 'Position Check Failed! - Mover ';
+			sTextTemp := CONCAT(sTextTemp, UDINT_TO_STRING(nLimitExceeded_MoverID));
+			sTextTemp := CONCAT(sTextTemp, ' too far away from rotation point.');
+			
+			//ipVisuMessage.SetErrorMessage(sTextTemp, 'MoverPreparation', nStatePreparation, 0);	
+			
+			nStatePreparation := nStatePreparation - 1;
+			
+	42:		//ipVisuMessage.ClearAllMessages();
+			nStatePreparation := nStatePreparation + 8;
+		
+		
+		
+	50: // 5th: Check if movers with accessory MoverID are present. If yes, do mover identification before enabeling all movers.	
+		bWithBumperID := FALSE;
+			
+		IF fbXPlanarSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+			FOR idx:=1 TO GVL.g_nMoverCount DO
+				nMoverAccessoryIdCount[idx] := fbXPlanarSystem.ipDriver.TcIoXpu(1).TcIoMover(UDINT_TO_UINT(idx)).GetMoverAccessoryIdCount();
+			END_FOR
+			
+			FOR idx:=1 TO GVL.g_nMoverCount DO
+				FOR idx2:=1 TO nMoverAccessoryIdCount[idx] DO
+					eMoverAccessoryID := fbXPlanarSystem.ipDriver.TcIoXpu(1).TcIoMover(UDINT_TO_UINT(idx)).GetMoverAccessoryID(UDINT_TO_INT(idx2));
+					
+					IF eMoverAccessoryID = MoverAccessoryID.APM9001_0000 THEN
+						// Note: With the current driver release (3.2209.36.0) mover identification only works if all movers are equiped with ID bumpers!
+						bWithBumperID := TRUE;						
+					END_IF
+				END_FOR
+			END_FOR
+		END_IF
+
+			
+		IF bWithBumperID THEN
+			nStatePreparation := nStatePreparation + 10;
+		ELSE
+			nStatePreparation := 500;
+		END_IF
+		
+	
+	60: // 6th: Do mover identification
+		//ipVisuMessage.SetInfoMessage('Start mover-identification', 'MoverPreparation', nStatePreparation);
+	
+		IF NOT bDeterminedMoverID THEN
+			IF fbXPlanarSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+// 				IF fbXPlanarSystem.ipDriver.TcIoXpu(1).SetCoordMoverCommunicationCmd(CoordinatedMoverCommCommand.IdentifyAndAssignPossible) THEN
+				IF fbXPlanarSystem.ipDriver.TcIoXpu(1).SetCoordMoverCommunicationCmd(CoordinatedMoverCommCommand.IdentifyBTNsAndRearrangeMovers) THEN
+					nStatePreparation := nStatePreparation +1;
+				END_IF	
+			END_IF
+		ELSE
+			nStatePreparation := nStatePreparation +10;
+		END_IF
+	
+	61:
+		IF fbXPlanarSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN			
+			moverCoordComStatus := fbXPlanarSystem.ipDriver.TcIoXpu(1).GetCoordMoverCommStatus();
+			
+			IF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationSuccessful THEN
+				bDeterminedMoverID := TRUE;
+				//ipVisuMessage.ClearAllMessages();
+				nStatePreparation := nStatePreparation + 4;
+			ELSIF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationFailed THEN
+				nStatePreparation := nStatePreparation + 1;	
+			END_IF
+			
+		END_IF
+		
+	62:	IF fbXPlanarSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN	
+			nMoverID_ErrorCode := fbXPlanarSystem.ipDriver.TcIoXpu(1).GetCoordMoverCommunicationErrorId();
+			//ipVisuMessage.SetErrorMessage('Mover Identification Failed!', 'MoverPreparation', nStatePreparation, nMoverID_ErrorCode);
+		END_IF
+		
+		//IF ipVisuMessage.CheckAknowledge()  THEN
+		nStatePreparation := 0;	
+		//END_IF
+	
+	65: 
+		FOR idx:=1 TO GVL.g_nMoverCount DO
+			fbMover[idx].P_MoverID := fbXPlanarSystem.ipDriver.TcIoXpu(1).TcIoMover(UDINT_TO_UINT(idx)).GetIdentifiedMoverBtn();
+		END_FOR
+		nStatePreparation := nStatePreparation + 5;
+	70: // 7th: Determine Mover-Orientation
+	
+		// Note: At the time of creation of this example code only APM4330 was able to determine its orientation.
+		//       Change the code according to newer driver releases and availability of the orientation feature.
+		bMoverCanDeterminOrientation := TRUE;
+		FOR idx:=1 TO GVL.g_nMoverCount DO
+			MoverType := fbXPlanarSystem.ipDriver.TcIoXpu(1).TcIoMover(UDINT_TO_UINT(idx)).GetMoverType();
+			IF MoverType <> XPlanarMoverType.APM4330 THEN
+				bMoverCanDeterminOrientation := FALSE;
+			END_IF
+		END_FOR
+			
+		IF bMoverCanDeterminOrientation THEN
+			IF NOT bDerterminedMoverOrientation THEN
+				//ipVisuMessage.SetInfoMessage('Mover orientation determination', 'MoverPreparation', nStatePreparation);
+				IF fbXPlanarSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+					IF fbXPlanarSystem.ipDriver.TcIoXpu(1).SetCoordMoverCommunicationCmd(CoordinatedMoverCommCommand.DetermineOrientations) THEN
+						nStatePreparation := nStatePreparation + 1;	
+					END_IF
+				END_IF
+			ELSE
+				nStatePreparation := nStatePreparation + 20;		
+			END_IF
+		ELSE
+			nStatePreparation := nStatePreparation + 20;
+		END_IF
+	
+		
+	71: // Check if communication is active
+		IF fbXPlanarSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+			moverCoordComStatus := fbXPlanarSystem.ipDriver.TcIoXpu(1).GetCoordMoverCommStatus();
+			IF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationInProcess THEN
+				nStatePreparation := nStatePreparation + 1;	
+			END_IF
+		END_IF
+	
+		
+	72: // Wait for orientation determination finished
+		IF fbXPlanarSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+			moverCoordComStatus := fbXPlanarSystem.ipDriver.TcIoXpu(1).GetCoordMoverCommStatus();
+			IF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationSuccessful THEN
+				nStatePreparation := nStatePreparation + 8;	
+			ELSIF moverCoordComStatus = CoordinatedMoverCommStatus.CommunicationFailed THEN
+				IF nCommunicationRetryCounter <= 5 THEN
+					nCommunicationRetryCounter := nCommunicationRetryCounter +1;
+					nStatePreparation := nStatePreparation - 2;	
+				ELSE
+					nStatePreparation := nStatePreparation + 1;	
+				END_IF
+			END_IF
+		END_IF
+		
+				
+	73:	// Check which movers do not communicate correctly:
+		nMoverToCheck := 0;
+		nStatePreparation := nStatePreparation + 1;
+		
+	74: nMoverToCheck := nMoverToCheck +1;
+		IF nMoverToCheck <= GVL.g_nMoverCount THEN
+			IF fbXPlanarSystem.UtilityCheckForError(bAutoReset := TRUE) > 0 THEN
+				IF fbXPlanarSystem.ipDriver.TcIoXpu(1).TcIoMover(nMoverToCheck).SetMoverCommunicationCommand(MoverCommunicationCommand.DetermineOrientation) THEN
+					nStatePreparation := nStatePreparation + 1;
+				END_IF
+			END_IF
+		ELSE
+			FOR idx:=1 TO GVL.g_nMoverCount DO
+				bCommunicationProblem := FALSE;
+				IF bMoverCommunicationProblem[idx] THEN
+					bCommunicationProblem := TRUE;	
+				END_IF
+			END_FOR
+			
+			IF bCommunicationProblem THEN
+				sTextTemp := 'Mover Communication Problem: ';
+				FOR idx:=1 TO GVL.g_nMoverCount DO
+					IF bMoverCommunicationProblem[idx] THEN
+						sTextTemp := CONCAT(sTextTemp, ' M');
+						sTextTemp := CONCAT(sTextTemp, UDINT_TO_STRING(idx));
+					END_IF
+				END_FOR				
+				//ipVisuMessage.SetErrorMessage(sTextTemp, sTextTemp, nStatePreparation, 0);
+			ELSE
+				nStatePreparation := nStatePreparation - 4;	
+			END_IF
+		END_IF
+		
+	75: moverComStatus := fbXPlanarSystem.ipDriver.TcIoXpu(1).TcIoMover(nMoverToCheck).GetCommunicationStatus();
+		IF moverComStatus = MoverCommunicationStatus.CommunicationSuccessful THEN
+			bMoverCommunicationProblem[nMoverToCheck] := FALSE;
+			nStatePreparation := nStatePreparation - 1;
+		ELSIF moverComStatus = MoverCommunicationStatus.CommunicationFailed THEN
+			bMoverCommunicationProblem[nMoverToCheck] := TRUE;
+			nStatePreparation := nStatePreparation - 1;
+		END_IF
+		
+		
+	80:	// Rotation-Angle modulo adaption
+		//ipVisuMessage.SetInfoMessage('Rotation-Angle modulo adaption', 'MoverPreparation', nStatePreparation);
+		nMoverToCorrect := 0;
+		nStatePreparation := nStatePreparation + 1;	
+		
+	81:	nMoverToCorrect := nMoverToCorrect +1;
+		IF nMoverToCorrect <= GVL.g_nMoverCount THEN
+			fMoverOrientationRead    := GVL.g_Movers[nMoverToCorrect].std.P_ActPosition.c; 
+			fMoverOrientationCorrect := fMoverOrientationRead;
+			 bDoRotationCorrection := FALSE;
+			nStatePreparation := nStatePreparation + 1;	
+		ELSE
+			bDerterminedMoverOrientation := TRUE;
+			nStatePreparation := nStatePreparation + 9;	
+		END_IF
+		
+	82:	IF fMoverOrientationCorrect >= 0 THEN
+			IF fMoverOrientationCorrect > 360.0 THEN
+				fMoverOrientationCorrect := fMoverOrientationCorrect - 180.0;
+				bDoRotationCorrection := TRUE;
+			ELSE
+				nStatePreparation := nStatePreparation + 1;
+			END_IF
+		ELSE
+			IF fMoverOrientationCorrect < 360.0 THEN
+				fMoverOrientationCorrect := fMoverOrientationCorrect + 180.0;
+				bDoRotationCorrection := TRUE;
+			ELSE
+				nStatePreparation := nStatePreparation + 1;
+			END_IF
+		END_IF			
+		
+		
+	83:	IF bDoRotationCorrection THEN
+			
+			fPosX := GVL.g_Movers[nMoverToCorrect].std.P_ActPosition.x;
+			fPosY := GVL.g_Movers[nMoverToCorrect].std.P_ActPosition.y;
+			fPosC := GVL.g_Movers[nMoverToCorrect].std.P_ActPosition.c;
+	
+			CorrectionPos.SetValuesXYC(fPosX, fPosY, fMoverOrientationCorrect);	
+	
+			GVL.g_Movers[nMoverToCorrect].std.SetMoverPosition('Correction', CorrectionPos);
+			
+			nStatePreparation := nStatePreparation + 1;	
+		ELSE
+			nStatePreparation := nStatePreparation - 2;
+		END_IF
+		
+	84:
+		IF GVL.g_Movers[nMoverToCorrect].std.P_SetMoverPosition.Done THEN
+			nStatePreparation := nStatePreparation - 3;
+		ELSIF GVL.g_Movers[nMoverToCorrect].std.P_SetMoverPosition.Error THEN
+			nErrorID := GVL.g_Movers[nMoverToCorrect].std.P_SetMoverPosition.ErrorID;
+			//ipVisuMessage.SetErrorMessage('Rotation-Angle modulo adaption', 'MoverPreparation', nStatePreparation, nErrorID);
+			GVL.g_Movers[nMoverToCorrect].P_ErrorID := UDINT_TO_INT(nErrorID);
+			GVL.g_Movers[nMoverToCorrect].P_Error := TRUE;
+		END_IF
+		
+
+	90: nStatePreparation := 500;
+	
+			
+	500: // Done
+	//	nStatePreparation := 0;
+		MoverPreparation := TRUE;		
+			
+		
+	END_CASE
+
+
+	//ipVisuMessage.StateUpdate(nStatePreparation, 'MoverPreparation');
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoverRecovery" Id="{52e3e9cc-4acf-4a1b-8e1b-4f643b9ce11d}">
+      <Declaration><![CDATA[METHOD MoverRecovery : BOOL
+VAR_INPUT
+	bReset : BOOL;
+END_VAR
+
+VAR
+	index : UDINT;
+	ipMoverApplication: INT;
+END_VAR
+
+VAR_INST
+	
+	stOptionsJoinTrack				: ST_JoinTrackOptions;
+	bMoversJoined 					: BOOL;
+	bMoverError 					: BOOL;
+	bMoverOrientationSet			: BOOL;
+	bClearStation 					:ARRAY [1..GVL.gc_NumberStations] OF BOOL;
+	bStationCleared					:bool;
+	nMoverToTurn					: UDINT;
+	nMoverToTurnBack				: UDINT;
+	nTrackToCheck					:UDINT; 
+	nDistanceToTrack				:LREAL;
+	nDistanceToTargetTrack			: ARRAY[1..moverCount] OF REAL;
+	nTargetTrack					: ARRAY[1..moverCount] OF UDINT;
+	
+	
+	
+	fRecoveryRotTarget				: LREAL;
+	fRecoveryRotVel					: LREAL :=  360.0;
+	fRecoveryRotAcc					: LREAL := 1800.0;
+	fRecoveryRotJerk				: LREAL := 9000.0;
+	stRotationOptions				: ST_MoveCOptions;
+
+
+
+
+	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	MoverRecovery := FALSE;
+	nRecoverySequence := 0;
+END_IF
+
+CASE nRecoverySequence OF
+	0:
+		bMoversJoined := FALSE;
+		bMoverError := FALSE;
+		nMoverToTurn := 0;
+		IF NOT bReset THEN
+			nRecoverySequence := nRecoverySequence + 1;
+		END_IF
+		
+	1: 	//set rotary orienation 
+	
+		FOR index := 1 TO gvl.g_nMoverCount DO
+		fbXPlanarMover[index].MoveA('', 0, 100, 1000, 1000, 10000);
+		fbXPlanarMover[index].MoveB('', 0, 100, 1000, 1000, 10000);
+ 		fbXPlanarMover[index].MoveC('', 0, 180, 1800, 1800, 18000, 0);
+		
+		END_FOR
+
+		nRecoverySequence := nRecoverySequence + 1;
+	
+	2: 
+		bMoverOrientationSet:= TRUE; 
+		FOR index := 1 TO  gvl.g_nMoverCount DO
+			IF fbXPlanarMover[index].P_MoveA.Done AND fbXPlanarMover[index].P_MoveB.Done AND fbXPlanarMover[index].P_MoveC.Done THEN 
+				bMoverOrientationSet:= TRUE; 
+			ELSE 
+				bMoverOrientationSet:= FALSE; 
+				
+			END_IF
+		END_FOR
+		
+		IF bMoverOrientationSet THEN
+			nRecoverySequence := nRecoverySequence + 8;
+	
+		END_IF
+	
+	10:
+	
+		nMoverToTurn := nMoverToTurn +1;
+		IF nMoverToTurn > gvl.g_nMoverCount THEN
+				nRecoverySequence := nRecoverySequence +3;
+			ELSE
+				IF GVL.g_Movers[nMoverToTurn].std.P_IsPresent THEN
+
+					fRecoveryRotTarget 				  := GVL.g_Movers[nMoverToTurn].std.P_ClosestQuaterAngle;	
+					stRotationOptions.additionalTurns := 0;
+					stRotationOptions.direction		  := Tc3_Mc3PlanarMotion.MC_direction.mcDirectionNonModulo;	
+					
+					GVL.g_Movers[nMoverToTurn].std.MoveC('Recovery - unfinished rotation', fRecoveryRotTarget, fRecoveryRotVel, fRecoveryRotAcc, fRecoveryRotAcc, fRecoveryRotJerk, stRotationOptions);
+					nRecoverySequence := nRecoverySequence +1;				
+				END_IF	
+			END_IF
+		
+	
+	11:
+			IF GVL.g_Movers[nMoverToTurn].std.P_MoveC.Done THEN
+				nRecoverySequence := nRecoverySequence -1;	
+			ELSIF GVL.g_Movers[nMoverToTurn].std.P_MoveC.Error THEN
+				nRecoverySequence := nRecoverySequence +1;	
+			END_IF
+			
+	12: 		// Check error ID and react accordingly
+			nErrorID := GVL.g_Movers[nMoverToTurn].std.P_MoveC.ErrorID;
+			GVL.g_Movers[nMoverToTurn].P_ErrorID := UDINT_TO_INT(nErrorID);
+			GVL.g_Movers[nMoverToTurn].P_Error := TRUE;
+
+			// In case rotation is not possible due to collision with another mover proceed without rotation correction.
+			IF nErrorID = 33158 THEN
+				nRecoverySequence := nRecoverySequence -2;
+			END_IF
+
+	13: 	nRecoverySequence := 100;	
+
+		    
+	100: 
+			bStationCleared:=TRUE;
+			bClearStation[GVL.PuncherStation]:=fbPuncherStation.Clear();
+			bClearStation[GVL.PuncherSeparateStation]:=fbPuncherSeparateStation.Clear();
+			bClearStation[GVL.PuncherBufferStation]:=fbPuncherBufferStation.Clear();
+	
+	FOR  index := 1 TO  GVL.gc_NumberStations DO
+		IF bClearStation[index] THEN
+			bStationCleared:=TRUE;
+			ELSE
+				bStationCleared:=FALSE;
+		END_IF
+	END_FOR
+	IF bStationCleared THEN
+			nRecoverySequence := 200;
+
+		END_IF
+		
+// 	110: // look for for nearest track 
+// 	
+// 	
+// 	FOR nMoverToTurnBack := 1 TO  gvl.g_nMoverCount DO
+// 		nDistanceToTargetTrack[nMoverToTurnBack]:= 999999;
+// 		
+// 		FOR nTrackToCheck :=1 TO GVL.gc_NumberTracks DO 
+// 		nDistanceToTrack := fbXPlanarMover[ nMoverToTurnBack].GetDistanceToTrack(GVL.g_Tracks[nTrackToCheck].std);
+// 		
+// 		IF nDistanceToTrack < nDistanceToTargetTrack[nMoverToTurnBack] AND nDistanceToTrack<> -1 THEN 
+// 			nDistanceToTargetTrack[nMoverToTurnBack]:=nDistanceToTrack;
+// 			nTargetTrack[nMoverToTurnBack] :=nTrackToCheck;
+// 		END_IF
+// 		
+// 	END_FOR
+// 	
+// 	END_FOR
+// 	
+// 	nRecoverySequence := nRecoverySequence +10;
+// 	
+// 	120: // join to track
+// 
+// 		stOptionsJoinTrack.useOrientation := TRUE;
+// 		
+// 		FOR index := 1 TO gvl.g_nMoverCount DO
+// 		IF fbXPlanarMover[index].P_CommandMode<> MC_PLANAR_MOVER_COMMAND_MODE.OnTrack THEN
+// 			fbXPlanarMover[index].JoinTrack('Joining track', GVL.g_Tracks[nTargetTrack[index]].std, 250, 1250, 12500, stOptionsJoinTrack);
+// 			
+// 		END_IF
+// 		
+// 			
+// END_FOR
+// 	
+// 		nRecoverySequence := nRecoverySequence + 1;
+// 		
+// 	121:
+// 		bMoversJoined := TRUE;
+// 		bMoverError := FALSE;
+// 		FOR index := 1 TO moverCount DO
+// 			bMoversJoined := bMoversJoined AND fbXPlanarMover[index].P_JoinTrack.Done;
+// 			IF  fbXPlanarMover[index].P_JoinTrack.Done THEN 
+// 				gvl.g_Movers[index].P_TrackId:=nTargetTrack[index];
+// 			END_IF
+// 			bMoverError := bMoverError OR fbXPlanarMover[index].P_JoinTrack.Error;			
+// 		END_FOR
+// 		
+// 	IF bMoversJoined THEN
+// 			nRecoverySequence := nRecoverySequence + 9;
+// 	ELSIF bMoverError THEN
+//  			nRecoverySequence := nRecoverySequence + 4;
+// 	END_IF
+// 		
+		
+// 	130: //send mover to station 
+// 	  	  
+// 		FOR index := 1 TO gvl.g_nMoverCount DO
+// 			 IF fbXPlanarMover[index].P_TrackId= GVL.TrackPuncherWellplate THEN 
+// 				 fbPuncherStation.P_List_Switch_Input_W.AddMover(GVL.g_Movers[index].std);
+// 		
+// 			
+// 			 END_IF
+// 		END_FOR
+// 
+// 		nRecoverySequence := 200;
+
+	200: 
+		MoverRecovery := TRUE;
+		
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Resetting" Id="{694859be-68a2-4e34-b4af-c62ce9ab73dd}">
+      <Declaration><![CDATA[METHOD Resetting : BOOL
+VAR_INPUT
+END_VAR
+
+VAR
+	index : UDINT;
+	MC_PLANNAR_: ST_CommandReturn;
+END_VAR
+
+
+VAR_INST
+	
+	nTrackToEnable		: UDINT;
+	stProductDataClear 	: ST_ProductData;
+	stOptionsJoinTrack				: ST_JoinTrackOptions;
+	bMoversJoined 					: BOOL;
+	bMoverError 					: BOOL;
+	nMoverToTurn					: UDINT;
+	nMoverToTurnBack				: UDINT;
+	nTrackToCheck					:UDINT; 
+	nDistanceToTrack				:LREAL;
+	nDistanceToTargetTrack			: ARRAY[1..moverCount] OF REAL;
+	nTargetTrack					: ARRAY[1..moverCount] OF UDINT;
+	
+END_VAR
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nErrorID := 0;
+
+CASE nResettingSequence OF 
+	
+	0: // Enter 
+		nResettingSequence := 10;
+		
+		
+		
+	10: // Reset all movers
+		IF fbXPlanarSystem.ResetMovers() THEN
+		//	ipVisuMessage.SetInfoMessage('RESET all movers', 'Resetting', nResettingSequence);
+			nResettingSequence := nResettingSequence +1;			
+		END_IF
+		
+	11: IF fbXPlanarSystem.P_ResetMovers.Done THEN
+			nResettingSequence := nResettingSequence +9;
+		ELSIF fbXPlanarSystem.P_ResetMovers.Error THEN
+			nResettingSequence := nResettingSequence +1;	
+		END_IF
+
+	12:	// Check error ID and react accordingly
+		nErrorID := fbXPlanarSystem.P_EnableMovers.ErrorID;
+		//ipVisuMessage.SetErrorMessage('RESET movers failed', 'Resetting', nResettingSequence, nErrorID);					
+		
+		
+		
+	20:	// Reset all tracks
+		IF fbXPlanarSystem.ResetTracks() THEN
+			//ipVisuMessage.SetInfoMessage('RESET all tracks', 'Resetting', nResettingSequence);
+			nResettingSequence := nResettingSequence +1;
+		END_IF
+		
+	21: IF fbXPlanarSystem.P_ResetTracks.Done THEN
+			nResettingSequence := nResettingSequence +19;
+	 	ELSIF fbXPlanarSystem.P_ResetTracks.Error THEN
+			nResettingSequence := nResettingSequence +1;	
+		END_IF
+	
+	22:	// Check error ID and react accordingly
+		nErrorID := fbXPlanarSystem.P_EnableMovers.ErrorID;
+		//ipVisuMessage.SetErrorMessage('RESET tracks failed', 'Resetting', nResettingSequence, nErrorID);			
+		
+	
+		
+// 	30:	// Reset MotionSystemApplication
+// 		IF ipMotionSystemApplication.Reset() THEN
+// 		//	ipVisuMessage.SetInfoMessage('RESET MotionSystemApplication', 'Resetting', nResettingSequence);
+// 			nResettingSequence := nResettingSequence +10;
+// 		END_IF
+	
+				
+	40:  // Cleaning all process data
+		FOR idx:=1 TO GVL.g_nMoverCount DO
+		//	ipMoverApplication[idx].P_ProductData := stProductDataClear;
+		END_FOR
+		nResettingSequence := nResettingSequence+10;
+		
+	50: // check if any mover is disable 
+			
+		FOR index := 1 TO gvl.g_nMoverCount DO
+			 IF fbXPlanarMover[index].P_State=MC_PLANAR_STATE.Disabled THEN 
+				 nResettingSequence := nResettingSequence + 1;
+				 RETURN; 
+			 END_IF
+		END_FOR
+			 nResettingSequence :=100;
+	 
+	51:	// enable movers
+			IF fbXPlanarSystem.EnableMovers() THEN
+				nResettingSequence := nResettingSequence + 1;
+			END_IF
+	
+	52: // wait for enabling
+		IF fbXPlanarSystem.P_EnableMovers.Done THEN
+			nResettingSequence := 100;
+		ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+			nResettingSequence := nResettingSequence + 3;
+			nErrorID := fbXPlanarSystem.P_EnableMovers.ErrorID;
+ 		END_IF
+		
+// 	60:  // look for for nearest track 
+// 	
+// 		FOR nMoverToTurnBack := 1 TO  gvl.g_nMoverCount DO
+// 			nDistanceToTargetTrack[nMoverToTurnBack]:= 999999;
+// 			
+// 			FOR nTrackToCheck :=1 TO 10 DO//GVL.gc_NumberTracks DO 
+// 			nDistanceToTrack := fbXPlanarMover[ nMoverToTurnBack].GetDistanceToTrack(GVL.g_Tracks[nTrackToCheck].std);
+// 			
+// 				IF nDistanceToTrack < nDistanceToTargetTrack[nMoverToTurnBack] THEN 
+// 					nDistanceToTargetTrack[nMoverToTurnBack]:=nDistanceToTrack;
+// 					nTargetTrack[nMoverToTurnBack] :=nTrackToCheck;
+// 				END_IF
+// 			
+// 			END_FOR
+// 	
+// 		END_FOR
+// 		
+// 	nResettingSequence := nResettingSequence +10;
+// 	
+// 	70: // join to track
+// 
+// 		stOptionsJoinTrack.useOrientation := TRUE;
+// 		
+// 		FOR index := 1 TO gvl.g_nMoverCount DO
+// 		IF fbXPlanarMover[index].P_CommandMode<> MC_PLANAR_MOVER_COMMAND_MODE.OnTrack THEN
+// 			fbXPlanarMover[index].JoinTrack('Joining track', GVL.g_Tracks[nTargetTrack[index]].std, 250, 1250, 12500, stOptionsJoinTrack);
+// 			END_IF
+// 
+// END_FOR
+// 	
+// 		nResettingSequence := nResettingSequence + 1;
+// 		
+// 	71:
+// 		bMoversJoined := TRUE;
+// 		bMoverError := FALSE;
+// 		FOR index := 1 TO moverCount DO
+// 			bMoversJoined := bMoversJoined AND fbXPlanarMover[index].P_JoinTrack.Done;
+// 			bMoverError := bMoverError OR fbXPlanarMover[index].P_JoinTrack.Error;			
+// 		END_FOR
+// 		
+// 	IF bMoversJoined THEN
+// 			nResettingSequence := 100;
+// 	ELSIF bMoverError THEN
+//  			nResettingSequence := nResettingSequence + 4;
+// 	END_IF
+// 		
+	
+	100: // Reset done
+		//ipVisuMessage.SetInfoMessage('RESET finished', 'Resetting', 0);
+	
+		nResettingSequence := 0; 
+		         Resetting := TRUE;
+
+END_CASE
+
+
+
+//ipVisuMessage.StateUpdate(nResettingSequence, 'Resetting');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Starting" Id="{53b00bea-1b77-4bdc-ba13-57fc278434db}">
+      <Declaration><![CDATA[METHOD Starting : BOOL
+VAR_INPUT
+	bReset : BOOL;
+END_VAR
+
+VAR 
+	nErrorID : UDINT;
+	nMoverIndex: UDINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	Starting := FALSE;
+	nStartingSequence := 0;
+END_IF
+
+CASE nStartingSequence OF
+	0: //init
+		Execute(bReset := TRUE);
+		MoverRecovery(bReset := TRUE);
+		IF NOT bReset THEN
+			nStartingSequence := nStartingSequence + 10;
+		END_IF
+	10: // enable collision avoidance group
+		IF fbXPlanarSystem.EnableGroup() THEN
+			nStartingSequence := nStartingSequence + 1;
+		END_IF
+	11:
+		IF fbXPlanarSystem.P_EnableGroup.Done THEN
+			nStartingSequence := nStartingSequence + 9;
+		ELSIF fbXPlanarSystem.P_EnableGroup.Error THEN
+			nStartingSequence := nStartingSequence + 4;
+			nErrorID := fbXPlanarSystem.P_EnableGroup.ErrorID;
+		END_IF
+	20: // add environment 
+		IF fbXPlanarSystem.AddEnvironmentToGroup() THEN
+			nStartingSequence := nStartingSequence + 1;
+		END_IF
+	21: 
+		IF fbXPlanarSystem.P_AddEnviromentToGroup.Done THEN
+			nStartingSequence := nStartingSequence + 9;
+		ELSIF fbXPlanarSystem.P_AddEnviromentToGroup.Error THEN
+			nStartingSequence := nStartingSequence + 4;
+			nErrorID := fbXPlanarSystem.P_AddEnviromentToGroup.ErrorID;
+		END_IF
+		
+	30:
+		IF fbXPlanarSystem.EnableTracks() THEN
+			nStartingSequence := nStartingSequence + 1;
+		END_IF
+	
+	31: 
+		IF fbXPlanarSystem.P_EnableTracks.Done THEN
+			nStartingSequence := nStartingSequence + 9;
+		ELSIF fbXPlanarSystem.P_EnableTracks.Error THEN
+			nStartingSequence := nStartingSequence + 4;
+			nErrorID := fbXPlanarSystem.P_EnableTracks.ErrorID;
+		END_IF
+	
+			
+	40:
+		IF fbXPlanarSystem.AddTracksToGroup() THEN
+			nStartingSequence := nStartingSequence + 1;
+		END_IF
+	
+	41: 
+		IF fbXPlanarSystem.P_AddTracksToGroup.Done THEN
+			nStartingSequence := nStartingSequence + 1;
+		ELSIF fbXPlanarSystem.P_AddTracksToGroup.Error THEN
+			nStartingSequence := nStartingSequence + 4;
+			nErrorID := fbXPlanarSystem.P_AddTracksToGroup.ErrorID;
+		END_IF
+		
+	42: // Prepare all movers
+		IF MoverPreparation(bReset:=TRUE) THEN
+			nStartingSequence := nStartingSequence + 1;
+		END_IF
+		
+	43:
+		IF MoverPreparation(bReset:=FALSE) THEN
+			nStartingSequence := nStartingSequence + 7;
+		END_IF	
+		
+	50: // enable movers
+		IF fbXPlanarSystem.EnableMovers() THEN
+			nStartingSequence := nStartingSequence + 1;
+		END_IF
+	51: // wait for enabling
+		IF fbXPlanarSystem.P_EnableMovers.Done THEN
+			nStartingSequence := nStartingSequence + 9;
+		ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+			nStartingSequence := nStartingSequence + 4;
+			nErrorID := fbXPlanarSystem.P_EnableMovers.ErrorID;
+		END_IF
+	60: // add movers to group
+		IF fbXPlanarSystem.AddMoversToGroup() THEN
+			nStartingSequence := nStartingSequence + 1;
+		END_IF
+	61: // wait for enabling
+		IF fbXPlanarSystem.P_AddMoversToGroup.Done THEN
+			nStartingSequence := nStartingSequence + 1;
+		ELSIF fbXPlanarSystem.P_AddMoversToGroup.Error THEN
+			nStartingSequence := nStartingSequence + 4;
+			nErrorID := fbXPlanarSystem.P_AddMoversToGroup.ErrorID;
+		END_IF
+	62:
+	 	FOR nMoverIndex := 1 TO GVL.g_nMoverCount DO
+			GVL.g_Movers[nMoverIndex].std.P_Id := UDINT_TO_UINT(nMoverIndex);
+		END_FOR
+		nStartingSequence := nStartingSequence + 8;
+	70:
+		IF MoverRecovery(bReset := FALSE) THEN
+			nStartingSequence := nStartingSequence + 10;
+		END_IF
+	80: 
+		Starting := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Startup" Id="{904c8cfe-531a-4b8c-8e83-76d830bda89d}">
+      <Declaration><![CDATA[METHOD Startup : BOOL
+VAR_INPUT
+	bReset : BOOL;
+END_VAR
+
+VAR
+	index : UDINT;
+		stMoverDetectionInfos   : ST_TcIoMoverDetectionInfos;
+		detectedMovers:UDINT;
+END_VAR
+
+VAR_INST
+	aTrackTable : ARRAY[1..maxTrackCount] OF FB_TrackTable;
+	nTrackIdx: UDINT;
+	nStationToInit : UINT;
+	
+	nStartFromTrack : UDINT;
+	nEndAtTrack : UDINT;
+	bCloseLoop : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	Startup := FALSE;
+	nStartupSequence := 0;
+END_IF
+
+CASE nStartupSequence OF
+	0: //init
+		bAssignmentComplete := FALSE;
+		IF NOT bReset THEN
+			nStartupSequence := nStartupSequence + 1;
+		END_IF
+
+	1: //assign mover to system
+		
+		FOR index := 1 TO MoverCount DO
+			fbMover[index].std := THIS^.fbXPlanarMover[index];
+		END_FOR	
+		//nStartupSequence := nStartupSequence + 1;
+	
+		FOR index := 1 TO moverCount DO
+			fbXPlanarSystem.SetMoverStandard(index, THIS^.fbXPlanarMover[index]);
+		END_FOR
+		
+		nStartupSequence := nStartupSequence + 1;
+		
+	2:  // Movers to global mover interface
+		FOR index := 1 TO MoverCount DO
+			GVL.g_Movers[index] := THIS^.fbMover[index];
+			THIS^.fbMover[index].P_MoverIndex := UDINT_TO_INT(index); 
+		END_FOR	
+		nStartupSequence := nStartupSequence + 1;
+	
+	3:  // Assigning global Track-Interfaces
+		GVL.g_Tracks[GVL.TrackPuncherWellplate] := THIS^.fbTrackPuncherWellplate;
+		GVL.g_Tracks[GVL.TrackBufferPuncher] := THIS^.fbTrackBufferPuncher;
+		GVL.g_Tracks[GVL.TrackStradeFirstSeg] := THIS^.fbTrackStradeFirstSeg;
+		GVL.g_Tracks[GVL.TrackStradeSecondSeg] := THIS^.fbTrackStradeSecondSeg;
+		GVL.g_Tracks[GVL.TrackPipettePreBuffer] := THIS^.fbTrackPipettePreBuffer;
+		GVL.g_Tracks[GVL.TrackPipette] := THIS^.fbTrackPipette;
+		GVL.g_Tracks[GVL.TrackPipettePostBuffer] := THIS^.fbTrackPipettePostBuffer;
+		GVL.g_Tracks[GVL.TrackPipetteBufferCon] := THIS^.fbTrackPipetteBufferCon;
+		GVL.g_Tracks[GVL.TrackUserInteraction] := THIS^.fbTrackUserInteraction;
+		GVL.g_Tracks[GVL.CloseLoopTrack] := THIS^.fbCloseLoopTrack;
+		GVL.g_Tracks[GVL.PuncherSeperateTrack] := THIS^.fbPuncherSeperate;
+		
+		
+		nTrackIdx := 0;
+		bAssignmentComplete := TRUE;
+		nStartupSequence := nStartupSequence + 1;	
+		
+	4: //assign track to system
+		FOR index := 1 TO GVL.gc_NumberTracks DO
+			fbXPlanarSystem.SetTrackStandard(index, GVL.g_Tracks[index].std);
+		END_FOR
+		
+		nStartupSequence := nStartupSequence + 1;
+	
+	5: // assign stations
+		GVL.g_Stations[GVL.PuncherStation] := THIS^.fbPuncherStation;
+		GVL.g_Stations[GVL.PuncherSeparateStation] := THIS^.fbPuncherSeparateStation;
+		GVL.g_Stations[GVL.PuncherBufferStation] := THIS^.fbPuncherBufferStation;
+		
+		nStartupSequence := nStartupSequence + 6;
+		
+	11: // Track number count
+		IF nTrackIdx < GVL.gc_NumberTracks THEN
+			nTrackIdx := nTrackIdx + 1;
+			nStartupSequence := nStartupSequence +1;
+		ELSE
+			    nTrackIdx := 0;
+			nStartupSequence := 14;
+		END_IF
+				
+	12:	// Clear track data
+		IF GVL.g_Tracks[nTrackIdx].Clear() THEN
+			nStartupSequence := nStartupSequence +1;
+		END_IF
+		
+	13: // Build the track
+		IF GVL.g_Tracks[nTrackIdx].Initialize(nTrackIdx) THEN	
+			nStartupSequence := 11;
+		ELSE
+			IF GVL.g_Tracks[nTrackIdx].P_Error THEN
+				nStartupSequence := nStartupSequence +1;
+			END_IF
+		END_IF
+		
+	14: // Init all stations
+		nStationToInit := 0;
+		nStartupSequence := nStartupSequence +1;
+
+	15:	nStationToInit := nStationToInit +1;
+		IF nStationToInit <= GVL.gc_NumberStations THEN
+			nStartupSequence := nStartupSequence +1;
+		ELSE
+			nStartupSequence := 30;
+		END_IF	
+				
+	16: IF GVL.g_Stations[nStationToInit].Init() THEN
+			nStartupSequence := nStartupSequence -1;
+		END_IF
+
+	30: 
+		Startup := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

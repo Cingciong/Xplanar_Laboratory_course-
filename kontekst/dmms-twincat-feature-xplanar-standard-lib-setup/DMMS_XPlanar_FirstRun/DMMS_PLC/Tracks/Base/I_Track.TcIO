@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <Itf Name="I_Track" Id="{20038d1a-3084-4988-90ae-edbc9e998b79}">
+    <Declaration><![CDATA[INTERFACE I_Track
+]]></Declaration>
+    <Method Name="Clear" Id="{b35f5f98-fb5f-4712-970e-18873dfdb214}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Cycle" Id="{2a9a3ab4-9667-4b08-b35b-9ca5e49a5470}">
+      <Declaration><![CDATA[METHOD Cycle : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Initialize" Id="{78ad5bf6-329e-4f08-9471-200afd1c518b}">
+      <Declaration><![CDATA[METHOD Initialize : BOOL
+VAR_INPUT
+	nTrackIndex	: UDINT;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="P_Error" Id="{d9ae669a-1d92-4c73-be6a-22b7bc9bde8b}">
+      <Declaration><![CDATA[PROPERTY P_Error : Bool]]></Declaration>
+      <Get Name="Get" Id="{93bc8f88-214b-4500-8443-cb53712e5395}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_TrackLength" Id="{665ede21-68c2-4d48-93a4-89b98c5172b5}">
+      <Declaration><![CDATA[PROPERTY P_TrackLength : LREAL]]></Declaration>
+      <Get Name="Get" Id="{1e51982a-ba69-4db8-bb2b-25abb189bdfe}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="std" Id="{147ccd20-c2c5-4dad-a5ba-c20c057326a2}">
+      <Declaration><![CDATA[PROPERTY std : I_TrackStandard]]></Declaration>
+      <Get Name="Get" Id="{ec0e9cb1-4f66-41b2-b659-9e5b14ad902c}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+  </Itf>
+</TcPlcObject>

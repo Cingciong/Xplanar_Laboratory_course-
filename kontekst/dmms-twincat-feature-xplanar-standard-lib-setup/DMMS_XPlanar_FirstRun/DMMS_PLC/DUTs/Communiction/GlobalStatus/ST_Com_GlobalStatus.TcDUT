@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_Com_GlobalStatus" Id="{2ae1ba39-ab12-4b2b-8209-bdd0877c312e}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}
+TYPE ST_Com_GlobalStatus :
+STRUCT
+	IN: 		ST_ComIn_GlobalStatus;
+	OUT:		ST_ComOut_GlobalStatus;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

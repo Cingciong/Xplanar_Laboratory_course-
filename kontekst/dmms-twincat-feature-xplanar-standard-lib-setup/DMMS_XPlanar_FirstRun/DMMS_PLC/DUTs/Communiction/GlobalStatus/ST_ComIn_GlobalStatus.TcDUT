@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ComIn_GlobalStatus" Id="{13fbf795-1d12-4ee1-b367-d1606f246305}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}
+TYPE ST_ComIn_GlobalStatus :
+STRUCT
+	Start: BOOL; 
+	EOC_Stop:BOOL; 
+	Stop:BOOL;
+	Reset:BOOL;
+	ProgramType: INT; 
+	MoversVelocity:REAL; 
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Refactors>
+  <Renames>
+    <RenamedType>
+      <Type guid="7d828aa6-8370-4588-b430-fe33d616db1c">ST_EMOVERLOADTYPE_1</Type>
+      <From>ST_EMoverLoadType_1</From>
+      <To>ST_EStationProcessState</To>
+    </RenamedType>
+    <RenamedType>
+      <Type guid="d9b2890f-80b2-4461-acaf-694e8b5b19bc">ST_ESTATIONPROCESSSTATE_1</Type>
+      <From>ST_EStationProcessState_1</From>
+      <To>ST_EStationHandshake</To>
+    </RenamedType>
+  </Renames>
+</Refactors>

@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ControlData" Id="{e14ecdaf-c10d-4766-9d35-ee84478fc5e8}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}
+TYPE ST_ControlData :
+STRUCT
+	StatusWord: INT;
+	ControlWord: INT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="E_XMotion_Command" Id="{edd36f5b-b279-49b3-bc03-01926153f3bb}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE E_XMotion_Command :
+(
+	NoCommand		:= 0,
+	Abort			:= 1,
+	Reset			:= 2,
+	Prepare			:= 3,
+	Start			:= 4,
+	HoldOnError		:= 5,
+	UserCommand		:= 6
+	
+) DINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

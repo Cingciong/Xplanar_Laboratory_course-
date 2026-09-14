@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <DUT Name="ST_VisuMessage" Id="{e5817a2a-a080-4ccd-8fa1-e5eec5ce3b08}">
+    <Declaration><![CDATA[TYPE ST_VisuMessage :
+STRUCT
+
+	bVisible_Box1_A		: BOOL;
+	bVisible_Box1_B		: BOOL;	
+	
+	sMessage_L1_Box1	: ST_MessageBoxText;
+	sMessage_L2_Box1	: ST_MessageBoxText;
+	
+	bAcknowledge		: BOOL;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

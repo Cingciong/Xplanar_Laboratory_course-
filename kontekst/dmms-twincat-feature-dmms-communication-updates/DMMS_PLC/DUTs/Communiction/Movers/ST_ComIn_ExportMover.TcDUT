@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_ComIn_ExportMover" Id="{720323f8-23ed-407b-a245-d3ee782f5649}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '1'}  // needed for python pyads reading
+TYPE ST_ComIn_ExportMover :
+STRUCT
+	Enable:BOOL;
+	Reset:BOOL;	
+	MoverType:INT;
+	ControlWord: INT; 
+	TaskToProcessed: UDINT;
+	id: STRING(13); 
+	WellplateData: ST_WellplateParametrization;
+	
+	
+	
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

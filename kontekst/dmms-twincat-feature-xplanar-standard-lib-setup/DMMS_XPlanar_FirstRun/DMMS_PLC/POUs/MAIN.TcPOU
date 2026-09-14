@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{e08087c0-d473-4865-979e-fa51639c40d1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fbXMotionUnit : FB_MotionSystem;
+	nState : UDINT;
+	nMemState : UDINT;
+	index:UDINT;
+	
+	//test
+	mover_idx: UINT:=1;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE nState OF
+	0: 
+		
+		nState := nState + 1;
+		
+	1:
+		IF fbXMotionUnit.Startup() THEN
+			nState := nState + 29;
+		END_IF
+		
+	30:
+		IF fbXMotionUnit.Starting(bReset := communication.g_Com_GlobalState.IN.Reset) THEN
+			nState := nState + 10;
+		END_IF
+		
+	40: 
+		fbXMotionUnit.Execute(bReset := communication.g_Com_GlobalState.IN.Reset);
+
+		IF communication.StopApplicationComm = FALSE THEN
+			
+		
+ 			communication.RunAplicationComm:=TRUE;
+		END_IF
+		
+	50: 
+			IF fbXMotionUnit.Resetting() THEN
+			nState := nMemState;
+		END_IF
+	
+		
+END_CASE
+
+
+fbXMotionUnit.Cycle();
+
+// global reset 
+
+IF Communication.g_Com_GlobalState.IN.Reset AND nState<> 50 THEN 
+	
+	nMemState:=nState;
+	
+	nState:= 50; 
+	 
+
+END_IF
+
+
+
+/// process parameters
+
+Communication.g_Com_GlobalState.IN.Start:= TRUE;
+//Communication.g_Com_GlobalState.IN.ProgramType:= 1; 
+
+
+Communication.g_Com_Movers[mover_idx].IN.Enable:=TRUE;
+Communication.g_Com_Movers[mover_idx].IN.id:= '0000lcle';
+Communication.g_Com_Movers[mover_idx].IN.MoverType:=1;
+
+Communication.g_Com_Movers[mover_idx].IN.WellplateData.Columns:=12;
+Communication.g_Com_Movers[mover_idx].IN.WellplateData.Row:=9;
+Communication.g_Com_Movers[mover_idx].IN.WellplateData.DistanceBetweenHoles_X:=3;
+Communication.g_Com_Movers[mover_idx].IN.WellplateData.DistanceBetweenHoles_Y:=3;
+Communication.g_Com_Movers[mover_idx].IN.WellplateData.OffsetFirstHoles_X:=575;
+Communication.g_Com_Movers[mover_idx].IN.WellplateData.OffsetFirstHoles_Y:=70;
+
+Communication.g_Com_Movers[mover_idx].ProcessData.OK_ToProcess:= TRUE;
+Communication.g_Com_Movers[mover_idx].ProcessData.WellplateStatus:=1;
+
+// GVL.stPayload...
+// 
+// 		IF GVL.ipXpu.TcIoMover(1).SetPayloadInertia(GVL.stPayload) THEN
+// 			nTest := 20;
+// 		END_IF
+// 		
+// 		IF GVL.ipXpu.TcIoMover(1).SetPayloadProductsOfInertia(GVL.stPayloadProductsOfInertia) THEN
+// 			nTest := 30;
+// 		END_IF
+
+
+
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

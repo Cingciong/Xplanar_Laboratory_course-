@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <GVL Name="Communication" Id="{fdf4dfc0-d142-49a0-bfc4-7eeefe034188}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	RunAplicationComm: bool; 
+
+	StopApplicationComm: BOOL;
+
+	g_Com_GlobalState: ST_Com_GlobalStatus;
+
+	g_Com_Movers : ARRAY[1..GVL.gc_nMaxNumberMovers] OF ST_Com_ExportMover;
+	
+	g_Com_Stations : ARRAY[1..GVL.gc_NumberStations] OF ST_Com_ExportStation;
+
+
+
+	std: INT;
+	Init: INT;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
