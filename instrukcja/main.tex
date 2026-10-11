@@ -1,0 +1,545 @@
+% =====================================================================
+% Instrukcja laboratoryjna — XPlanar / TwinCAT 3
+% Szkielet dokumentu: rozdziały = zagadnienia laboratorium, placeholdery.
+% Styl wizualny zbliżony do dokumentacji Beckhoff (InfoSys).
+% =====================================================================
+\documentclass[11pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage[scaled=0.92]{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[margin=2.4cm,headheight=14pt]{geometry}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage[most]{tcolorbox}
+\usepackage[colorlinks=true,linkcolor=bkorange,urlcolor=bkorange,citecolor=bkorange]{hyperref}
+
+\graphicspath{{zdjęcia/}}
+
+% --- Paleta (Beckhoff: pomarańcz + szarości) ---
+\definecolor{bkorange}{RGB}{232,90,10}
+\definecolor{bkdark}{RGB}{51,51,51}
+\definecolor{bkgray}{RGB}{240,240,240}
+\definecolor{bkblue}{RGB}{0,106,163}
+\definecolor{bknote}{RGB}{230,242,250}
+\definecolor{bkwarn}{RGB}{255,244,214}
+\definecolor{bkwarnbd}{RGB}{214,158,0}
+
+\AtBeginDocument{\color{bkdark}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlist{itemsep=1pt,topsep=3pt}
+\emergencystretch=3em
+
+% --- Nagłówki ---
+\titleformat{\chapter}[block]
+  {\normalfont\bfseries\color{bkorange}}
+  {\fontsize{34}{36}\selectfont\thechapter}{0.5em}
+  {\Huge\color{bkdark}}
+  [\vspace{2pt}{\color{bkorange}\titlerule[2pt]}]
+\titlespacing*{\chapter}{0pt}{-10pt}{22pt}
+\titleformat{\section}{\Large\bfseries\color{bkorange}}{\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{16pt}{6pt}
+\titleformat{\subsection}{\large\bfseries\color{bkdark}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{bkorange}}{}{0em}{}
+\titlespacing*{\subsubsection}{0pt}{12pt}{4pt}
+\setcounter{tocdepth}{3}
+\newcommand{\podrozdzial}[1]{\subsection*{#1}\addcontentsline{toc}{subsection}{#1}}
+\newcommand{\podpodrozdzial}[1]{\subsubsection*{#1}\addcontentsline{toc}{subsubsection}{#1}}
+
+% --- Nagłówek i stopka ---
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.8pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{bkorange}\leaders\hrule height \headrulewidth\hfill}}
+\fancyhead[L]{\small\color{bkdark}XPlanar --- TwinCAT 3}
+\fancyhead[R]{\small\color{bkdark}\leftmark}
+\fancyfoot[L]{\small\color{gray}Instrukcja laboratoryjna}
+\fancyfoot[R]{\small\color{bkorange}\textbf{\thepage}}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[R]{\small\color{bkorange}\textbf{\thepage}}\renewcommand{\headrulewidth}{0pt}}
+
+% --- Ramki w stylu InfoSys: kolorowy pasek z lewej ---
+\tcbset{beckbox/.style={enhanced,breakable,frame hidden,boxrule=0pt,sharp corners,
+  borderline west={3pt}{0pt}{bkorange},left=10pt,right=8pt,top=6pt,bottom=6pt}}
+
+\newcommand{\opisDoUzupelnienia}[1]{%
+  \begin{tcolorbox}[beckbox,colback=bkgray,borderline west={3pt}{0pt}{bkdark!50}]
+  \textbf{[DO UZUPEŁNIENIA]} Opis czynności oraz nazewnictwo bloków, metod i parametrów
+  zgodne z dokumentacją Beckhoff (\texttt{Tc3\_XPlanarStandard}, \texttt{Tc3\_XPlanarUtility}). #1
+  \end{tcolorbox}}
+
+\newcommand{\uwaga}[1]{%
+  \begin{tcolorbox}[beckbox,colback=bknote,borderline west={3pt}{0pt}{bkblue}]
+  \textbf{\color{bkblue}Note}\par #1
+  \end{tcolorbox}}
+
+\newcommand{\zadanie}[2]{%
+  \begin{tcolorbox}[beckbox,colback=bkwarn,borderline west={3pt}{0pt}{bkwarnbd}]
+  \textbf{\color{bkorange}#1}\par #2
+  \end{tcolorbox}}
+
+% --- Placeholder na zrzut ekranu ---
+\newcommand{\zrzutEkranu}[3][0.8\linewidth]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{zdjęcia/#2}{%
+      \includegraphics[width=#1,height=0.42\textheight,keepaspectratio]{#2}%
+    }{%
+      \begin{tcolorbox}[enhanced,width=#1,height=5.5cm,colback=bkgray,colframe=bkdark!30,
+        boxrule=0.6pt,sharp corners,halign=center,valign=center]
+        \itshape Miejsce na zrzut ekranu\\[0.4em]\normalfont\ttfamily\small zdjęcia/#2
+      \end{tcolorbox}%
+    }
+    \caption{#3}
+  \end{figure}}
+
+\title{\textbf{Instrukcja laboratoryjna}\\\vspace{0.4em}\large XPlanar --- TwinCAT 3 (IEC~61131-3)}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\chapter{Wstęp}
+\textbf{Forma:} prowadzący pokazuje technologię wizualnie (na maszynie), nie na slajdach.
+
+\subsection*{Komentarz / zalecenia}
+\begin{itemize}
+  \item Student musi otrzymać wiedzę przed przystąpieniem do laboratorium numer 1.
+  \item Wytłumaczenie musi wystąpić \textbf{wizualnie} --- ilość wiedzy jest zbyt duża, by przedstawić ją na wykładzie, którego slajdy nie odzwierciedlają ani nie uczą realnej pracy przy maszynie.
+  \item Z doświadczenia: po zajęciach z PLC lub jakichkolwiek zajęciach z automatyki przemysłowej studenci nie dochodzą do wyjaśnienia zasady działania ani postępowania z maszyną. Typowy student nawet nie ma pojęcia, czym \textit{dokładnie} jest PLC.
+  \item Wizualne przekazanie wiedzy, co można zrobić z danym sprzętem --- choćby na podstawie PLC nie od Beckhoffa, a np. Delty/Siemensa, na realnych przykładach.
+  \item To kluczowe do efektywnego przeprowadzenia laboratoriów, ponieważ systemy Beckhoffa cechują się wysokim poziomem wejścia relatywnie do innych środowisk, jak TIA Portal czy ISPSoft.
+  \item Podkreślić, że na rok 2026 platforma XPlanar Beckhoff jest technologią jeszcze nie w 100\% dopracowaną: na razie jest rozwijana i mało jest systemów zaimplementowanych, jednakże jest to rozwiązanie bardzo rzeczowe / obiecujące \textit{(do doprecyzowania sformułowanie)}.
+\end{itemize}
+
+\section{Jak działa XPlanar i jego możliwości}
+\begin{itemize}
+  \item jak działa,
+  \item jakie są maksymalne zakresy działania,
+  \item jakie typy i rozmiary,
+  \item możliwości i miejsca zastosowania,
+  \item ograniczenia moverów.
+\end{itemize}
+\opisDoUzupelnienia{}
+
+\section{Szafa sterownicza}
+\zrzutEkranu[0.8\linewidth]{01-wstep/szafa-sterownicza/szafa-sterownicza-widok-ogolny.png}{Szafa sterownicza --- widok ogólny (zdjęcie do dodania)}
+\begin{itemize}
+  \item co znajduje się w szafie,
+  \item jak elementy szafy komunikują się ze sobą i z peryferiami --- EtherCAT.
+\end{itemize}
+\opisDoUzupelnienia{}
+
+\section{Środowisko TwinCAT XAE Shell}
+Projekty TwinCAT 3 tworzymy w środowisku \textbf{TcXaeShell 64-bit} (wersja 7.21.11, oparte na Visual Studio 2022) wraz z \textbf{TwinCAT XAE 4026.27}.
+
+\podrozdzial{Okno główne}
+Okno główne składa się z paska menu i paska narzędzi, Solution Explorera z drzewem projektu, obszaru edytora, w którym otwieramy wybrane elementy projektu, oraz okien pomocniczych (m.in.\ Error List i Output). 
+\podrozdzial{Pasek menu i narzędzi}
+\zrzutEkranu[0.95\linewidth]{01-wstep/srodowisko-tcxaeshell/tcxaeshell-pasek-narzedzi.png}{Edytor TcXaeShell --- pasek menu i pasek narzędzi}
+
+Z paska, z którego będziemy realnie korzystać, od lewej:
+\begin{enumerate}
+  \item \textbf{wybór wersji TwinCAT}, przez którą się komunikujemy, a następnie wersja aktywna (\textit{Active version}),
+  \item \textbf{Activate Configuration} --- wgranie konfiguracji projektu na wybrany target,
+  \item \textbf{Run Mode} i \textbf{Config Mode} --- przełączanie trybu pracy runtime'u (zielona --- Run, niebieska --- Config),
+  \item \textbf{aktywny projekt} (\texttt{StarterkitBase}) --- lista rozwijana projektów w rozwiązaniu,
+  \item \textbf{target} (\texttt{<Local>}) --- system, na którym uruchamiamy projekt.
+\end{enumerate}
+
+
+
+Sterownik zewnętrzny wybieramy po nazwie lub numerze seryjnym; wymaga to wcześniej dodanej trasy komunikacji (\textit{Edit Routes w Zasobniku}).
+
+\podrozdzial{Solution Explorer}
+Solution Explorer dzieli projekt na części: SYSTEM, MOTION, PLC, SAFETY, C++, VISION, ANALYTICS i I/O. W laboratorium korzystamy z SYSTEM, MOTION, I/O i PLC.
+
+\podpodrozdzial{SYSTEM}
+SYSTEM to konfiguracja komputera sterującego, na którym uruchamiamy projekt.
+
+\zrzutEkranu[0.4\linewidth]{01-wstep/czesci-projektu/solution-explorer-system.png}{Solution Explorer --- SYSTEM}
+
+\textbf{License} --- licencje TwinCAT.
+
+\textbf{Real-Time} --- w tej zakładce definiujemy rdzenie procesora, które pracują, aby system działał szybko.
+
+\zrzutEkranu[0.95\linewidth]{01-wstep/czesci-projektu/solution-explorer-system-realtime.png}{Solution Explorer --- SYSTEM, Real-Time (Settings)}
+
+Rdzenie \textit{shared} (współdzielone) TwinCAT dzieli z Windows, a \textit{Core Limit} określa, jaką część czasu rdzenia może zająć TwinCAT. Rdzenie \textit{isolated} (izolowane) są przydzielone wyłącznie TwinCAT i Windows z nich nie korzysta. Po zmianie parametrów trzeba zapisać konfigurację (\textit{Set on Target}).
+
+\textbf{TcCOM Objects} --- obiekty, w których żyje system XPlanar. Obiekt \texttt{XPlanar} zawiera:
+\begin{itemize}
+  \item \texttt{Part1} --- kafelki, po których poruszają się movery,
+  \item \texttt{Area1} --- obszar ruchu, czyli zdefiniowane środowisko, w którym movery mogą się poruszać,
+  \item movery, nazwane swoim numerem \textbf{BTN} (np.\ \texttt{0000kyte}).
+\end{itemize}
+BTN (\textit{Beckhoff Traceability Number}) to numer fabryczny movera z jego naklejki. Mover jest tylko magnesem, więc identyfikuje go zderzak (czarna ramka); dzięki BTN system wie, który mover jest którym obiektem w projekcie.
+
+\podpodrozdzial{MOTION}
+\texttt{XPlanar MC Project} zawiera obiekty ruchu, które są pośrednikiem między programem PLC a światem rzeczywistym.
+
+\zrzutEkranu[0.5\linewidth]{01-wstep/czesci-projektu/solution-explorer-motion.png}{Solution Explorer --- MOTION}
+
+W jego skład wchodzą:
+\begin{itemize}
+  \item \texttt{Axes} --- po jednej osi na każdy mover (to nie są osie silników). Oś jest zlinkowana z obiektem movera w TcCOM oraz ze zmiennymi PLC (\texttt{PlcToMc}: komendy, \texttt{McToPlc}: stany i pozycja); linki PLC wykonujemy sami (\textit{Change Axis PLC Links}),
+  \item \texttt{Groups} --- grupa \textbf{XPlanar} (sprawdzanie kolizji movery--tracki--środowisko), \textbf{Environment} (powierzchnia kafelków, czyli obszar, w którym się poruszamy) oraz \textbf{tracki} (\textit{Track1--3}, „ulice'' dla moverów).
+\end{itemize}
+Tylko osie moverów mają odpowiednik w sprzęcie. Grupa, Environment i tracki są czysto programowe, więc linkuje się je tylko z PLC (\texttt{MCTOPLC\_STD}), aby PLC mogło nimi sterować.
+
+\podpodrozdzial{I/O}
+I/O opisuje fizyczne urządzenia i powiązania między nimi a resztą projektu.
+
+\zrzutEkranu[0.4\linewidth]{01-wstep/czesci-projektu/solution-explorer-io.png}{Solution Explorer --- I/O}
+\zrzutEkranu[0.6\linewidth]{01-wstep/czesci-projektu/solution-explorer-io-mappings.png}{Solution Explorer --- I/O, Mappings}
+
+Na zrzutach widać:
+\begin{itemize}
+  \item trzy urządzenia EtherCAT: Device 1, Device 2 i Device 3,
+  \item w Device 1 sprzęgacz EK1200,
+  \item w Device 2 terminale APS4322-7000 o numerach 5, 7, 9, 11, 13 i 15, czyli kafelki XPlanara,
+  \item w Device 3 terminale APS4322-7000 o numerach 17, 19, 21, 23, 25 i 27, również kafelki,
+  \item w każdym urządzeniu EtherCAT elementy wspólne: Image, Image-Info, SyncUnits, Inputs, Outputs i InfoData,
+  \item urządzenie USB: Device 6,
+  \item Mappings, czyli wszystkie linki w jednym miejscu: obiekty moverów 0000kyte, 0000kyto, 0000kytm i 0000kytn powiązane ze swoimi osiami, a także Context, XPlanar, Environment i Track1--3 powiązane z instancją projektu PLC.
+\end{itemize}
+
+\podrozdzial{Ikona TwinCAT w zasobniku systemu}
+Menu ikony TwinCAT w zasobniku systemu pozwala m.in. uruchomić środowisko (TcXaeShell 32/64-bit, Visual Studio), uruchomić lub zrestartować runtime (\texttt{Start/Restart}), przełączyć go w tryb Config (\texttt{Config}) oraz otworzyć ustawienia routera ADS (\texttt{Router}: \texttt{Info}, \texttt{Cleanup}, \texttt{Change AMS NetId}, \texttt{Edit Routes}). Stan runtime'u widać po kolorze ikony (niebieska --- Config, zielona --- Run); szczegóły: \href{https://infosys.beckhoff.com/content/1033/tc3_userinterface/2867291659.html}{Information bar} w Infosys.
+
+\zrzutEkranu[0.4\linewidth]{01-wstep/srodowisko-tcxaeshell/tcxaeshell-zasobnik-systemu.png}{Menu ikony TwinCAT w zasobniku systemu}
+
+\section{Kod demo}
+\zrzutEkranu[0.4\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc.png}{Solution Explorer --- PLC}
+
+W tym projekcie skupiamy się tylko na folderze \texttt{2\_Application}.
+
+\podrozdzial{Podstawy programowania PLC}
+Językiem programowania jest \textbf{ST} (\textit{Structured Text}).
+
+\textbf{Zasady.} Ze względu na to, że jest to PLC, nasz program wykonuje się \textbf{cyklicznie}, podobnie jak w ladderze czy w języku blokowym: zadanie \texttt{PlcTask} wywołuje program główny w każdym cyklu (tu co 10 ms). Dlatego kod nie może czekać w pętli; długie czynności rozkładamy na kroki maszyny stanów (\texttt{CASE}), wykonywane w kolejnych cyklach. Poza tym:
+\begin{itemize}
+  \item zmienną deklarujemy przed użyciem, w bloku \texttt{VAR \ldots END\_VAR}, z typem i opcjonalną wartością początkową,
+  \item instrukcję kończymy średnikiem; przypisanie to \texttt{:=}, porównanie to \texttt{=}.
+\end{itemize}
+
+\textbf{Jednostki organizacyjne (POU).} Program składa się z jednostek organizacyjnych (\textit{Program Organization Unit}), które dodajemy w Solution Explorer:
+\begin{itemize}
+  \item \textbf{Program} --- jednostka wywoływana bezpośrednio przez zadanie; jest jedna i zachowuje stan między cyklami,
+  \item \textbf{Function Block} --- jednostka z własną pamięcią: tworzymy jej instancje, a każda pamięta swój stan. Może mieć metody i właściwości, dziedziczyć po innym bloku i implementować interfejsy,
+  \item \textbf{Function}  --- jednostka bez pamięci, która dla tych samych argumentów zwraca ten sam wynik,
+  \item \textbf{Method}  --- funkcja należąca do bloku funkcyjnego lub programu, wywoływana na jego instancji, z dostępem do jego zmiennych,
+  \item \textbf{Property} (właściwość) --- z zewnątrz działa jak zmienna bloku, ale odczyt i zapis wykonuje kod (\textit{Get} i \textit{Set}),
+  \item \textbf{Action}  --- dodatkowy fragment kodu bloku lub programu, bez własnych argumentów, pracujący na jego zmiennych,
+  \item \textbf{Interface}  --- lista metod i właściwości bez kodu; blok, który go implementuje, musi je zawierać, dzięki czemu różne bloki można traktować jednakowo,
+  \item \textbf{DUT} (\textit{Data Unit Type}) --- definicja własnego typu danych: struktury, wyliczenia lub aliasu,
+  \item \textbf{GVL} (\textit{Global Variable List}) --- lista zmiennych i stałych globalnych, dostępnych w całym projekcie.
+\end{itemize}
+
+\textbf{Dobre praktyki nazewnictwa.} Nazwy zmiennych mają prefiks oznaczający typ: \texttt{b} --- \texttt{BOOL}, \texttt{n} --- liczba całkowita, \texttt{f} --- zmiennoprzecinkowa, \texttt{s} --- \texttt{STRING}, \texttt{fb} --- instancja bloku funkcyjnego, \texttt{ip} --- interfejs. Typy i listy mają prefiks rodzaju: \texttt{FB\_}, \texttt{ST\_} (struktura), \texttt{E\_} (wyliczenie), \texttt{I\_} (interfejs), \texttt{GVL\_}; stałe globalne zaczynamy od \texttt{gc\_}.
+
+\podrozdzial{Program}
+\zrzutEkranu[0.4\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc-kod.png}{Solution Explorer --- PLC, kod aplikacji}
+
+\begin{itemize}
+  \item \texttt{Machine} --- \texttt{FB\_MotionSystem} to główna maszyna stanów systemu: zatrzymanie, reset, przygotowanie i praca. W przygotowaniu sprawdza zasilanie kafelków, wykrywa i identyfikuje movery, określa ich orientację, włącza je i wprowadza na tory. \texttt{FB\_MoverTarget} wysyła movery do zadanych pozycji,
+  \item \texttt{Mover} --- \texttt{FB\_ApplicationMover} to obiekt aplikacyjny jednego movera: w każdym cyklu wywołuje standardowy obiekt movera i udostępnia jego pozycję wizualizacji,
+  \item \texttt{Station} --- \texttt{FB\_StationBase} to wspólna baza dla pięciu stacji. Każda stacja jest maszyną stanów z metodami \texttt{Init}, \texttt{Clear} i \texttt{Process}: czeka na movera, wysyła go do pozycji obróbki, wykonuje swój proces, wybiera następną stację i odsyła movera po torze. Nazwy stacji 4 i 5 (\texttt{SW\_Separate}, \texttt{SW\_Merge}) wskazują na rozdzielanie i łączenie torów,
+  \item \texttt{Tracks} --- \texttt{FB\_TrackBase} i trzy segmenty torów, które po nim dziedziczą; metoda \texttt{Initialize} buduje tablicę punktów toru,
+  \item \texttt{GVL\_Application} --- stałe aplikacji: 4 movery, 3 tory i 5 stacji.
+\end{itemize}
+
+\podrozdzial{References}
+\zrzutEkranu[0.4\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc-references.png}{Solution Explorer --- PLC, References}
+
+References to biblioteki dołączone do projektu: gotowe bloki i typy, z których korzysta program. Używamy między innymi \texttt{Tc3\_XPlanarStandard}, która nie jest ogólnie udostępniana przez Beckhoff. Dzięki niej pisanie programu jest wyższego poziomu: zamiast niskopoziomowych komend ruchu używamy gotowych obiektów systemu i movera, np.\ wywołania \texttt{std.cycle()}.
+
+\podrozdzial{Linki Inputs i Outputs}
+\zrzutEkranu[0.8\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc-instance-linki.png}{Solution Explorer --- instancja PLC (Inputs, Outputs)}
+
+Instancja projektu PLC ma dwie listy zmiennych wymienianych z resztą systemu w każdym cyklu zadania. \textbf{PlcTask Inputs} to dane wchodzące do PLC: przyciski pierścienia CX, a także statusy z MOTION (\texttt{MCTOPLC}) dla Environment, grupy, czterech moverów i trzech torów. \textbf{PlcTask Outputs} to dane wychodzące z PLC: komendy dla czterech moverów (\texttt{PLCTOMC}). \textbf{Link} to połączenie zmiennej PLC ze zmienną drugiej strony, np.\ osi w MOTION; dzięki niemu wartości są kopiowane automatycznie w każdym cyklu, a PLC może sterować moverami. Zmienne przyciskowe w programie są zadeklarowane jako wejścia (\texttt{AT \%I*}), czyli bez stałego adresu, który nadaje dopiero link.
+
+\section{Odpalenie projektu}
+\podrozdzial{Rodzaje pracy: Normal, BasicSimulation, AdvancedSimulation}
+Tryb ustawiamy w obiekcie XPlanar: \texttt{SYSTEM} $\rightarrow$ \texttt{TcCOM Objects} $\rightarrow$ \texttt{XPlanar} $\rightarrow$ \texttt{Parameter (Init)} $\rightarrow$ \texttt{OperationMode}.
+
+\zrzutEkranu[0.9\linewidth]{01-wstep/odpalenie-projektu/tccom-xplanar-parameter-init-operationmode.png}{Obiekt XPlanar --- Parameter (Init), wybór OperationMode}
+
+\begin{center}\small
+\begin{tabular}{@{}p{2.7cm}p{3.2cm}p{4.1cm}p{4.4cm}@{}}
+\toprule
+\textbf{Tryb} & \textbf{Sprzęt} & \textbf{Czas rzeczywisty} & \textbf{Obliczenia}\\
+\midrule
+\texttt{Normal} & wymagany & wymagany & rzeczywisty system\\
+\midrule[0.3pt]
+\texttt{BasicSimulation} & praca na komputerze & nie musi być spełniony, można symulwoać na jednym rdzeniu& symulowany ruch moverów, bez obliczania prądów i sprzężenia zwrotnego\\
+\midrule[0.3pt]
+\texttt{Advanced-\allowbreak Simulation} & ? & wymagany; układ zadań jak w rzeczywistej konfiguracji (czas cyklu, rozłożenie obciążenia na rdzenie) & aktywne obliczanie prądów i sprzężenia zwrotnego, bliżej trybu \texttt{Normal}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+
+
+\podrozdzial{Odpalenie w trybie Normal na PLC}
+Tryb \texttt{Normal} to praca z rzeczywistym sprzętem na sterowniku XPlanara.
+\begin{enumerate}
+  \item Otwieramy rozwiązanie (aktualnie: \texttt{StarterkitBase}) w TcXaeShell.
+  \item Wybieramy target: sterownik XPlanara (np.\ \texttt{CX-94E797}); wymaga to dodanej wcześniej trasy komunikacji.
+  \item Sprawdzamy, czy \texttt{OperationMode} to \texttt{Normal}.
+  \item Sprawdzamy, urządzenia I/O są enablowane.
+  \item Upewniamy się, że movery stoją na kafelkach.
+  \item Wykonujemy \textit{Activate Configuration}, logujemy się do PLC i uruchamiamy program.
+  \item Maszynę obsługujemy z wizualizacji: Start, Stop, wprowadzenie w stan Execute.
+\end{enumerate}
+
+\podrozdzial{Odpalenie w symulacji}
+W symulacji projekt działa bez maszyny: symulowany jest sprzęt XPlanar (kafelki i movery), a program PLC wykonuje się normalnie. Wspólne kroki:
+\begin{enumerate}
+  \item w obiekcie XPlanar ustawiamy \texttt{OperationMode} na \texttt{BasicSimulation} lub \texttt{AdvancedSimulation},
+  \item urządzenia I/O ustawiamy na disable albo na simulation mode.
+  \item wykonujemy \textit{Activate Configuration}, logujemy się do PLC i uruchamiamy program,
+  \item zmiany w symulacji obserwujemy na dwa sposoby:
+  \begin{itemize}
+    \item \textit{TwinCAT} $\rightarrow$ \textit{MC3-XPlanar Environment View},
+    \item \textit{TwinCAT} $\rightarrow$ \textit{XPlanar} $\rightarrow$ \textit{Configurator} $\rightarrow$ \textit{Live View}; po zmianach w projekcie klikamy \textit{Reload},
+  \end{itemize}
+\end{enumerate}
+
+\podpodrozdzial{Symulacja na PLC Beckhoffa}
+Jako target wybieramy sterownik. Runtime jest na nim już zainstalowany i skonfigurowany pod czas rzeczywisty, więc kroki dotyczące wirtualizacji i pakietów z następnego podrozdziału nie mają zastosowania. \texttt{BasicSimulation} nie wymaga czasu rzeczywistego, a \texttt{AdvancedSimulation} wymaga rzeczywistego układu zadań, który sterownik zapewnia. Przy niezgodności ustawień Real-Time wykonujemy \textit{Read from Target}.
+
+\podpodrozdzial{Symulacja na zewnętrznym PC}
+Jako target wybieramy \texttt{<Local>}. Komputer musi spełniać wymagania:
+\begin{itemize}
+  \item zainstalwoanwego środowiska TwinCAT w pdoanej konfigruacji. TODO DODOAĆ KONFIURACJE WYŁAUMCZYĆ PBORANIE NA KOMPUTER
+  \item wyłączona wirtualizacja: Hyper-V, WSL, VBS (Memory integrity) i Windows Hello Enhanced Sign-in; zmiana wymaga uprawnień administratora i restartu,
+  \item biblioteka \texttt{Tc3\_XPlanarStandard} w wersji, której wymaga projekt (References),
+  \item ustawienia Real-Time dopasowane do komputera: \textit{Read from Target}, potem przypisanie zadań do istniejących rdzeni; dla \texttt{BasicSimulation} wystarczy jeden rdzeń, dla \texttt{AdvancedSimulation} układ zadań jak w rzeczywistej konfiguracji.
+\end{itemize}
+
+
+\section{Zadania}
+\podrozdzial{Zadanie 1}
+Uruchomienie projektu na PLC lub przez własny komputer w trybie Normal, odpalić z visualizacji ruch moverów 
+\podrozdzial{Zadanie 2}
+Odpalenie Symualcji w trybie BasicSimulation na PLC lub przez własny komputer, odpalić z visualizacji ruch moverów oraz sprawdic ruch
+
+\subsection*{Dokumentacja Beckhoff (Infosys)}
+\begin{itemize}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9244773515.html}{TF5430 TwinCAT 3 Planar Motion --- Introduction}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_installation/6162675979.html}{Installing TwinCAT 3 Engineering and Runtime}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_userinterface/2867291659.html}{Information bar (stan systemu TwinCAT)}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_system/2525041803.html}{Your first TwinCAT 3 PLC project}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_system/5211863691.html}{Core Management (Real-Time: rdzenie, Base Time)}
+\end{itemize}
+
+\chapter{Konfiguracja oraz włączenie systemu}
+\textit{Ćwiczenia: \textbf{inicjalizacja systemu}, \textbf{lewitacja}}
+
+\subsection*{Backup}
+\begin{itemize}
+  \item \textbf{STWORZENIE BACKUP} --- student musi umieć tworzyć backup.
+  \item Trzeba nauczyć dobrych praktyk: zawsze przed wejściem do środowiska produkcyjnego wykonujemy backup.
+\end{itemize}
+
+\textbf{Backup systemu na sterowniku Beckhoff (TwinCAT 3, Windows) --- skrótowo}\par
+Backup składa się z trzech części; zawsze robimy je razem:
+\begin{enumerate}
+  \item \textbf{Archiwum projektu (źródła)} --- w drzewie projektu prawy klik na projekcie PLC $\rightarrow$ \texttt{Save <nazwa projektu> as Archive...}. Wynikiem jest plik archiwum (u nas \texttt{.tnzip}), z którego projekt można odtworzyć na innym komputerze.
+  \item \textbf{Boot project} --- projekt na sterowniku musi odpowiadać projektowi w środowisku. Zapisz zmiany (czerwona dyskietka przy obiektach oznacza niezapisane zmiany), a następnie na węźle PLC wybierz \texttt{Activate Boot Project}, zaloguj się i uruchom PLC.
+  \item \textbf{Kopia folderu Boot ze sterownika} (przez RDP lub udział sieciowy): w TwinCAT 3.1.4026 i nowszych \texttt{C:\textbackslash ProgramData\textbackslash Beckhoff\textbackslash TwinCAT\textbackslash 3.1\textbackslash Boot\textbackslash}. Folder \texttt{Plc} zawiera dane boot aplikacji PLC, a opcjonalnie \texttt{CurrentConfig} --- źródła projektu, jeśli są przechowywane na sterowniku.
+\end{enumerate}
+
+\uwaga{Zmienne \texttt{PERSISTENT} zapisują się w pliku \texttt{.bootdata} w folderze Boot (poprzednią wersję system zmienia na \texttt{.bootdata-old}). Aby mieć w backupie aktualne wartości, wywołaj przed kopiowaniem \texttt{FB\_WritePersistentData} z biblioteki \texttt{Tc2\_Utilities}.}
+
+\textbf{Przywracanie:} rozpakuj archiwum projektu na komputerze, zawartość skopiowanego folderu \texttt{Plc} wstaw do folderu \texttt{Boot\textbackslash Plc} na sterowniku (zastępuje istniejącą), po czym zrestartuj TwinCAT.
+
+\uwaga{Osobny produkt \textbf{TwinCAT Backup} (usługa \texttt{TcBackupServer}, archiwa \texttt{*.tbs}, profile z harmonogramem) wg Infosys należy do dokumentacji \textbf{TS1150 | TwinCAT 2 Backup}, więc dla TwinCAT 3 nie jest tu opisany. Źródła: Infosys Beckhoff, rozdziały \emph{Performing a PLC update}, \emph{Transferring a PLC project}, \emph{PLC Project Settings}.}
+\subsection*{Pakiety i biblioteki}
+\begin{itemize}
+  \item Sprawdzenie i pokazanie działania Package Managera po stronie Beckhoffa.
+  \item Przedstawienie bibliotek.
+\end{itemize}
+\subsection*{Projekt i sprzęt}
+\begin{itemize}
+  \item Utworzenie projektu, zdefiniowanie obszaru roboczego XPlanar.
+  \item Student musi wiedzieć, jak wygląda tile.
+  \item Wytłumaczenie po krótce, jak działa EtherCAT --- \textbf{max 6 tile'i na jeden EtherCAT}.
+  \item Wsadzenie moverów, odczytanie BTN.
+\end{itemize}
+\subsection*{Odpalenie moverów}
+\begin{itemize}
+  \item Movery można odpalić tylko z przechyleniem do 10 stopni w osi C.
+  \item Wspomnieć o ograniczeniu: nie znamy dokładnie, w jakiej orientacji jest mover \textit{(odnośnik do strony Beckhoffa; w dalszej części kursu nie będzie to wspominane)}.
+  \item \textbf{Z moverUI:}
+  \begin{itemize}
+    \item pokazanie, jak działa JOG,
+    \item pokazanie punktów rotacji, zmiany Z i innych możliwości movera \textit{(do sprawdzenia: czy na dużych moverach są punkty rotacji)},
+    \item pokazanie ruchu w osi Z \textit{(można też spróbować A i B, ale nie wiem po co)}.
+  \end{itemize}
+  \item Na końcu: pokazanie, że movery można enable'ować przez kod --- wytłumaczenie cyklu.
+\end{itemize}
+\textbf{Zadanie} \textit{(propozycja)}: uruchom system w symulacji (\texttt{BasicSimulation}), zaloguj się do PLC, włącz movery z kodu (\texttt{EnableMovers}), unieś jeden mover w Z na 5 mm i opuść go z powrotem; podglądaj pozycję w \texttt{P\_ActPosition} i w Configuratorze (Live View).
+
+\begin{itemize}
+  \item \textbf{Lewitacja:} funkcje do kontroli w osi Z (\texttt{MoveZ}, zakres w konfiguracji osi: od -1 do 10 mm) \textit{(przeniesione z zagadnienia 3)}.
+  \item Metoda do usuwania i dodawania moverów + wytłumaczenie, po co jest potrzebna \textit{(przeniesione z zagadnienia 3)}.
+  \item Pokazanie, jak to działa dla \textbf{2 wariantów bibliotek}:
+  \begin{itemize}
+    \item \texttt{Tc3\_XPlanarUtility} --- ogólnie dostępna,
+    \item \texttt{Tc3\_XPlanarStandard} --- poza repozytorium Beckhoffa, udostępniana na prośbę.
+  \end{itemize}
+\end{itemize}
+\subsection*{Materiały do przekazania}
+\begin{itemize}
+  \item Do tego etapu: GitHub, nagranie oraz docs w PDF.
+\end{itemize}
+
+\subsection*{Dokumentacja Beckhoff (Infosys)}
+\begin{itemize}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_installation/6162675979.html}{Installing TwinCAT 3 Engineering and Runtime}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_userinterface/2867291659.html}{Information bar (stan systemu TwinCAT)}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2953964811.html}{Command Activate configuration}
+  \item \href{https://infosys.beckhoff.com/content/1033/xts_software/10484022667.html}{Activating simulation mode}
+  \item \href{https://infosys.beckhoff.com/content/1033/xts_software/11288921739.html}{Parameter (Init) --- OperationMode}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5890_tc3_xplanar/19457544715.html}{TwinCAT 3 XPlanar Utility}
+\end{itemize}
+
+\chapter{Ruch wysterowany}
+\textit{Ćwiczenie: \textbf{ruch w 6 stopniach swobody (6 DoF)}}
+
+\subsection*{Start}
+\begin{itemize}
+  \item Z GitHuba, z brancha 3, pobrać działający projekt albo kontynuować kolejny.
+\end{itemize}
+\subsection*{Cel dydaktyczny}
+\begin{itemize}
+  \item Student powinien rozumieć, \textbf{dlaczego mamy cykl}.
+  \item Pokazanie studentowi, jak ruszyć jednym moverem.
+  \item Student musi umieć dodać w pętli \texttt{FOR} kolejne movery --- zrozumieć, że tak się je deklaruje i że są aktualizowane z cyklu.
+\end{itemize}
+\subsection*{Ruch zadany w 6 DoF --- free move}
+Każda oś ma osobną komendę na obiekcie movera (\texttt{FB\_XPlanarMoverStandard}):
+
+\begin{center}\small\begin{tabular}{@{}lll@{}}\toprule
+Oś & Komenda & Uwagi \\
+\midrule
+X, Y (+C) & \texttt{MoveToPosition} & ruch po płaszczyźnie; zadaje X/Y/C naraz \\
+C (obrót) & \texttt{MoveC} & tylko w punktach obrotu (co 120 mm); \texttt{P\_AtRotationPoint} \\
+Z (wysokość) & \texttt{MoveZ} & zakres od -1 do 10 mm \\
+A (przechył wokół X) & \texttt{MoveA} & zakres $\pm$6$^\circ$ \\
+B (przechył wokół Y) & \texttt{MoveB} & zakres $\pm$6$^\circ$ \\
+\bottomrule\end{tabular}\end{center}
+\begin{itemize}
+  \item **A i B nie są w \texttt{MoveToPosition}** --- zadaje się je osobnymi komendami \texttt{MoveA} / \texttt{MoveB} (parametry: pozycja docelowa w stopniach, prędkość, przyspieszenie, opóźnienie, jerk), tak samo jak \texttt{MoveZ}.
+  \item Zastosowanie przechyłu: np. kompensacja przechyłu przy płynach, ustawienie narzędzia pod kątem.
+\end{itemize}
+\subsection*{Zadanie}
+Wykonaj ruch 4 moverów w tył i w przód w osi Y.
+
+\begin{itemize}
+  \item Punkty startowe: \texttt{Y = 360}; \texttt{X} pierwszego = \texttt{120}, ostatniego = \texttt{840}.
+  \item Po tym etapie student powinien rozumieć działanie cyklu, jak dodać movery itd.
+  \item \textit{(Rozszerzenie 6 DoF --- do decyzji: w punktach końcowych podnieść movery w Z i przechylić w A/B.)}
+\end{itemize}
+
+\subsection*{Dokumentacja Beckhoff (Infosys)}
+\begin{itemize}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9335871883.html}{Limits and options of the motion commands}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/13424733067.html}{Example: Activating a Planar part position and moving a Planar mover}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9334645515.html}{Example: Creating and moving a Planar mover with External Setpoint Generation}
+\end{itemize}
+
+\chapter{Tracki i omijanie kolizji}
+\textit{Ćwiczenie: \textbf{omijanie kolizji} (tracki jako podstawa)}
+
+\subsection*{Tracki}
+\textbf{Start}
+
+\begin{itemize}
+  \item Pobieramy z GitHuba \textit{(do sprawdzenia: czy da się to dodać)} wersję kodu, w której jest dodany cały blok Motion, Mover Preparation itd.
+  \item Student powinien się zaznajomić, co dokładnie dają te bloki.
+\end{itemize}
+\textbf{Koncept tracków}
+
+\begin{itemize}
+  \item Pokazanie konceptu tracków poprzez dokumentację --- jak go dodać.
+  \item Przedstawienie ograniczeń (produkt nie jest jeszcze w 100\% dopracowany).
+  \item Skupienie się na razie na \textbf{liniach}.
+  \item Zlinkowanie tracków.
+  \item \textbf{Group} --- deklarujemy już tutaj, bo tracki zawsze dodaje się do grupy (\texttt{EnableGroup} $\rightarrow$ \texttt{AddEnvironmentToGroup} $\rightarrow$ \texttt{EnableTracks} $\rightarrow$ \texttt{AddTracksToGroup} $\rightarrow$ \texttt{EnableMovers} $\rightarrow$ \texttt{AddMoversToGroup}). Szczegóły działania grupy --- poniżej, w części o kolizjach.
+\end{itemize}
+\textbf{Pokaz w UI}
+
+\begin{itemize}
+  \item Jak wejść na track.
+  \item Dlaczego \textbf{keep orientation} jest ważne.
+  \item JOG po tracku.
+  \item Metoda \textbf{recovery}, która pozwala dołączyć do tracku \textit{(powiedzieć o ograniczeniach --- czy jest w stanie bezproblemowo nie uderzyć w inne movery)}.
+\end{itemize}
+\subsection*{Omijanie kolizji --- Group}
+\begin{itemize}
+  \item \textbf{Group} --- jak działa; odesłanie do linku Beckhoffa.
+  \item Environment jako granica obszaru ruchu.
+  \item Pokazanie na zasadzie kolejki \textit{(do sprawdzenia: czy nie trzeba kolejnego brancha na GitHubie, by pokazać kolejkowanie)} --- \texttt{gap}, \texttt{P\_IsQueuing}.
+  \item Błąd \textbf{33158} (Collision Avoidance odrzuciło ruch) i odczyt \texttt{stInfo} --- który obiekt zablokował.
+  \item Strefa wspólna --- materiał z rozdziału 08 pracy.
+\end{itemize}
+\subsection*{Zadania}
+\textbf{Zadanie 1 --- jeden track, dwa movery:}
+
+\begin{itemize}
+  \item Pokazanie, że na tracka można wejść \textbf{ręcznie} (z UI).
+  \item Zapisanie kodu dla jednego tracka (budowa geometrii, linkowanie, dodanie do Group), dołączenie do niego 2 moverów i wysterowanie jazdy w kółko --- jak w docsach Beckhoffa.
+\end{itemize}
+\textbf{Zadanie 2 --- dwa tracki z punktem przecięcia:}
+
+\begin{itemize}
+  \item 2 movery jadące na \textbf{oddzielnych trackach}, które przechodzą przez jeden punkt przecięcia (łatwe do zrobienia).
+  \item Obserwacja zatrzymania, kolejkowania i wznowienia przy kolizji w punkcie przecięcia.
+\end{itemize}
+
+\subsection*{Dokumentacja Beckhoff (Infosys)}
+\begin{itemize}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9247679243.html}{Planar track operation modes}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9021192715.html}{Planar environment}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/19794139531.html}{Collision avoidance between Planar movers and Planar tracks}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/10384430603.html}{Example: Creating and moving Planar movers with group}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9253329803.html}{Example: Creating and moving Planar movers with track and group}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/10789602827.html}{Example: Following a Planar mover through a Track Network}
+\end{itemize}
+
+\chapter{Dynamiczne trasowanie moverów --- stacje}
+\textit{Ćwiczenie: \textbf{dynamiczne trasowanie moverów} (najtrudniejsze)}
+
+\begin{itemize}
+  \item Stacje jako punkty decyzyjne --- mover po obsłudze dostaje kolejny cel w zależności od stanu systemu.
+  \item Wzorzec ze starter kitu: \texttt{FB\_Station\_01..03} (stacje procesowe, wybór następnej stacji), \texttt{FB\_Station\_04\_SW\_Separate} (zwrotnica 1$\rightarrow$2), \texttt{FB\_Station\_05\_SW\_Merge} (zwrotnica 2$\rightarrow$1 z priorytetem).
+  \item Listy kolejek stacji (\texttt{FB\_List}), \texttt{P\_ProcessRequest} / \texttt{P\_ProcessClearance}.
+  \item \texttt{FB\_MoverTarget} --- przydział najbliższego movera do pozycji.
+\end{itemize}
+\textbf{Zadanie} \textit{(propozycja)}: na torach z zagadnienia 3 dodać 2 stacje i zwrotnicę; movery cyklicznie trafiają do wolnej stacji.
+
+
+\subsection*{Dokumentacja Beckhoff (Infosys)}
+\begin{itemize}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9244773515.html}{TF5430 TwinCAT 3 Planar Motion --- Introduction}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/10789602827.html}{Example: Following a Planar mover through a Track Network}
+\end{itemize}
+
+\end{document}
