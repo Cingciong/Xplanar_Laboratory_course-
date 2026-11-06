@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="ST_StationReturn" Id="{15e1eb12-7a20-4052-b551-014221c39a0e}">
+    <Declaration><![CDATA[TYPE ST_StationReturn :
+STRUCT
+	Done	: BOOL;
+	stState	: INT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

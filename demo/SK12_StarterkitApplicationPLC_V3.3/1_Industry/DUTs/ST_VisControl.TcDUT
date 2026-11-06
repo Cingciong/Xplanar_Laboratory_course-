@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.4">
+  <DUT Name="ST_VisControl" Id="{c330307e-d464-4336-b6c6-600891ee7229}">
+    <Declaration><![CDATA[TYPE ST_VisControl :
+STRUCT
+	
+	stControlPad	: ST_Vis_ControlPadControl;
+	stOperatorPad	: ST_Vis_OperationalControl;
+
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -351,36 +351,167 @@ Odpalenie Symualcji w trybie BasicSimulation na PLC lub przez własny komputer, 
 \chapter{Konfiguracja oraz włączenie systemu}
 \textit{Ćwiczenia: \textbf{inicjalizacja systemu}, \textbf{lewitacja}}
 
-\subsection*{Backup}
+\section{Backup}
+Kopia zapasowa składa się z dwóch części: archiwum projektu (źródła, po stronie PC inżynierskiego) oraz folderu \texttt{Boot} (to, co działa na sterowniku).
+
+\podrozdzial{Archiwum projektu}
+TwinCAT zapisuje projekt jako archiwum, w zależności od zakresu:
 \begin{itemize}
-  \item \textbf{STWORZENIE BACKUP} --- student musi umieć tworzyć backup.
-  \item Trzeba nauczyć dobrych praktyk: zawsze przed wejściem do środowiska produkcyjnego wykonujemy backup.
+  \item \textbf{\texttt{.tnzip}} --- całe solution, wszystkie projekty w nim zawarte.
+  \item \textbf{\texttt{.tszip}} --- tylko projekt TwinCAT.
+  \item \textbf{\texttt{.tpzip}} --- tylko projekt PLC.
+\end{itemize}
+Zapis: zaznaczyć element w Solution Explorerze, \textit{File} $\rightarrow$ \textit{Save <nazwa> as Archive\ldots}. Odtworzenie: \textit{File} $\rightarrow$ \textit{Open} $\rightarrow$ \textit{Open Solution from Archive}.
+
+\podrozdzial{Folder Boot}
+Folder \texttt{Boot} sterownika zawiera dane uruchomieniowe wgrane po aktywacji konfiguracji. Lokalizacja zależy od wersji:
+\begin{itemize}
+  \item TwinCAT przed 3.1.4026.0 --- \texttt{C:\textbackslash TwinCAT\textbackslash 3.1\textbackslash Boot}
+  \item TwinCAT od 3.1.4026.0 --- \texttt{C:\textbackslash ProgramData\textbackslash Beckhoff\textbackslash TwinCAT\textbackslash 3.1\textbackslash Boot}
+\end{itemize}
+Elementy, które nas interesują:
+\begin{itemize}
+  \item \texttt{CurrentConfig.tszip} --- archiwum aktywnej konfiguracji; powstaje przy aktywacji, jeśli włączona jest opcja \textit{Auto Save to Target as Archive}.
+  \item \texttt{Plc\textbackslash Port\_xxx.bootdata} --- dane trwałe (\textit{persistent}) danego runtime'u PLC, np. \texttt{Port\_851}. Kopia poprzednia: \texttt{Port\_xxx.bootdata-old}.
+\end{itemize}
+Dane trwałe są zapisywane przy normalnym zatrzymaniu (przejście Run $\rightarrow$ Config/Stop), więc folder kopiujemy po zatrzymaniu TwinCATa. \textit{(do sprawdzenia: pełna lista plików w \texttt{Boot} --- Infosys podaje tylko lokalizację, zawartość należy potwierdzić na sterowniku)}
+
+\podrozdzial{Odczyt projektu ze sterownika}
+Gdy na PC inżynierskim nie ma źródeł, projekt można pobrać bezpośrednio ze sterownika: \textit{File} $\rightarrow$ \textit{Open} $\rightarrow$ \textit{Open Project from Target}. Wymaga to skonfigurowanej ścieżki sieciowej do targetu; po wybraniu sterownika z listy projekt jest pobierany, rozpakowywany i otwierany. Następnie zapisujemy go jako archiwum (patrz wyżej). \textit{(do sprawdzenia: czy na naszym sterowniku jest włączone zapisywanie projektu na targecie --- bez tego opcja nie zadziała)}
+
+\uwaga{Nie znaleziono w Infosys jednej procedury „backup całego folderu Boot''. Powyższy opis łączy strony o archiwach, lokalizacji \texttt{Boot} i plikach \texttt{bootdata}.}
+
+\subsection*{Dokumentacja Beckhoff (Infosys)}
+\begin{itemize}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/6818132747.html}{Archiving options}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/3692446603.html}{Command Save <solution name> as Archive\ldots}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2530721163.html}{Command Save <TwinCAT project name> as Archive\ldots}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_userinterface/3679203467.html}{Command Save <PLC project name> as archive\ldots}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/3679211915.html}{Command Open Solution from Archive}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2526225803.html}{Transferring a PLC project}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2530743691.html}{Command Open Project from Target}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_grundlagen/19006560267.html}{Boot directory}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_grundlagen/4291102603.html}{CurrentConfig.tszip}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_grundlagen/4291095051.html}{Port\_xxx.bootdata}
 \end{itemize}
 
-\textbf{Backup systemu na sterowniku Beckhoff (TwinCAT 3, Windows) --- skrótowo}\par
-Backup składa się z trzech części; zawsze robimy je razem:
+\section{Utworzenie projektu}
+Projekt tworzymy w TcXaeShell: \textit{File} $\rightarrow$ \textit{New} $\rightarrow$ \textit{Project}, a następnie wybieramy szablon \textbf{TwinCAT XAE Project (XML format)}.
+
+\zrzutEkranu[0.8\linewidth]{02-konfiguracja/utworzenie-projektu/tcxaeshell-nowy-projekt-wybor-szablonu.png}{TcXaeShell --- wybór szablonu nowego projektu}
+
+Po otwarciu projektu przechodzimy w tryb \textbf{Config}. Na pasku narzędzi jest to niebieska zębatka.
+
+\section{Skanowanie urządzeń I/O}
+W drzewie projektu wybieramy \textit{I/O} $\rightarrow$ \textit{Devices}, klikamy prawym przyciskiem i wybieramy \textit{Scan}. Należy pamiętać, że:
+\begin{itemize}
+  \item skanowanie działa w trybie Config i na wybranym targecie z podłączonym sprzętem,
+  \item skanowanie przechodzi przez całą magistralę EtherCAT, ale wykrywa też inne urządzenia, np.\ USB, EtherCAT Automation Protocol i NOV-DP-RAM,
+  \item każdy konwerter na inny protokół, np.\ IO-Link, oraz urządzenia po protokołach innych firm, np.\ Festo AP, wymagają dodatkowego skanowania.
+\end{itemize}
+
+TwinCAT wyświetli listę urządzeń, które może zeskanować.
+
+\zrzutEkranu[0.7\linewidth]{02-konfiguracja/skanowanie-urzadzen/io-scan-wybor-urzadzen.png}{I/O --- lista znalezionych urządzeń}
+
+Zaznaczamy jak na załącoznym obrazie.
+\begin{itemize}
+  \item \textbf{Device 1 (EtherCAT)} --- wewnętrzna magistrala sieciowa sterownika, służąca do podłączania kolejnych modułów.
+  \item \textbf{Device 2 i Device 3 (EtherCAT)} --- urządzenia połączone z kafelkami XPlanara.
+  \item \textbf{Device 4 i Device 5 (EtherCAT Automation Protocol)} --- są odznaczone i sygnalizują, że na takiej karcie sieciowej możemy otworzyć taki protokół.
+  \item \textbf{Device 6 (USB)} --- zwykle jest podczepiony moduł licencyjny,
+  \item \textbf{Device 7 (NOV-DP-RAM)} --- odznaczone; zapewnia dostęp do pamięci sterownika, łączącej cechy RAM i ROM. Część nieulotna (NOV) zachowuje dane po wyłączeniu zasilania, a pamięć dwuportowa (DP-RAM) umożliwia dostęp do tych samych danych z dwóch stron. Opis: \href{https://infosys.beckhoff.com/content/1033/tcsystemmanager/1087918987.html}{I/O Devices} (Infosys).
+\end{itemize}
+
+\uwaga{\textbf{Informacja dodatkowa --- EtherCAT.} Kafle XPlanara komunikują się przez EtherCAT~G, czyli gigabitowy, a pozostałe urządzenia zazwyczaj przez standardowy EtherCAT 100~Mbit. W naszym projekcie na jednym EtherCAT-cie gigabitowym jest 6 kafli, dlatego są dwa EtherCAT-y podłączone tylko do XPlanara. Topologii nie rozszerzamy w oparciu o kafle XPlanara. Zasady łączenia kafli i budowy topologii opisuje instrukcja Beckhoffa: \href{https://download.beckhoff.com/download/document/motion/xplanar_ba_en.pdf}{XPlanar Operating Instructions}.}
+
+\section{Configurator XPlanar}
+Configurator otwieramy z paska menu na górze okna TcXaeShell: \textit{TwinCAT} $\rightarrow$ \textit{XPlanar} $\rightarrow$ \textit{Configurator}. Pozwala zbudować stół: dodać kafelki, movery i tracki.
+
+\zrzutEkranu[0.95\linewidth]{02-konfiguracja/configurator/xplanar-configurator-okno-glowne.png}{XPlanar Configurator --- okno główne}
+
+Okno Configuratora składa się z zakładek:
+\begin{itemize}
+  \item \textbf{XPU} --- XPlanar Processing Unit (nazywana też XPlanar Driver) to „mózg'' systemu: centralna jednostka, która steruje kafelkami (cewkami stojana), unoszącymi i przesuwającymi movery. W projekcie jest widoczna jako obiekt \texttt{XPlanar} w \textit{SYSTEM} $\rightarrow$ \textit{TcCOM Objects}. Dokumentacja: \href{https://infosys.beckhoff.com/content/1033/tf5890_tc3_xplanar/index.html}{TF5890 TwinCAT 3 XPlanar} (Infosys),
+  \item \textbf{Part} --- tworzenie stołu,
+  \item \textbf{Mover} --- dodawanie moverów,
+  \item \textbf{Track} --- dodawanie tracków,
+  \item \textbf{Real-Time} --- nazwa zakładki może wprowadzać w błąd: służy ona wyłącznie do przypisania procesów systemu, takich jak obsługa moverów i kafelków XPlanara, do wybranych rdzeni procesora,
+  \item \textbf{Live-View} --- podgląd na żywo; według dokumentacji \texttt{Tc3\_XPlanarStandard} (str.~52) w tym trybie można monitorować movery.
+\end{itemize}
+
+Pod zakładkami znajdują się tryby pracy i przyciski:
+\begin{itemize}
+  \item \textit{Create} --- dodawanie obiektów na stół, zależnie od zakładki,
+  \item \textit{Select} --- wybór obiektu z renderu stołu,
+  \item \textit{Inspect} --- poruszanie się po modelu stołu,
+  \item \textit{Import} --- import z konfiguracji w projekcie, a nie ze sprzętu,
+  \item \textit{Export} --- opisany w ostatnim kroku,
+  \item \textit{Reset All}.
+\end{itemize}
+W środku okna widać model 3D stołu, po lewej panel \textit{Factory Settings} i listę \textit{Created XPUs}, po prawej \textit{Component Settings} i \textit{Camera Control}, a na dole listę komunikatów \textit{Log List}.
+
+\section{Budowa stołu w Configuratorze}
+Stół budujemy w pięciu kolejnych etapach.
+
+\podrozdzial{Etap 1 --- XPU}
 \begin{enumerate}
-  \item \textbf{Archiwum projektu (źródła)} --- w drzewie projektu prawy klik na projekcie PLC $\rightarrow$ \texttt{Save <nazwa projektu> as Archive...}. Wynikiem jest plik archiwum (u nas \texttt{.tnzip}), z którego projekt można odtworzyć na innym komputerze.
-  \item \textbf{Boot project} --- projekt na sterowniku musi odpowiadać projektowi w środowisku. Zapisz zmiany (czerwona dyskietka przy obiektach oznacza niezapisane zmiany), a następnie na węźle PLC wybierz \texttt{Activate Boot Project}, zaloguj się i uruchom PLC.
-  \item \textbf{Kopia folderu Boot ze sterownika} (przez RDP lub udział sieciowy): w TwinCAT 3.1.4026 i nowszych \texttt{C:\textbackslash ProgramData\textbackslash Beckhoff\textbackslash TwinCAT\textbackslash 3.1\textbackslash Boot\textbackslash}. Folder \texttt{Plc} zawiera dane boot aplikacji PLC, a opcjonalnie \texttt{CurrentConfig} --- źródła projektu, jeśli są przechowywane na sterowniku.
+  \item Otwieramy zakładkę \textit{XPU}.
+  \item Dodajemy XPlanar przyciskiem \textit{+} na liście \textit{Created XPUs}, o ile nie jest już dodany.
+  \item W \textit{Component Settings} ustawiamy \textit{Operation Mode} zależnie od wybranego trybu pracy.
+  \item W \textit{Component Settings} ustawiamy \textit{Type Tiles} na \textbf{APS4322}.
+  \item Opcjonalnie klikamy \textit{Factory Settings} $\rightarrow$ \textit{Scan BTNs}, aby odczytać BTN każdego kafelka; przyda się w następnym etapie.
 \end{enumerate}
 
-\uwaga{Zmienne \texttt{PERSISTENT} zapisują się w pliku \texttt{.bootdata} w folderze Boot (poprzednią wersję system zmienia na \texttt{.bootdata-old}). Aby mieć w backupie aktualne wartości, wywołaj przed kopiowaniem \texttt{FB\_WritePersistentData} z biblioteki \texttt{Tc2\_Utilities}.}
+\podrozdzial{Etap 2 --- Part}
+\begin{enumerate}
+  \item Otwieramy zakładkę \textit{Part} i dodajemy Part.
+  \item W \textit{Factory Settings} określamy wielkość stołu: 4 na 3 kafelki APS4322.
+  \item Dodajemy 12 kafelków, klikając na renderze stołu.
+  \item Każdemu kafelkowi przypisujemy jego numer BTN: w trybie \textit{Select} klikamy kafelek i wybieramy \textit{Assign BTN} z listy wykrytych BTN.
+\end{enumerate}
+Ważne jest, aby każdy kafelek miał przypisany odpowiedni numer BTN.
 
-\textbf{Przywracanie:} rozpakuj archiwum projektu na komputerze, zawartość skopiowanego folderu \texttt{Plc} wstaw do folderu \texttt{Boot\textbackslash Plc} na sterowniku (zastępuje istniejącą), po czym zrestartuj TwinCAT.
+\zrzutEkranu[0.4\linewidth]{02-konfiguracja/configurator/xplanar-configurator-part-lista-btn.png}{Part1 --- kafelki z przypisanymi BTN}
 
-\uwaga{Osobny produkt \textbf{TwinCAT Backup} (usługa \texttt{TcBackupServer}, archiwa \texttt{*.tbs}, profile z harmonogramem) wg Infosys należy do dokumentacji \textbf{TS1150 | TwinCAT 2 Backup}, więc dla TwinCAT 3 nie jest tu opisany. Źródła: Infosys Beckhoff, rozdziały \emph{Performing a PLC update}, \emph{Transferring a PLC project}, \emph{PLC Project Settings}.}
+\begin{figure}[H]
+\centering
+\resizebox{0.95\linewidth}{!}{%
+\begin{tikzpicture}[tile/.style={draw=bkdark,fill=bkgray,minimum width=3.3cm,minimum height=1.5cm,align=center,inner sep=2pt},>=stealth]
+\foreach \n/\b/\c/\r in {1/0000kxuy/0/0, 2/0000kxuq/1/0, 3/0000l4no/2/0, 4/0000l4ka/3/0,
+                         5/0000l485/0/1, 6/0000l48a/1/1, 7/0000l48h/2/1, 8/0000kxux/3/1,
+                         9/0000l55d/0/2, 10/0000l515/1/2, 11/0000l4nn/2/2, 12/0000l4nr/3/2}
+  \node[tile] at (\c*3.4,\r*1.6) {\textbf{\Large\n}\\[2pt]\texttt{\b}};
+\draw[->,very thick,bkorange] (-2.1,-1.0) -- (0.4,-1.0) node[right] {X};
+\draw[->,very thick,bkorange] (-2.1,-1.0) -- (-2.1,1.0) node[above] {Y};
+\end{tikzpicture}}
+\caption{Układ kafelków: numer kafelka i jego BTN}
+\end{figure}
+
+\podrozdzial{Etap 3 --- Mover}
+\begin{enumerate}
+  \item Otwieramy zakładkę \textit{Mover}.
+  \item Dodajemy jeden mover \textbf{APM4330}.
+\end{enumerate}
+Współrzędne movera nie mają znaczenia dla pracy na fizycznej maszynie: po wykryciu movera przez XPlanar powiązuje on numery BTN z systemem. \textit{(TODO: dodawanie BTN movera.)}
+
+\podrozdzial{Etap 4 --- Real-Time}
+\begin{enumerate}
+  \item Otwieramy zakładkę \textit{Real-Time} i klikamy \textit{Scan CPU}.
+  \item Wybieramy źródło CPU (\textit{CPU source}) zależnie od tego, czy pracujemy na sprzęcie, czy w symulacji na PC.
+  \item Po skanowaniu klikamy \textit{Reassign modules}.
+  \item Po lewej stronie sprawdzamy, jak program podzielił zadania moverów na rdzenie. Najlepiej korzystać z rdzeni izolowanych (\textit{isolated}).
+\end{enumerate}
+
+\podrozdzial{Etap 5 --- Export}
+\begin{enumerate}
+  \item Klikamy \textit{Export}. Obiekty XPlanara zostają wyeksportowane do sekcji MOTION oraz do \textit{TcCOM Objects} w SYSTEM.
+\end{enumerate}
+
 \subsection*{Pakiety i biblioteki}
 \begin{itemize}
   \item Sprawdzenie i pokazanie działania Package Managera po stronie Beckhoffa.
   \item Przedstawienie bibliotek.
-\end{itemize}
-\subsection*{Projekt i sprzęt}
-\begin{itemize}
-  \item Utworzenie projektu, zdefiniowanie obszaru roboczego XPlanar.
-  \item Student musi wiedzieć, jak wygląda tile.
-  \item Wytłumaczenie po krótce, jak działa EtherCAT --- \textbf{max 6 tile'i na jeden EtherCAT}.
-  \item Wsadzenie moverów, odczytanie BTN.
 \end{itemize}
 \subsection*{Odpalenie moverów}
 \begin{itemize}
@@ -418,6 +549,7 @@ Backup składa się z trzech części; zawsze robimy je razem:
   \item \href{https://infosys.beckhoff.com/content/1033/xts_software/10484022667.html}{Activating simulation mode}
   \item \href{https://infosys.beckhoff.com/content/1033/xts_software/11288921739.html}{Parameter (Init) --- OperationMode}
   \item \href{https://infosys.beckhoff.com/content/1033/tf5890_tc3_xplanar/19457544715.html}{TwinCAT 3 XPlanar Utility}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5890_tc3_xplanar/index.html}{TF5890 TwinCAT 3 XPlanar (XPlanar Processing Unit)}
 \end{itemize}
 
 \chapter{Ruch wysterowany}

@@ -1,0 +1,462 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_Station_05_SW_Merge" Id="{0ff451c0-d2e3-4469-9419-5c505570ebf0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Station_05_SW_Merge EXTENDS FB_StationBase
+VAR
+	nStationIndex				: UINT;
+	nNextStationIndexOutputA 	: UINT;	
+	nNextStationIndex			: UINT;
+	nTrackIndexOutputA 			: UINT;		
+	
+	fStationPosition_X 			: LREAL;
+	fStationPosition_Y 			: LREAL;		  
+    fSendAwayDistance			: LREAL;	
+	fInRangeDistance			: LREAL;	
+	fSendAwayPosition			: LREAL;
+	
+	position					: PositionXYC;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Clear" Id="{fb740c7f-a2f5-4ca2-8260-8aa3e14c7615}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+VAR_INPUT
+END_VAR
+
+
+
+	]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+
+	CASE nStateClear OF
+		
+	0:	// Enter
+		Clear := FALSE;
+		nStateClear := nStateClear +10;
+		
+	10: // Clearing all Station-Lists 
+		IF SUPER^.Clear() THEN
+			nStateClear := nStateClear +10;
+		END_IF	
+	
+	20:	// Add aditional Data to be cleared here...
+		nStateClear := 100;
+		
+		
+	100: // Done
+		      Clear := TRUE;
+		nStateClear := 0;
+
+	END_CASE
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Init" Id="{2be7a4c8-26b4-4bd2-850e-bb0e689edfb1}">
+      <Declaration><![CDATA[METHOD Init : BOOL
+
+
+
+VAR_INST
+	nTestCounter	: INT;	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nTestCounter := nTestCounter +1;
+
+CASE nStateInit OF
+
+	0:		// Enter 
+			bStationInitDone := FALSE;
+			   nStateProcess := 0;
+			      nStateInit := 10;
+				 
+			
+	10:		// Init Station-Parameters				
+					   nStationIndex := 5;			// Each station needs an unique index				
+			nNextStationIndexOutputA := 1;			// Index of the following station on output_A		
+				  nTrackIndexOutputA := 1;			// Track on which the following station resides
+				  		  
+			      fStationPosition_X := 480.0;		// Position of the station in X/Y coordinates
+			      fStationPosition_Y := 120.0;		// Position of the station in X/Y coordinates
+			  
+			       fSendAwayDistance := 300.0;		// Position on track a mover will be send to after processing 
+			       fInRangeDistance  := 300.0;		// Position in front of a station from where a mover will be taken over
+			  
+			       nStateInit := 11;
+  
+			   
+	11: // Fail-safe check, just to make sure all variables have been assigned after doing copy&paste from the template
+			IF              nStationIndex > 0
+			AND  nNextStationIndexOutputA > 0
+			AND        nTrackIndexOutputA > 0				
+			AND        fStationPosition_X > 0
+			AND        fStationPosition_Y > 0
+			AND         fSendAwayDistance > 0
+			THEN   
+				nStateInit := 20;
+			END_IF
+			
+				   
+	20:		// Calculating positions
+	
+			// 1. Calculating station position on track
+			fStationPositionOnTrack := 0.0;
+							
+			// 2. Calculating send-away position on track
+			fSendAwayPosition := fSendAwayDistance; 
+			
+			// The send away position must not exceed the lenght of the track!
+			IF fSendAwayPosition > ipTrack[nTrackIndexOutputA].P_TrackLength THEN
+				fSendAwayPosition := ipTrack[nTrackIndexOutputA].P_TrackLength;
+			END_IF
+			
+			// 3. Calculating the station position in X/Y coordinates determined by the track	
+            //    This is to make sure the center of the station is always located directly on the track.
+			ipTrack[nTrackIndexOutputA].std.GetMoverPositionAt(fStationPositionOnTrack, StationPosition);
+			
+			// Providing the station position to e.g. visualization	
+			stStationPosition.bInit            := TRUE;
+			stStationPosition.fPositionOnTrack := fStationPositionOnTrack;
+			stStationPosition.nTrackId         := nTrackIndexOutputA;
+			stStationPosition.fPosition_X	   := StationPosition.x;
+			stStationPosition.fPosition_Y	   := StationPosition.y;
+
+			nStateInit := 30;
+			
+			
+	30:		// Clear Lists
+			IF THIS^.Clear() THEN
+				nStateInit := 90;	
+			END_IF
+
+			
+		
+	90:		// Creating a little history of what happened in the station for debugging purpose
+			fbHistoryInfo.AddEntry('Init');
+	
+			nStateInit := 100;
+			
+						
+	100:	// Init done
+			IF SUPER^.Init() THEN
+				bStationInitDone := TRUE;	
+				           Init := TRUE;
+			END_IF
+				
+	
+END_CASE
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Process" Id="{369f290c-ac08-48a6-a74a-13c0dace7c62}">
+      <Declaration><![CDATA[METHOD Process : BOOL
+
+VAR_INST
+		
+	nMoverIndex				: UINT;
+	
+	fMoverToTrackPosition	: LREAL;
+	nTrackIndex				: UINT;
+	fMoverVelocity			: LREAL;
+	fMoverAcceleration		: LREAL;
+	fMoverJerk				: LREAL;
+	
+	
+	nErrorId				: UDINT;
+	nObjectID				: UDINT;
+	nObjectType				: UDINT;		
+	
+	
+	// Process
+	nMoverIndexInputB			: UINT;
+	nMoverIndexInputC			: UINT;	
+	
+	bNewMoverIn					: BOOL;
+	
+	
+	(*
+	nDestinationProcess		: UINT;
+	nIncommingTrackOID		: UDINT;
+	nNextStationIndex		: UINT;		 				
+	fSendAwayPosition		: LREAL;
+	nTrackindexNext			: UINT;
+	*)
+	
+	
+END_VAR
+
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// Station - Switch-Merge
+
+CASE nStateProcess OF 
+
+	0:		// Enter
+			IF bStationInitDone THEN
+				nStateProcess := 100;
+			END_IF
+
+						
+	100:	// Clearance
+			IF eProcessMode = E_ProcessMode.Production THEN
+				nProcessClearence := 0;
+				IF nProcessRequest > 0 THEN
+					nProcessClearence := nProcessRequest;
+					  nProcessRequest := 0;
+						nStateProcess := nStateProcess +5;
+				ELSE
+					IF P_List_Switch_Input_B.P_FirstInList <> 0	
+					OR P_List_Switch_Input_C.P_FirstInList <> 0
+					THEN
+						nStateProcess := nStateProcess +5;	
+					END_IF
+				END_IF
+			ELSE
+				nStateProcess := nStateProcess +5;	
+			END_IF
+
+		
+	105: 	// Waiting for Mover on Input_B or Input_C
+	            nProcessState := 0;
+			      nMoverIndex := 0;
+			nMoverIndexInputB := 0;
+			nMoverIndexInputC := 0;
+			      bNewMoverIn := FALSE;
+	
+			IF P_List_Switch_Input_B.P_FirstInList <> 0 THEN
+				nMoverIndexInputB := P_List_Switch_Input_B.P_FirstInList.P_Id;
+			END_IF		
+			
+			IF P_List_Switch_Input_C.P_FirstInList <> 0 THEN
+				nMoverIndexInputC := P_List_Switch_Input_C.P_FirstInList.P_Id;
+			END_IF		
+		
+			// Copy mover data to station list, Input_B is prioritized
+			IF nMoverIndexInputB > 0 THEN
+				P_List_Station.AddMover(P_List_Switch_Input_B.RemoveFirstInList());
+				bNewMoverIn := TRUE;
+			ELSIF nMoverIndexInputC > 0 THEN
+				P_List_Station.AddMover(P_List_Switch_Input_C.RemoveFirstInList());
+				bNewMoverIn := TRUE;
+			END_IF
+			
+			IF bNewMoverIn THEN
+				nProcessState := 1;
+				nStateProcess := nStateProcess +5;
+			END_IF
+			
+			
+	110:	// Working with the station list from here on:
+			nMoverIndex := 0;
+			IF P_List_Station.P_FirstInList <> 0 THEN
+				nMoverIndex := P_List_Station.P_FirstInList.P_Id;
+			END_IF
+						
+			IF nMoverIndex > 0 THEN
+				nNextStationIndex := nNextStationIndexOutputA;
+				    nStateProcess := nStateProcess +10;
+			END_IF
+			
+			
+	120: 	// Check if Mover is in range
+			IF ipMoverApplication[nMoverIndex].std.P_SetOnTrack.SetPos > fStationPositionOnTrack - fInRangeDistance THEN
+				nStateProcess := 200;
+			END_IF
+			
+
+			
+		
+	200: 	// Send mover to the next station	
+			fMoverToTrackPosition := fSendAwayPosition;
+			nTrackIndex           := nTrackIndexOutputA;
+			fMoverVelocity     	  :=    300.0;
+			fMoverAcceleration 	  :=  1_000.0;
+			fMoverJerk         	  := 10_000.0;	
+	
+			stMoveParameters.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive;	
+			stMoveParameters.gap       := 240.0;
+
+			
+			// Creating info text with a little history of what happened in the station for debugging purpose		
+			strInfo := fbHistoryInfo.CreateStationInfo(nStationIndex, nMoverIndex, nNextStationIndex);	
+			
+				
+			// Move on track command	
+			ipMoverApplication[nMoverIndex].std.MoveOnTrack( strInfo,
+															 ipTrack[nTrackIndex].std,
+															 fMoverToTrackPosition,
+															 fMoverVelocity,
+															 fMoverAcceleration,
+															 fMoverJerk,
+															 stMoveParameters.gap,
+															 stMoveParameters.direction);
+			nStateProcess := nStateProcess +1;
+			
+		
+		
+	201: 	// Checking move command return
+			IF ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Active
+			OR ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Done 
+			THEN
+				nStateProcess := nStateProcess + 9;
+				
+			ELSIF ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.Error THEN
+				   nErrorID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.ErrorID;
+				  nObjectID := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectID;
+				nObjectType := ipMoverApplication[nMoverIndex].std.P_MoveOnTrack.stInfo.nObjectType;
+			END_IF		
+		
+			
+	210:	// Wait till the mover passed the junction point
+			IF ipMoverApplication[nMoverIndex].std.P_SetOnTrack.TrackOID = ipTrack[nTrackIndexOutputA].std.P_OID THEN
+				nStateProcess := nStateProcess + 10;
+			END_IF		
+			
+			
+	220: 	// Mover to the list of the next station
+			ipStation[nNextStationIndex].P_List_Station.AddMover(P_List_Station.RemoveFirstInList());
+			nStateProcess := 500;	
+	
+		
+	500: 	// Done for this cycle
+			nStateProcess := 100;
+
+END_CASE
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_Station_05_SW_Merge">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Station_05_SW_Merge.Clear">
+      <LineId Id="35" Count="3" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="55" Count="2" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="39" Count="1" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Station_05_SW_Merge.Init">
+      <LineId Id="336" Count="11" />
+      <LineId Id="459" Count="2" />
+      <LineId Id="351" Count="6" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="360" Count="14" />
+      <LineId Id="376" Count="11" />
+      <LineId Id="389" Count="2" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="392" Count="14" />
+      <LineId Id="408" Count="26" />
+      <LineId Id="85" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Station_05_SW_Merge.Process">
+      <LineId Id="4963" Count="0" />
+      <LineId Id="4477" Count="0" />
+      <LineId Id="4480" Count="2" />
+      <LineId Id="4742" Count="2" />
+      <LineId Id="4483" Count="0" />
+      <LineId Id="5180" Count="0" />
+      <LineId Id="4484" Count="0" />
+      <LineId Id="5165" Count="0" />
+      <LineId Id="5179" Count="0" />
+      <LineId Id="5174" Count="0" />
+      <LineId Id="5169" Count="0" />
+      <LineId Id="5175" Count="0" />
+      <LineId Id="5178" Count="0" />
+      <LineId Id="5177" Count="0" />
+      <LineId Id="5188" Count="2" />
+      <LineId Id="5192" Count="2" />
+      <LineId Id="5176" Count="0" />
+      <LineId Id="5185" Count="2" />
+      <LineId Id="5170" Count="0" />
+      <LineId Id="5166" Count="0" />
+      <LineId Id="4486" Count="0" />
+      <LineId Id="5156" Count="0" />
+      <LineId Id="5046" Count="0" />
+      <LineId Id="5027" Count="0" />
+      <LineId Id="5030" Count="0" />
+      <LineId Id="5160" Count="0" />
+      <LineId Id="5028" Count="0" />
+      <LineId Id="5012" Count="5" />
+      <LineId Id="5008" Count="1" />
+      <LineId Id="5038" Count="1" />
+      <LineId Id="5042" Count="0" />
+      <LineId Id="5161" Count="0" />
+      <LineId Id="5044" Count="1" />
+      <LineId Id="5110" Count="0" />
+      <LineId Id="5043" Count="0" />
+      <LineId Id="5152" Count="3" />
+      <LineId Id="5163" Count="0" />
+      <LineId Id="5103" Count="0" />
+      <LineId Id="5105" Count="0" />
+      <LineId Id="5092" Count="0" />
+      <LineId Id="5104" Count="0" />
+      <LineId Id="5100" Count="0" />
+      <LineId Id="5095" Count="1" />
+      <LineId Id="5101" Count="0" />
+      <LineId Id="5031" Count="0" />
+      <LineId Id="5047" Count="0" />
+      <LineId Id="5036" Count="0" />
+      <LineId Id="5033" Count="0" />
+      <LineId Id="5026" Count="0" />
+      <LineId Id="5023" Count="0" />
+      <LineId Id="4493" Count="1" />
+      <LineId Id="4497" Count="2" />
+      <LineId Id="4966" Count="2" />
+      <LineId Id="4569" Count="0" />
+      <LineId Id="4999" Count="1" />
+      <LineId Id="4572" Count="3" />
+      <LineId Id="4577" Count="1" />
+      <LineId Id="4583" Count="1" />
+      <LineId Id="4644" Count="0" />
+      <LineId Id="4640" Count="2" />
+      <LineId Id="4597" Count="25" />
+      <LineId Id="5111" Count="0" />
+      <LineId Id="5115" Count="0" />
+      <LineId Id="5117" Count="0" />
+      <LineId Id="5116" Count="0" />
+      <LineId Id="5112" Count="1" />
+      <LineId Id="4623" Count="13" />
+      <LineId Id="340" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

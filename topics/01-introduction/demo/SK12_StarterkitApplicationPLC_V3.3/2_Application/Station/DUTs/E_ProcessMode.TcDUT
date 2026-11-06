@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="E_ProcessMode" Id="{695d1d9b-aa5f-4cdb-b6a8-0c8f2205c2da}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE E_ProcessMode :
+(
+	None        := 0,
+	InitRun	    := 1,
+	Production	:= 2
+	
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <Itf Name="I_MotionSystemApplication" Id="{1da6f52d-c565-4561-9cf0-97e4dd664d2b}">
+    <Declaration><![CDATA[INTERFACE I_MotionSystemApplication
+]]></Declaration>
+    <Method Name="Aborting" Id="{54123edb-312c-40ab-8717-6fbf58ab2036}">
+      <Declaration><![CDATA[METHOD Aborting : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Cycle" Id="{4aedd24a-4a3a-41d8-8e46-47a13b72c8eb}">
+      <Declaration><![CDATA[METHOD Cycle : BOOL
+VAR_INPUT
+END_VAR
+
+
+]]></Declaration>
+    </Method>
+    <Method Name="Execute" Id="{dbe0efa8-4aeb-47d4-9108-33e9d5ea34cc}">
+      <Declaration><![CDATA[METHOD Execute : UDINT
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="P_AbortingSequence" Id="{b667672d-6526-4d40-bb4f-eb0bd9086b4b}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_AbortingSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{8c9dcb17-b16a-41ab-ba0a-4b7c99b22abb}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_Alarm" Id="{42ee40ad-6d6c-42d2-afe9-64e381313353}">
+      <Declaration><![CDATA[PROPERTY P_Alarm : ST_VisuMessage]]></Declaration>
+      <Get Name="Get" Id="{36bed26f-c345-4a6b-b8d5-5b86eeba9e34}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_ExecutingSequence" Id="{4345c1a3-adea-4932-8319-262b70a2d025}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_ExecutingSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{792a5645-3c91-4e4d-8115-a0101949f885}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_MoverError" Id="{682e6bf6-018d-4177-8f35-dd21e0704d45}">
+      <Declaration><![CDATA[PROPERTY P_MoverError : BOOL]]></Declaration>
+      <Get Name="Get" Id="{e3616a5d-b1b9-4b7c-957c-109c46ca09eb}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{d6344f9f-284b-4d7a-bded-881611932679}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="P_ResettingSequence" Id="{56561a0c-cf32-4b38-a027-0be6fea83525}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_ResettingSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{0760ce4f-8b05-4c6c-b46d-2359052e0566}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_StartingSequence" Id="{f12a8862-5c01-45d3-b986-a01b121fea6c}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_StartingSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{734fd181-884c-4827-af49-e0af474062cc}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_StartupSequence" Id="{eb95d516-c3f8-40f1-baa6-5bb7761dd19e}">
+      <Declaration><![CDATA[PROPERTY PUBLIC P_StartupSequence : DINT]]></Declaration>
+      <Get Name="Get" Id="{f105d00d-f44f-4331-95e8-24c9eceb7275}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Method Name="Prepare" Id="{cb001d58-5786-4ff5-a1c9-e540c49cbb0b}">
+      <Declaration><![CDATA[METHOD Prepare : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Reset" Id="{a1297e52-e747-4c6b-9d80-2f1f14f0ef68}">
+      <Declaration><![CDATA[METHOD Reset : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Resetting" Id="{4b361718-d6e9-479e-a219-08d0267cc755}">
+      <Declaration><![CDATA[METHOD Resetting : BOOL
+]]></Declaration>
+    </Method>
+    <Method Name="Startup" Id="{92f94760-b499-47c9-9b2b-f45742a734d3}">
+      <Declaration><![CDATA[METHOD Startup : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="std" Id="{181feb11-8bc1-4539-b3ef-897836c8ba0c}">
+      <Declaration><![CDATA[PROPERTY std : I_MotionSystem]]></Declaration>
+      <Get Name="Get" Id="{3d26728f-5464-474f-b6b8-3b1bb542cae4}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{465b1343-4380-4bec-8464-4d0d8b95e83a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+      </Set>
+    </Property>
+  </Itf>
+</TcPlcObject>

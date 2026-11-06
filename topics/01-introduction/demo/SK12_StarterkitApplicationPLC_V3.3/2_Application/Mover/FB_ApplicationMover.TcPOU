@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ApplicationMover" Id="{40b5c66d-1fb4-4d55-9f96-3f23301af31f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ApplicationMover IMPLEMENTS I_MoverApplication
+VAR
+	ipMoverStandard	: I_XPlanarMoverStandard;
+	
+	stProductData	: ST_ProductData;
+	
+	nMoverIndex		: INT;
+	
+	nTrackId		: UDINT;
+	
+	// customer Data
+	bIsLoaded		: BOOL;	
+		
+				
+END_VAR
+
+VAR_OUTPUT
+	VisuPos	: MoverVector;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Cycle" Id="{3db1001d-9da7-43c7-a358-11235832af95}">
+      <Declaration><![CDATA[METHOD Cycle
+
+
+VAR_INST
+	nTestCounter	: UINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF std <> 0 THEN
+	
+	nTestCounter := nTestCounter +1;
+	
+	std.cycle();
+	
+	VisuPos   := std.P_ActPosition;
+	VisuPos.c := std.P_RotationAngleModulo;
+			
+END_IF
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="P_MoverIndex" Id="{8b0bebb8-d22b-43e1-ab25-8038159fc710}">
+      <Declaration><![CDATA[PROPERTY P_MoverIndex : INT]]></Declaration>
+      <Get Name="Get" Id="{6f9fc754-362d-4beb-b50e-e77684f8d50a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_MoverIndex := nMoverIndex;
+
+
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{e9f36281-f830-4039-8a28-5be43aca55c3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[nMoverIndex := P_MoverIndex;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_ProductData" Id="{2fbfbc33-cad6-4c1a-b194-3c225a2cf1a2}">
+      <Declaration><![CDATA[PROPERTY P_ProductData : Reference to ST_ProductData]]></Declaration>
+      <Get Name="Get" Id="{4bf4c121-923d-40dd-9c53-7ec22e020235}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ProductData REF= stProductData;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{d33adc77-a2c9-4f4a-8e6a-c148905050cb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[stProductData := P_ProductData;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_TrackId" Id="{bb3a46f6-fd72-439f-b5bc-ae327bc94714}">
+      <Declaration><![CDATA[PROPERTY P_TrackId : UDINT]]></Declaration>
+      <Get Name="Get" Id="{46b8b84e-3f2c-4789-b5d6-57d0e1a81c42}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_TrackId := nTrackId;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{d5f18ced-3aa1-4f6f-8451-8cfd636c29e7}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[nTrackId := P_TrackId;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="std" Id="{74c2e056-88c5-47b5-acb8-9968b5751165}">
+      <Declaration><![CDATA[PROPERTY std : I_XPlanarMoverStandard]]></Declaration>
+      <Get Name="Get" Id="{fdfe9a14-b3ed-40dd-b13f-11a53d96eb71}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF ipMoverStandard <> 0 THEN
+	std := ipMoverStandard;	
+END_IF
+
+
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{75695d29-ba0d-4136-a3f2-f10c3a65b76b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ipMoverStandard := std;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="FB_ApplicationMover">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ApplicationMover.Cycle">
+      <LineId Id="64" Count="0" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="114" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="105" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ApplicationMover.P_MoverIndex.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ApplicationMover.P_MoverIndex.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ApplicationMover.P_ProductData.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ApplicationMover.P_ProductData.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ApplicationMover.P_TrackId.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ApplicationMover.P_TrackId.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ApplicationMover.std.Get">
+      <LineId Id="5" Count="2" />
+      <LineId Id="16" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ApplicationMover.std.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

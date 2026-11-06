@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.4">
+  <DUT Name="ST_Vis_OperationalControl" Id="{393206ed-334f-4bb3-9a28-008024047ac0}">
+    <Declaration><![CDATA[TYPE ST_Vis_OperationalControl :
+STRUCT
+	bVisInvisibleButton	: BOOL;	
+	bVisInvisible		: BOOL;
+	nFramePositionX		: REAL;
+	nFramePositionY		: REAL;
+	nButtonPositionX	: INT;
+	nButtonPositionY	: INT;	
+	
+	bStartButtunState	: BOOL;
+	bStopButtonState	: BOOL;
+	bQuitButtonState	: BOOL;
+	bEStopButtonState	: BOOL;
+	
+	bStartButtonLamp	: BOOL;
+	bStopButtonLamp		: BOOL;
+	bQuitButtonLamp		: BOOL;
+	bEStopButtonLamp	: BOOL;
+	
+	bMessageColorGreen	: BOOL;
+	bMessageColorRed	: BOOL;
+	
+	sMessage			: STRING;
+	
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

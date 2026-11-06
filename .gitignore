@@ -63,3 +63,5 @@ LineIDs.dbg.bak
 *.~u
 *.project.~u
 *.suo
+# Praca dyplomowa — szablon WETI (licencja: tylko użytek wewnętrzny) i tekst przed weryfikacją JSA
+thesis/

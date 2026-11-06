@@ -1,0 +1,278 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_TrackSegment_1" Id="{8bc03b03-a8a0-4837-bf56-60fab90a5b15}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TrackSegment_1 EXTENDS FB_TrackBase IMPLEMENTS I_TRACK
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Initialize" Id="{ec4a5bb1-839f-4f43-b542-fc56fd640856}">
+      <Declaration><![CDATA[METHOD Initialize : BOOL
+VAR_INPUT
+	nTrackIndex : UDINT;
+END_VAR
+
+VAR_INST
+	TrackTable		: FB_TrackTable;
+	
+	nPointIndex		: INT;
+	nPointIndexA	: INT;	
+	nPointIndexB	: INT;	
+	idx1, idx2		: INT;
+	nStartFromTrack	: INT;
+	nEndAtTrack		: INT;
+	bCloseLoop		: BOOL;	
+	
+	bTrackBuild		: BOOL;
+	StartFromTrack	: I_Track;
+	EndAtTrack		: I_Track;
+	
+	sIndexWhereTheCheckFailed	: UINT;
+	nErrorID					: UDINT;
+
+END_VAR
+
+
+
+
+
+VAR_INST
+	
+	TrackTableTemp		: ARRAY[1..gc_MaxNumberTrackPoints] OF ST_TrackTable;
+	
+
+
+END_VAR
+
+
+VAR_INST
+	
+	pos01	:		PositionXYC;
+	pos02	:		PositionXYC;
+
+
+END_VAR
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+	  
+CASE nState OF 
+
+	10:	// Starting with an empty table. 
+		IF TrackTable.ClearTrackTable() THEN
+			nState := nState + 10;
+		END_IF
+		
+
+	20:	// Init Track-Table
+		
+		// *************************************************************************************
+		// *** Only the code in this state must be eddited according to machine/track layout ***
+		// *************************************************************************************	
+		
+		nStartFromTrack	:= 0;		// 0 for the first track all others according to their predecessor!
+	    	nEndAtTrack := 0;		// 0 for the first track all others according to their successor! 		
+		     bCloseLoop := FALSE;	// TRUE for circular track	
+
+			 			 			 
+		// Building the track table:	
+		TrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 480.0, 120.0, 0.0); 	 
+		TrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 240.0, 120.0, 0.0);				
+		
+		TrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 120.0, 240.0, 0.0); 	 
+		TrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 120.0, 480.0, 0.0);	
+ 
+		TrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 240.0, 600.0, 0.0); 	 
+		TrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 480.0, 600.0, 0.0);		
+	 		
+		nState := nState + 10;
+
+
+	30:
+		// *************************************************************
+		// ***       NO Code Changes are needed from here on!        ***
+		// *************************************************************		
+			
+		// The track table contains all additional information, too.
+		IF nStartFromTrack > 0 THEN
+			TrackTable.P_StartFromTrack := ipTrack[nStartFromTrack].std;	
+		END_IF
+		IF nEndAtTrack > 0 THEN
+			TrackTable.P_EndAtTrack := ipTrack[nEndAtTrack].std;	
+		END_IF	
+		TrackTable.P_CloseTheLoop := bCloseLoop;	
+		nState := nState + 10;
+
+			
+		
+	40: // Checking the track table for plausibility
+		IF TrackTable.CheckTrackTable() <> 0 THEN
+			IF TrackTable.P_TrackTableCheckResult THEN
+				nState := 50;	// Plausibility test succeeded.
+			ELSE
+				nState := 41;	// Plausibility test failed!
+			END_IF
+		END_IF
+
+	
+	41:	// In case of failed plausibility test check the creation of the above track table.
+		// A Line must always begin with E_PointType.Line_Start and end with E_PointType.Line_End.
+		// A Circle must always be added in the order E_PointType.Circle_Start, E_PointType.Circle_Center, E_PointType.Circle_End.
+		// Check the info text for further information:
+		sErrorInfoTextTemp := CONCAT('Track: ', UDINT_TO_STRING(nTrackIndex));
+		sErrorInfoTextTemp := CONCAT(sErrorInfoTextTemp, ' - ');
+		sErrorInfoTextTemp := CONCAT(sErrorInfoTextTemp, TrackTable.P_InfoText);
+		
+				     bTrackBuildError := TRUE;
+					   sErrorInfoText := sErrorInfoTextTemp;
+			sIndexWhereTheCheckFailed := TrackTable.P_TrackCheckImplausibleTableIndex;
+					   TrackTableTemp := TrackTable.P_Table;	
+							
+ 					   
+	50:	// Building the track	
+		IF fbTrackStandard.BuildTrackExt(TrackTable) THEN
+			nState := nState +1;
+		END_IF
+		
+	51:	IF fbTrackStandard.P_BuildTrackExt.Done THEN
+			nState := 100;	
+		ELSIF fbTrackStandard.P_BuildTrackExt.Error THEN
+	  		nState := nState +1;
+		END_IF		
+		
+	52: // In case an error occured, check the error ID and InfoText and react accordingly:
+		sErrorInfoTextTemp := CONCAT('Track: ', UDINT_TO_STRING(nTrackIndex));
+		sErrorInfoTextTemp := CONCAT(sErrorInfoTextTemp, ' - ');
+		sErrorInfoTextTemp := CONCAT(sErrorInfoTextTemp, fbTrackStandard.P_BuildTrackExtInfoText);	
+	
+			      nErrorID := fbTrackStandard.P_BuildTrackExt.ErrorID;
+		    sErrorInfoText := sErrorInfoTextTemp;		
+			
+		  bTrackBuildError := TRUE;		   
+					   
+		 
+	100: 	// Track build done
+			fTrackLength := fbTrackStandard.GetLength();
+			  Initialize := TRUE;
+	
+
+END_CASE
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="P_Error" Id="{d386063a-b1d4-4b3c-940b-ef6404cff1d0}">
+      <Declaration><![CDATA[PROPERTY P_Error : BOOL]]></Declaration>
+      <Get Name="Get" Id="{e4cd3f32-fa4c-420e-b6e4-48cb575ffb24}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_Error := bTrackBuildError;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_ErrorInfo" Id="{1e4f03d0-c460-49e5-9817-32cb648de575}">
+      <Declaration><![CDATA[PROPERTY P_ErrorInfo : STRING]]></Declaration>
+      <Get Name="Get" Id="{cb18e2b1-11c4-4a6d-abb3-214850a91257}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ErrorInfo := sErrorInfoText;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="FB_TrackSegment_1">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_TrackSegment_1.Initialize">
+      <LineId Id="1845" Count="2" />
+      <LineId Id="2682" Count="1" />
+      <LineId Id="2685" Count="0" />
+      <LineId Id="2695" Count="0" />
+      <LineId Id="2812" Count="0" />
+      <LineId Id="2686" Count="0" />
+      <LineId Id="1848" Count="1" />
+      <LineId Id="2680" Count="0" />
+      <LineId Id="2687" Count="1" />
+      <LineId Id="1850" Count="0" />
+      <LineId Id="2689" Count="0" />
+      <LineId Id="1857" Count="5" />
+      <LineId Id="2356" Count="0" />
+      <LineId Id="2353" Count="1" />
+      <LineId Id="2359" Count="0" />
+      <LineId Id="2357" Count="0" />
+      <LineId Id="2362" Count="0" />
+      <LineId Id="2364" Count="2" />
+      <LineId Id="2675" Count="0" />
+      <LineId Id="2696" Count="0" />
+      <LineId Id="2699" Count="0" />
+      <LineId Id="2698" Count="0" />
+      <LineId Id="2701" Count="1" />
+      <LineId Id="2700" Count="0" />
+      <LineId Id="2676" Count="0" />
+      <LineId Id="1881" Count="7" />
+      <LineId Id="1891" Count="0" />
+      <LineId Id="2801" Count="0" />
+      <LineId Id="1893" Count="0" />
+      <LineId Id="2803" Count="0" />
+      <LineId Id="1894" Count="13" />
+      <LineId Id="2865" Count="3" />
+      <LineId Id="2536" Count="0" />
+      <LineId Id="2862" Count="0" />
+      <LineId Id="1909" Count="2" />
+      <LineId Id="2481" Count="0" />
+      <LineId Id="1914" Count="4" />
+      <LineId Id="2752" Count="2" />
+      <LineId Id="2756" Count="0" />
+      <LineId Id="2749" Count="1" />
+      <LineId Id="2747" Count="0" />
+      <LineId Id="2872" Count="1" />
+      <LineId Id="2869" Count="1" />
+      <LineId Id="2748" Count="0" />
+      <LineId Id="1922" Count="0" />
+      <LineId Id="2811" Count="0" />
+      <LineId Id="2809" Count="1" />
+      <LineId Id="2424" Count="0" />
+      <LineId Id="1925" Count="1" />
+      <LineId Id="1928" Count="1" />
+      <LineId Id="2491" Count="0" />
+      <LineId Id="1935" Count="2" />
+      <LineId Id="2231" Count="18" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_TrackSegment_1.P_Error.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_TrackSegment_1.P_ErrorInfo.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

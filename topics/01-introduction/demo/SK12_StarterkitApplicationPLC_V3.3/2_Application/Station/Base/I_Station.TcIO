@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <Itf Name="I_Station" Id="{b7c4e6a8-f5ef-4a85-9c38-d9540037c3bc}">
+    <Declaration><![CDATA[INTERFACE I_Station
+]]></Declaration>
+    <Method Name="Clear" Id="{91060713-2ed2-42e7-bb37-b1107a5e6c65}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Cycle" Id="{a75c557b-6c9f-4cc4-b97e-1ec3d822b4a0}">
+      <Declaration><![CDATA[METHOD Cycle : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Init" Id="{aa78eb2b-d070-4fbe-860c-b25f4b451a5c}">
+      <Declaration><![CDATA[METHOD Init : BOOL
+
+]]></Declaration>
+    </Method>
+    <Property Name="P_bInitDone" Id="{03b99a46-2131-4358-8ee2-78b639c921ea}">
+      <Declaration><![CDATA[PROPERTY P_bInitDone : BOOL]]></Declaration>
+      <Get Name="Get" Id="{64e1cb95-c985-4317-932c-fc2ebef47049}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_eProcessMode" Id="{cf92a65d-6956-4c06-b3e5-f40f99fa0b52}">
+      <Declaration><![CDATA[PROPERTY P_eProcessMode : E_ProcessMode]]></Declaration>
+      <Get Name="Get" Id="{18435ddd-988d-4a00-9493-fb9ff91da3ba}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{194ceb23-b84b-42b0-a605-118fc0dd5a15}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="P_List_Station" Id="{43d2d18b-96a9-4239-9a98-df84662159be}">
+      <Declaration><![CDATA[PROPERTY P_List_Station : I_List]]></Declaration>
+      <Get Name="Get" Id="{9bacb839-5958-41a2-a26a-da703e2364b0}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_List_Switch_Input_A" Id="{b3f7a703-dc33-4235-bf3d-15450c9a5650}">
+      <Declaration><![CDATA[PROPERTY P_List_Switch_Input_A : I_List]]></Declaration>
+      <Get Name="Get" Id="{98b07056-4df2-41b8-9ab8-695dd8e8fc41}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_List_Switch_Input_B" Id="{44f932a5-9164-43b5-949c-4677d15cfc6a}">
+      <Declaration><![CDATA[PROPERTY P_List_Switch_Input_B : I_List]]></Declaration>
+      <Get Name="Get" Id="{5cd63f5e-8936-4d99-b194-24c8a9c3d0a8}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_List_Switch_Input_C" Id="{c14ac153-0198-4c9d-855a-bcb9d1602995}">
+      <Declaration><![CDATA[PROPERTY P_List_Switch_Input_C : I_List]]></Declaration>
+      <Get Name="Get" Id="{dcbb7747-a243-4be6-b0ae-9d984db1ac06}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_nErrorCode" Id="{ea1b2323-87e9-4702-bc65-6c2b9287f539}">
+      <Declaration><![CDATA[PROPERTY P_nErrorCode : UDINT]]></Declaration>
+      <Get Name="Get" Id="{424a2654-461c-449e-9b25-ce4fe72a35e7}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_Position" Id="{79b899ad-e234-49d0-8fda-9307f846f068}">
+      <Declaration><![CDATA[PROPERTY P_Position : ST_StationPosition]]></Declaration>
+      <Get Name="Get" Id="{ae624e8b-fed0-4343-8088-ad6ec5760740}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_ProcessClearance" Id="{8f7a4b8e-d3f3-416c-adfd-f2dd9b066afd}">
+      <Declaration><![CDATA[PROPERTY P_ProcessClearance : DINT]]></Declaration>
+      <Get Name="Get" Id="{94f45565-a3e4-4d3f-89d5-ec03df4554f5}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="P_ProcessRequest" Id="{fb31ea4d-dc37-4288-b3db-b21cbadbf4c9}">
+      <Declaration><![CDATA[PROPERTY P_ProcessRequest : DINT]]></Declaration>
+      <Get Name="Get" Id="{b9dd3435-4073-4350-95ed-94e96100e900}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{1f274383-a710-4883-8c62-996464c47fcf}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="P_ProcessState" Id="{061557d0-be34-4687-a7da-28e4efc8acab}">
+      <Declaration><![CDATA[PROPERTY P_ProcessState : DINT]]></Declaration>
+      <Get Name="Get" Id="{815a71fc-44b4-40b9-af1e-359ba452e982}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Method Name="Process" Id="{4748aef3-ba14-429a-a8b6-29679e986082}">
+      <Declaration><![CDATA[METHOD Process : BOOL
+]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>

@@ -1,0 +1,724 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_MoverTarget" Id="{08cc6630-d8a6-4f15-8d11-de0963e4bc5b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MoverTarget
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	
+	positionList		: ARRAY[1..gc_nMoverCountConfigured] OF ST_PositionXY;
+	nPositionCount		: UDINT;
+	moverList			: ARRAY[1..gc_nMoverCountConfigured] OF I_MoverApplication;	
+	nMoversInList		: UDINT;
+	
+	nErrorWarningCode 	: DINT;
+	sMessage 			: STRING;
+	
+	idx					: UDINT;
+	
+	recoverVelocity					: LREAL :=   250.0;
+	recoveryAcceleration			: LREAL :=  1000.0;
+	recoveryJerk					: LREAL := 10000.0;
+	
+	fShiftDistanceY			: LREAL;
+	fShiftDistanceX			: LREAL;
+	
+	nStateMove						: DINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="AddMover" Id="{0e498e46-22ef-4d08-a7c9-2166ae0d7638}">
+      <Declaration><![CDATA[METHOD AddMover : BOOL
+VAR_INPUT
+	ipMover		: I_MoverApplication;
+END_VAR
+
+
+
+VAR
+	bMoverInList	: BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+	IF ipMover <> 0 THEN
+	
+		nMoversInList := 0;
+		bMoverInList  := FALSE;
+		FOR idx:=1 TO gc_nMoverCountConfigured DO
+			IF moverList[idx] <> 0 THEN
+				nMoversInList := nMoversInList +1;
+				IF moverList[idx].std.P_Id = ipMover.std.P_Id THEN
+					bMoverInList := TRUE;
+				END_IF				
+			END_IF
+		END_FOR
+		
+		IF NOT bMoverInList THEN
+			nMoversInList := nMoversInList +1;
+			moverList[nMoversInList] := ipMover;
+			
+			nErrorWarningCode := 0;
+		            sMessage := 'Success: Mover added.';				
+		ELSE
+			nErrorWarningCode := +11;
+		            sMessage := 'Warning: Mover already exists.';				
+		END_IF
+
+	ELSE
+		nErrorWarningCode := -11;
+		        sMessage := 'Error: Mover invalid';	
+	END_IF
+	
+	IF nErrorWarningCode < 0 THEN
+		AddMover := FALSE;
+	ELSE
+		AddMover := TRUE;
+	END_IF
+	
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="AddPosition" Id="{9e28e13e-0b8e-45db-bf34-8500f9848ada}">
+      <Declaration><![CDATA[METHOD AddPosition : BOOL
+VAR_INPUT
+	x 	: LREAL;
+	y	: LREAL;	
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+
+	nPositionCount := nPositionCount +1;
+	
+	IF nPositionCount <= gc_nMoverCountConfigured THEN
+	
+		positionList[nPositionCount].x     := x;
+		positionList[nPositionCount].y     := y;
+		positionList[nPositionCount].valid := TRUE;
+
+		nErrorWarningCode := 0;
+		        sMessage := 'Success: Position added.';				
+	ELSE
+		nPositionCount := gc_nMoverCountConfigured;	
+	
+		nErrorWarningCode := -21;
+		        sMessage := 'Error: Position count higher than mover count!';				
+	END_IF
+
+	IF nErrorWarningCode < 0 THEN
+		AddPosition := FALSE;
+	ELSE
+		AddPosition := TRUE;
+	END_IF
+	
+
+	
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Clear" Id="{9171561e-6998-407c-9bff-83f1f64e90e6}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+
+
+	FOR idx:=1 TO gc_nMoverCountConfigured DO
+		MoverList[idx] := 0;
+		
+		positionList[idx].x     := 0;
+		positionList[idx].y     := 0;
+		positionList[idx].valid := FALSE;
+		
+	END_FOR	
+	
+	    nMoversInList := 0;
+	   nPositionCount := 0;	
+	       nStateMove := 0;
+	nErrorWarningCode := 0;
+			sMessage := 'Cleared';				
+
+	Clear := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoversToTarget" Id="{0c9a811b-5c98-4ad0-a59f-2a17c5f0ce24}">
+      <Declaration><![CDATA[METHOD MoversToTarget : BOOL
+VAR_INPUT
+END_VAR
+
+
+
+VAR_INST
+	
+	idx1, idx2						: UDINT;
+	idxMover, idxPosition			: UDINT;
+	fShortestDistance				: LREAL;
+	targetPosition					: PositionXYC;
+	currentPos						: PositionXYC;
+	bDone							: BOOL;	
+	
+	fMoverDistanceToInitialPosition	: ARRAY [1..gc_nMoverCountConfigured, 1..gc_nMoverCountConfigured] OF ST_MoverDistance;   // Mover;Position
+	nMoverToInitialPosition			: ARRAY [1..gc_nMoverCountConfigured] OF UDINT;
+	nInitialPositionTakesMover		: ARRAY [1..gc_nMoverCountConfigured] OF UDINT;
+	
+	nInitialPositionTaken			: ARRAY [1..gc_nMoverCountConfigured] OF BOOL;	
+	nInitialMoverTaken				: ARRAY [1..gc_nMoverCountConfigured] OF BOOL;	
+	nMoverTaken						: UDINT;
+	
+	fShiftDistanceY			: LREAL := 240.0;
+	fShiftDistanceX			: LREAL := 240.0;
+	
+	
+	nTestCounter03	: UINT;
+	nTestCounter01	: UINT;
+	
+	nMoveStatus						: ARRAY [1..gc_nMoverCountConfigured] OF DINT;	
+	
+	bMoverDone_01  					: BOOL;
+	bMoverError_01 					: BOOL;
+	bMoverDoneXYC_01  					: BOOL;
+	bMoverErrorxyc_01 					: BOOL;
+
+	
+	bMoverDone_02  					: BOOL;
+	bMoverError_02 					: BOOL;	
+	bMoverDoneXYC_02  					: BOOL;
+	bMoverErrorxyc_02 					: BOOL;
+	
+	stMoveToPositionOptions				: ST_MoveToPositionOptions;
+	
+	bStepByStep						: BOOL;
+	bNextStep						: BOOL;
+	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[	
+	CASE nStateMove OF 
+		
+	0:	// Check mover and position count
+		IF nMoversInList <= nPositionCount THEN
+			nErrorWarningCode := 0;
+			        sMessage := 'Mover and position count OK.';	
+			      nStateMove := nStateMove + 10;
+		ELSE
+			nErrorWarningCode := -31;
+					sMessage := 'Error: Mover count higher than position count!';				
+		END_IF
+	
+		
+	10:	// Clear 
+		FOR idx:=1 TO gc_nMoverCountConfigured DO
+			        nMoveStatus[idx] := 0;
+			 nInitialMoverTaken[idx] := 0;
+		END_FOR	
+		nStateMove := nStateMove + 10;
+		
+	
+	20: // Calculate all distances
+		FOR idx1:=1 TO gc_nMoverCountConfigured DO
+			FOR idx2:=1 TO gc_nMoverCountConfigured DO
+				fMoverDistanceToInitialPosition[idx1, idx2].fDistance      := 0.0;
+				fMoverDistanceToInitialPosition[idx1, idx2].nPositionIndex := 0;
+			END_FOR
+		END_FOR
+	
+	
+		FOR idx1:=1 TO nMoversInList DO
+			currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+			FOR idx2:=1 TO nPositionCount DO
+				fMoverDistanceToInitialPosition[idx1, idx2].nPositionIndex := idx2;		
+				fMoverDistanceToInitialPosition[idx1, idx2].fDistance := SQRT((currentPos.x - positionList[idx2].x) * (currentPos.x - positionList[idx2].x) + (currentPos.y - positionList[idx2].y) * (currentPos.y - positionList[idx2].y)); 
+			END_FOR	
+			
+			nInitialPositionTaken[idx1] := FALSE;
+		END_FOR			
+
+		nErrorWarningCode := 0;
+				sMessage := 'Calculated all distances.';			
+		      nStateMove := nStateMove + 10;
+	
+		
+	30: // Find the closest initial position for each mover	
+		FOR idxPosition:=1 TO nPositionCount DO
+			fShortestDistance := 1.7976931348623158E+308;
+			FOR idxMover:=1 TO nMoversInList DO			
+				IF NOT nInitialMoverTaken[idxMover] THEN
+					IF fMoverDistanceToInitialPosition[idxMover, idxPosition].fDistance < fShortestDistance THEN
+						fShortestDistance := fMoverDistanceToInitialPosition[idxMover, idxPosition].fDistance;
+						nInitialPositionTakesMover[idxPosition] := idxMover;
+						nMoverTaken := idxMover;
+					END_IF
+				END_IF
+			END_FOR
+			IF nMoverTaken > 0 THEN
+				nInitialMoverTaken[nMoverTaken] := TRUE;
+			END_IF
+		END_FOR
+		
+		
+		FOR idx:=1 TO gc_nMoverCountConfigured DO
+			nMoverToInitialPosition[nInitialPositionTakesMover[idx]] := idx;	
+		END_FOR
+
+		nErrorWarningCode := 0;
+				sMessage := 'Calculated closest initial position for each mover.';			
+		nStateMove := nStateMove + 10;
+		
+		
+		
+	40: // Turn all movers back to 0° 
+		
+		// -> warten auf Set-C rotation Feature aus der NC
+			
+		nStateMove := nStateMove + 10;
+		
+		
+		
+	50: // Moving all movers to their initial position
+
+		nErrorWarningCode := 0;
+				sMessage := 'Moving.';
+
+
+		FOR idx1:=1 TO nMoversInList DO
+			
+			// 1st: try direct move
+			IF  nMoveStatus[idx1] = 0 THEN
+				currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+				targetPosition.SetValuesXYC(positionList[nMoverToInitialPosition[idx1]].x, positionList[nMoverToInitialPosition[idx1]].y, currentPos.c);
+				stMoveToPositionOptions.useOrientation := FALSE;	
+				IF moverList[idx1].std.MoveToPositionExt('ToTarget move direct', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions) THEN
+					nMoveStatus[idx1] := 1;
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF
+			END_IF
+			
+			// 2nd: try direct move XYC
+			IF  nMoveStatus[idx1] = 1 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+					targetPosition.SetValuesXYC(positionList[nMoverToInitialPosition[idx1]].x, positionList[nMoverToInitialPosition[idx1]].y, currentPos.c);
+					stMoveToPositionOptions.useOrientation := TRUE;
+					moverList[idx1].std.MoveToPositionExt('ToTarget move direct', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					nMoveStatus[idx1] := 2;
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF
+			END_IF			
+			
+			// 3rd: try move in x-direction
+			IF  nMoveStatus[idx1] = 2 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					IF moverList[idx1].std.P_SetPosition.x <> positionList[nMoverToInitialPosition[idx1]].x THEN
+						currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+						targetPosition.SetValuesXYC(positionList[nMoverToInitialPosition[idx1]].x, currentPos.y, currentPos.c);
+						stMoveToPositionOptions.useOrientation := FALSE;
+						moverList[idx1].std.MoveToPositionExt('ToTarget move in x', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					END_IF
+					nMoveStatus[idx1] := 3;
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF
+			END_IF
+						
+			// 4th: try move XYC in x-direction
+			IF  nMoveStatus[idx1] = 3 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					IF moverList[idx1].std.P_SetPosition.x <> positionList[nMoverToInitialPosition[idx1]].x THEN
+						currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+						targetPosition.SetValuesXYC(positionList[nMoverToInitialPosition[idx1]].x, currentPos.y, currentPos.c);
+						stMoveToPositionOptions.useOrientation := TRUE;
+						moverList[idx1].std.MoveToPositionExt('ToTarget move in x', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					END_IF					
+					nMoveStatus[idx1] := 4;
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF
+			END_IF			
+			
+			// 5th: try move in y-direction
+			IF  nMoveStatus[idx1] = 4 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					IF moverList[idx1].std.P_SetPosition.y <> positionList[nMoverToInitialPosition[idx1]].y THEN
+						currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+						targetPosition.SetValuesXYC(currentPos.x, positionList[nMoverToInitialPosition[idx1]].y, currentPos.c);
+						stMoveToPositionOptions.useOrientation := FALSE;
+						moverList[idx1].std.MoveToPositionExt('ToTarget move in y', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					END_IF
+					nMoveStatus[idx1] := 5; 
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF			
+			
+			// 6th: try move XYC in y-direction
+			IF  nMoveStatus[idx1] = 5 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					IF moverList[idx1].std.P_SetPosition.y <> positionList[nMoverToInitialPosition[idx1]].y THEN
+						currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+						targetPosition.SetValuesXYC(currentPos.x, positionList[nMoverToInitialPosition[idx1]].y, currentPos.c);
+						stMoveToPositionOptions.useOrientation := TRUE;
+						moverList[idx1].std.MoveToPositionExt('ToTarget move in y', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					END_IF
+					nMoveStatus[idx1] := 6; 
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF				
+			
+			// 7th: try positive step-move in y-direction
+			IF  nMoveStatus[idx1] = 6 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+					targetPosition.SetValuesXYC(currentPos.x, currentPos.y + fShiftDistanceY, currentPos.c);
+					stMoveToPositionOptions.useOrientation := FALSE;
+					moverList[idx1].std.MoveToPositionExt('ToTarget step-move in +y', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					nMoveStatus[idx1] := 7;
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF					
+			
+			// 8th: try positive step-move XYC in y-direction
+			IF  nMoveStatus[idx1] = 7 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+					targetPosition.SetValuesXYC(currentPos.x, currentPos.y + fShiftDistanceY, currentPos.c);
+					stMoveToPositionOptions.useOrientation := TRUE;
+					moverList[idx1].std.MoveToPositionExt('ToTarget step-move in +y', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					nMoveStatus[idx1] := 8; 
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF			
+			
+			// 9th: try negative step-move in y-direction
+			IF  nMoveStatus[idx1] = 8 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+					targetPosition.SetValuesXYC(currentPos.x, currentPos.y - fShiftDistanceX, currentPos.c);
+					stMoveToPositionOptions.useOrientation := FALSE;
+					moverList[idx1].std.MoveToPositionExt('ToTarget step-move in -y', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					nMoveStatus[idx1] := 9; 
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF	
+
+			// 10th: try negative step-move XYC in y-direction
+			IF  nMoveStatus[idx1] = 9 THEN 
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+					targetPosition.SetValuesXYC(currentPos.x, currentPos.y - fShiftDistanceX, currentPos.c);
+					stMoveToPositionOptions.useOrientation := TRUE;
+					moverList[idx1].std.MoveToPositionExt('ToTarget step-move in -y', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					nMoveStatus[idx1] := 10; 
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF		
+
+			// 11th: try positive step-move in x-direction
+			IF  nMoveStatus[idx1] = 10 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+					targetPosition.SetValuesXYC(currentPos.x  + fShiftDistanceY, currentPos.y, currentPos.c);
+					stMoveToPositionOptions.useOrientation := FALSE;
+					moverList[idx1].std.MoveToPositionExt('ToTarget step-move in +x', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					nMoveStatus[idx1] := 11; 
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF	
+			
+			// 12th: try positive step-move XYC in x-direction
+			IF  nMoveStatus[idx1] = 11 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+					targetPosition.SetValuesXYC(currentPos.x  + fShiftDistanceY, currentPos.y, currentPos.c);
+					stMoveToPositionOptions.useOrientation := TRUE;
+					moverList[idx1].std.MoveToPositionExt('ToTarget step-move in +x', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					nMoveStatus[idx1] := 12; 
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF					
+			
+			// 13th: try negative step-move in x-direction
+			IF  nMoveStatus[idx1] = 12 THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+					targetPosition.SetValuesXYC(currentPos.x - fShiftDistanceY, currentPos.y, currentPos.c);
+					stMoveToPositionOptions.useOrientation := FALSE;
+					moverList[idx1].std.MoveToPositionExt('ToTarget step-move in -x', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					nMoveStatus[idx1] := 13; 
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF				
+			
+			// 14th: try negative step-move XYC in x-direction
+			IF  nMoveStatus[idx1] = 13 THEN 
+				IF moverList[idx1].std.P_MoveToPositionExt.Error THEN
+					currentPos.SetValuesXYC(moverList[idx1].std.P_SetPosition.x, moverList[idx1].std.P_SetPosition.y, moverList[idx1].std.P_SetPosition.c);
+					targetPosition.SetValuesXYC(currentPos.x - fShiftDistanceY, currentPos.y, currentPos.c);
+					stMoveToPositionOptions.useOrientation := TRUE;
+					moverList[idx1].std.MoveToPositionExt('ToTarget step-move in -x', targetPosition, recoverVelocity, recoveryAcceleration, recoveryAcceleration, recoveryJerk, stMoveToPositionOptions);
+					nMoveStatus[idx1] := 0; 
+					IF bStepByStep THEN nMoveStatus[idx1] := -nMoveStatus[idx1]; END_IF
+				END_IF		
+			END_IF				
+			
+			
+			// Check feedback
+			IF nMoveStatus[idx1] = 1
+			OR nMoveStatus[idx1] = 2
+			THEN
+				IF moverList[idx1].std.P_MoveToPositionExt.Done THEN
+					nMoveStatus[idx1] := 100;
+				END_IF
+			ELSE
+				IF nMoveStatus[idx1] <> 100 THEN						
+					// If y-move is finished or no move was possible
+					IF moverList[idx1].std.P_MoveToPositionExt.Done THEN
+						nMoveStatus[idx1] := 0;
+					END_IF						
+				END_IF
+			END_IF
+			
+		END_FOR
+		
+	
+		// Check if all movers have reached their position
+		bDone := TRUE;
+		FOR idx1:=1 TO nMoversInList DO
+			IF nMoveStatus[idx1] <> 100 THEN
+				bDone := FALSE;
+			END_IF
+		END_FOR
+			
+		IF bDone THEN
+			nStateMove := nStateMove + 10;
+		END_IF
+		
+
+	60: // Done
+		nErrorWarningCode := 0;
+				sMessage := 'Done';			
+	
+		   nStateMove := 0;
+		MoversToTarget := TRUE;
+			
+	END_CASE
+	
+	
+	
+	IF bNextStep THEN
+		bNextStep := FALSE;
+		FOR idx1:=1 TO g_nMoverCountPresent DO
+			nMoveStatus[idx1] := ABS(nMoveStatus[idx1]);
+		END_FOR
+	END_IF
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="P_ErrorWarningCode" Id="{da3c1c09-ebd7-4da8-8368-54a7f6d98ef4}">
+      <Declaration><![CDATA[PROPERTY P_ErrorWarningCode : DINT]]></Declaration>
+      <Get Name="Get" Id="{515fbed3-58d5-4738-81d4-6ed5851d03ee}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ErrorWarningCode := nErrorWarningCode;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_Info" Id="{7c8e04a8-6af2-4a51-a56f-3afc63647e0c}">
+      <Declaration><![CDATA[PROPERTY P_Info : STRING]]></Declaration>
+      <Get Name="Get" Id="{ed808a0e-800d-478e-a32e-9e2a682f03da}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_Info := sMessage;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="P_ShiftDistanceX" Id="{a115928d-555e-4048-a71c-e5f444b8de04}">
+      <Declaration><![CDATA[PROPERTY P_ShiftDistanceX : LREAL]]></Declaration>
+      <Get Name="Get" Id="{d91c76ce-f919-4519-afb6-66d6d2445480}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ShiftDistanceX := fShiftDistanceX;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{1f041eee-3416-4ebd-a10a-776bc29e73db}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[fShiftDistanceX := P_ShiftDistanceX;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="P_ShiftDistanceY" Id="{7fe7315c-8ad5-470d-9f47-744af9b097cd}">
+      <Declaration><![CDATA[PROPERTY P_ShiftDistanceY : LREAL]]></Declaration>
+      <Get Name="Get" Id="{b23858bb-5cbe-463f-8e23-fb8ab90fce56}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[P_ShiftDistanceY := fShiftDistanceY;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{2cfad5ed-aaab-42ae-afd0-d73dead4d996}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[fShiftDistanceY := P_ShiftDistanceY;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="SetDynamics" Id="{6fd0ae84-46aa-4fc6-a469-ba2149a60e46}">
+      <Declaration><![CDATA[METHOD SetDynamics : BOOL
+VAR_INPUT
+	vel	: LREAL;
+	acc : LREAL;
+	jerk :LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+	recoverVelocity := vel;
+	recoveryAcceleration := acc;
+	recoveryJerk := jerk;
+	
+	SetDynamics := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_MoverTarget">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.AddMover">
+      <LineId Id="9" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="46" Count="1" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="41" Count="2" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="69" Count="2" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="67" Count="1" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="75" Count="1" />
+      <LineId Id="78" Count="1" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="11" Count="3" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.AddPosition">
+      <LineId Id="13" Count="0" />
+      <LineId Id="39" Count="1" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="41" Count="1" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="50" Count="4" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="18" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.Clear">
+      <LineId Id="6" Count="4" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="30" Count="2" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.MoversToTarget">
+      <LineId Id="3252" Count="334" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.P_ErrorWarningCode.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.P_Info.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.P_ShiftDistanceX.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.P_ShiftDistanceX.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.P_ShiftDistanceY.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.P_ShiftDistanceY.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MoverTarget.SetDynamics">
+      <LineId Id="15" Count="0" />
+      <LineId Id="9" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="16" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

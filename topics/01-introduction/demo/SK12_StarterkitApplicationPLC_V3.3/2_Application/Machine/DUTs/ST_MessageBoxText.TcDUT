@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <DUT Name="ST_MessageBoxText" Id="{29138eaa-499a-4e30-ae55-308b9de90680}">
+    <Declaration><![CDATA[TYPE ST_MessageBoxText :
+STRUCT
+	
+	sText	: STRING;
+	nColor	: DWORD;	
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

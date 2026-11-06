@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <GVL Name="GVL_Application" Id="{18f75531-8f6a-4989-9af3-dc4395a8777e}">
+    <Declaration><![CDATA[VAR_GLOBAL CONSTANT
+	
+	gc_nMaxNumberMovers			: UDINT := 4;	
+	gc_nMoverCountConfigured 	: UDINT := gc_nMaxNumberMovers;
+	
+	gc_MaxNumberTiles			: UDINT := 24;
+
+	gc_NumberTracks				: UDINT := 3;		// Number of tracks controlled by the application
+	gc_NumberStations			: UINT  := 5;		// Number of stations controlled by the application
+	gc_MaxNumberTrackPoints		: INT   := 20;		// max number of track points for each track 
+END_VAR
+
+VAR_GLOBAL
+	g_nMoverCount				: UDINT := 4;
+	g_nMoverCountPresent		: UDINT := g_nMoverCount;
+	
+	ipTrack						: ARRAY [1..gc_NumberTracks] OF I_Track;
+	ipStation					: ARRAY [1..gc_NumberStations] OF I_Station;
+	ipMoverApplication			: ARRAY [1..gc_nMaxNumberMovers] OF I_MoverApplication;
+	ipMotionSystemApplication	: I_MotionSystemApplication;
+
+	g_VisStationData			: ARRAY[1..gc_NumberStations] OF ST_VisStationData;
+	
+	
+	sTextTemp					: STRING;
+	ipVisuMessage				: I_VisuMessage;				
+	g_VisuMessage				: ST_VisuMessage;
+END_VAR
+
+]]></Declaration>
+  </GVL>
+</TcPlcObject>
