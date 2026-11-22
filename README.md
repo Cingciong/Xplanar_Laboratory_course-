@@ -7,9 +7,9 @@ Zestaw ćwiczeń laboratoryjnych i instrukcji dydaktycznych dla stanowiska trans
 | Folder | Co zawiera |
 |---|---|
 | `instrukcja/` | Instrukcja laboratoryjna w LaTeX (`main.tex`, `main.pdf`), zrzuty ekranu, zasady stylu (`STYL.md`) |
-| `demo/` | Projekt demo Starter Kit (`StarterkitBase`, TwinCAT 3.1.4026.27) |
+| `demo/` | Projekt demo Starter Kit (`StarterkitBase.tsproj`, TwinCAT 3.1.4026.27); ta sama kopia z plikiem `.sln` jest w `topics/01-introduction/demo/` |
 | `topics/` | Kody do ćwiczeń: dla każdego zagadnienia `start/` (wersja dla studenta) i `solution/` (rozwiązanie) |
-| `setup/` | Wersje TwinCAT i bibliotek do odtworzenia środowiska |
+| `setup/` | `setup.config` — eksport pakietów TcPkg do odtworzenia środowiska |
 | `PRZEGLAD.md` | Przegląd struktury repozytorium |
 
 Zagadnienia: wstęp i demo, konfiguracja systemu, ruch w 6 DoF, tracki i omijanie kolizji, dynamiczne trasowanie (stacje).
@@ -26,21 +26,43 @@ Zagadnienia: wstęp i demo, konfiguracja systemu, ruch w 6 DoF, tracki i omijani
 
 ### Odtworzenie środowiska
 
+Na nowym komputerze (po zalogowaniu do feedu Beckhoffa), z katalogu repozytorium:
+
 ```
-tcpkg export -o setup.config
-tcpkg install setup.config
+tcpkg install setup/setup.config
 ```
 
-Pierwsze polecenie uruchamiasz na komputerze referencyjnym, drugie na nowym (po zalogowaniu do feedu Beckhoffa). Sprawdź składnię przez `tcpkg install --help`.
+Po zmianie wersji pakietów na komputerze referencyjnym odśwież plik: `tcpkg export -o setup/setup.config`. Składnia: `tcpkg install --help`. Bibliotekę `Tc3_XPlanarStandard` wgraj ręcznie (patrz wyżej).
 
 ## Uruchomienie dema
 
-1. Otwórz projekt z `demo/` w TcXaeShell.
+1. Otwórz `topics/01-introduction/demo/StarterkitBase.sln` w TcXaeShell (albo `demo/StarterkitBase.tsproj`).
 2. W obiekcie XPlanar ustaw `OperationMode`: `Normal` (maszyna) albo `BasicSimulation` / `AdvancedSimulation` (symulacja).
 3. W symulacji ustaw urządzenia I/O (EtherCAT, USB) na `Disable`, target `<Local>`.
 4. Wykonaj Activate Configuration, zaloguj się do PLC i uruchom program.
 
 Szczegóły i typowe błędy: rozdział „Odpalenie projektu” w instrukcji.
+
+## Laboratoria
+
+Każde zadanie w `topics/` ma `start/` (wersja dla studenta) i `solution/` (rozwiązanie). Treść zadania jest w `README.md` danego folderu i w odpowiednim rozdziale `instrukcja/main.pdf`.
+
+| Lab | Folder | Co otworzyć | Stan kodu |
+|---|---|---|---|
+| 1 Wstęp | `topics/01-introduction/` | `demo/StarterkitBase.sln` | gotowy (demo) |
+| 2 Konfiguracja i włączenie | `topics/02-configuration/` | `start/TwinCAT Project1/TwinCAT Project1.sln` | pusty projekt startowy |
+| 3 Ruch wysterowany (6 DoF) | `topics/03-motion/` | `start/` | do uzupełnienia |
+| 4 Tracki — jeden track, dwa movery | `topics/04-tracks/task-1-one-track-two-movers/` | `start/` | do uzupełnienia |
+| 4 Tracki — dwa tracki z przecięciem | `topics/04-tracks/task-2-two-tracks-crossing/` | `start/` | do uzupełnienia |
+| 5 Stacje (dynamiczne trasowanie) | `topics/05-stations/` | `start/` | do uzupełnienia |
+
+Jak przejść zadanie:
+
+1. Otwórz `.sln` z folderu `start/` w TcXaeShell.
+2. Ustaw tryb jak w demo (`BasicSimulation` bez maszyny, `Normal` na stanowisku) i target.
+3. Uzupełnij kod PLC zgodnie z treścią zadania.
+4. Build, Activate Configuration, Login, Start; sprawdź ruch w wizualizacji lub w XPlanar Configurator (Live View).
+5. Porównaj z `solution/`.
 
 ## Kompilacja instrukcji
 
