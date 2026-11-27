@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_MotionSystem" Id="{76b90533-2f5f-4265-a888-7463c8f15552}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MotionSystem
+VAR
+    fbXPlanarSystem   : FB_XPlanarSystem;
+    fbXPlanarMover    : ARRAY[1..maxNumMover] OF FB_XPlanarMoverStandard;
+    nStartupSequence  : UDINT;
+    nStartingSequence : UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Cycle" Id="{7a6a436f-abe3-49cf-80ba-736989644d1a}">
+      <Declaration><![CDATA[METHOD Cycle
+VAR
+    i : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[fbXPlanarSystem.Cycle();
+FOR i := 1 TO moverCount DO
+    fbXPlanarMover[i].Cycle();
+END_FOR]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Starting" Id="{04721e65-d0d5-4973-a78a-e55f3a27c0da}">
+      <Declaration><![CDATA[METHOD Starting : BOOL
+VAR_INPUT
+    bReset : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+    Starting := FALSE;
+    nStartingSequence := 0;
+END_IF
+CASE nStartingSequence OF
+    0:  nStartingSequence := 50;
+    50: IF fbXPlanarSystem.EnableMovers() THEN
+            nStartingSequence := 51;
+        END_IF
+    51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
+            nStartingSequence := 80;
+        ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+            nStartingSequence := 90;   // blad enable
+        END_IF
+    80: Starting := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Startup" Id="{ab1988d1-2b56-4e22-9706-835668cd8a23}">
+      <Declaration><![CDATA[METHOD Startup : BOOL
+VAR
+    i : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE nStartupSequence OF
+    0:  nStartupSequence := 1;
+    1:  FOR i := 1 TO moverCount DO
+            fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
+        END_FOR
+        nStartupSequence := 30;
+    30: Startup := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

@@ -1,14 +1,18 @@
-# Zagadnienia XPlanar — kody do zadań
+# XPlanar lab topics
 
-Układ folderów odpowiada spisowi treści instrukcji (`instrukcja/main.pdf`). W każdym zadaniu: `start/` (wersja dla studenta) i `solution/` (rozwiązanie). Nazwy folderów są angielskie.
+| Instruction chapter | Folder |
+|---|---|
+| 1 Introduction | `T01_introduction/` |
+| 2 Configuration and startup | `T02_configuration/` |
+| 3 Controlled motion | `T03_motion/` |
+| 4 Tracks and collision avoidance | `T04_tracks/` |
+| 5 Dynamic routing to stations | `T05_stations/` |
 
-| Rozdział instrukcji | Zadanie | Folder |
-|---|---|---|
-| 1 Wstęp | Zadanie 1 i 2 (demo `StarterkitBase`) | `01-introduction/demo/` |
-| 2 Konfiguracja oraz włączenie systemu | Zadanie (propozycja) | `02-configuration/` |
-| 3 Ruch wysterowany | Zadanie | `03-motion/` |
-| 4 Tracki i omijanie kolizji | Zadanie 1 — jeden track, dwa movery | `04-tracks/task-1-one-track-two-movers/` |
-| 4 Tracki i omijanie kolizji | Zadanie 2 — dwa tracki z punktem przecięcia | `04-tracks/task-2-two-tracks-crossing/` |
-| 5 Dynamiczne trasowanie moverów — stacje | Zadanie (propozycja) | `05-stations/` |
+## Naming
 
-*Podział na `start/` i `solution/` jest tymczasowy: po decyzji o układzie repozytorium rozwiązania mogą trafić na osobny branch lub do osobnego repozytorium.*
+- Topic folder: `TNN_name`.
+- Inside: `start/`, `solution/` (single solution) or `solution_exercise_N/`.
+- Inside each of them: `simulation/` and `hardware/`.
+- Solution and TwinCAT project: `TNN_<start|EN>_SIM` or `_HW` (e.g. `T04_E2_SIM.sln`); `TNN_SIM` for a single solution.
+- PLC project: `PLC` (the demo keeps the Beckhoff name).
+- Every folder level has a short `README.md` in English: topic, task folder, and each `simulation` / `hardware`.

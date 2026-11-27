@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# TcXaeShell Solution File, Format Version 11.00
+VisualStudioVersion = 17.10.35827.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{B1E792BE-AA5F-4E3C-8C82-674BF9C0715B}") = "T04_E1_SIM", "T04_E1_SIM.tsproj", "{D6769974-513D-4FF8-9E09-63689C3C4B21}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|TwinCAT RT (x64) = Debug|TwinCAT RT (x64)
+		Release|TwinCAT RT (x64) = Release|TwinCAT RT (x64)
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D6769974-513D-4FF8-9E09-63689C3C4B21}.Debug|TwinCAT RT (x64).ActiveCfg = Debug|TwinCAT RT (x64)
+		{D6769974-513D-4FF8-9E09-63689C3C4B21}.Debug|TwinCAT RT (x64).Build.0 = Debug|TwinCAT RT (x64)
+		{D6769974-513D-4FF8-9E09-63689C3C4B21}.Release|TwinCAT RT (x64).ActiveCfg = Release|TwinCAT RT (x64)
+		{D6769974-513D-4FF8-9E09-63689C3C4B21}.Release|TwinCAT RT (x64).Build.0 = Release|TwinCAT RT (x64)
+		{3BDD3D76-540F-463E-931E-0AF13AD42FEA}.Debug|TwinCAT RT (x64).ActiveCfg = Debug|TwinCAT RT (x64)
+		{3BDD3D76-540F-463E-931E-0AF13AD42FEA}.Debug|TwinCAT RT (x64).Build.0 = Debug|TwinCAT RT (x64)
+		{3BDD3D76-540F-463E-931E-0AF13AD42FEA}.Release|TwinCAT RT (x64).ActiveCfg = Release|TwinCAT RT (x64)
+		{3BDD3D76-540F-463E-931E-0AF13AD42FEA}.Release|TwinCAT RT (x64).Build.0 = Release|TwinCAT RT (x64)
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CBFF27FE-B07B-4E80-A8F6-360121C4FF54}
+	EndGlobalSection
+EndGlobal

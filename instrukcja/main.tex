@@ -231,7 +231,7 @@ Elementy paska, z których będziemy korzystać (od lewej):
 \zrzutEkranu[0.3\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-wersja-twincat.png}{Lista wersji TwinCAT}
   \item \textbf{Activate Configuration} \ikona{01-wstep/srodowisko-tcxaeshell/ikona-activate-configuration.png} --- wgranie konfiguracji projektu na wybrany target,
   \item \textbf{Run Mode} \ikona{01-wstep/srodowisko-tcxaeshell/ikona-run-mode.png} i \textbf{Config Mode} \ikona{01-wstep/srodowisko-tcxaeshell/ikona-config-mode.png} --- przełączanie trybu pracy runtime'u (zielona --- Run, niebieska --- Config),
-  \item \textbf{aktywny projekt} (\texttt{StarterkitBase}) --- lista rozwijana projektów TwinCAT w rozwiązaniu,
+  \item \textbf{aktywny projekt} (np.\ \texttt{T01\_demo\_HW}) --- lista rozwijana projektów TwinCAT w rozwiązaniu,
 \zrzutEkranu[0.3\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-aktywny-projekt.png}{Lista aktywnego projektu TwinCAT}
   \item \textbf{target} (\texttt{<Local>}) --- system, na którym uruchamiamy projekt; \textit{Choose Target System} otwiera wybór sterownika,
 \zrzutEkranu[0.4\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-target.png}{Lista targetów}
@@ -681,7 +681,7 @@ Movera można podnieść i poruszać ręcznie, bez programu PLC. Robimy to po zb
 \subsection*{Materiały do przekazania}
 \begin{itemize}
   \item Do tego etapu: GitHub, nagranie oraz docs w PDF.
-  \item W repozytorium, w folderze \texttt{topics}, każde zagadnienie ma kod na początek (\texttt{start}) i na koniec (\texttt{solution}), w wersjach \texttt{hardware} (stanowisko ze sterownikiem) i \texttt{simulation} (symulacja na PC). Dla zagadnienia 1 jest to po prostu demo. Zagadnienie 2 ma tylko koniec (\texttt{solution}): projekt z konfiguracją bez programu PLC, który można otworzyć i sterować JOG-iem. Start zagadnienia 3 to koniec zagadnienia 2. Start zagadnienia 4 to rozwiązanie zagadnienia 3 (ruch w 6 DoF) bez metody \texttt{Execute6DoF}; rozwiązania zagadnienia 4 są w \texttt{solution/exercise-1} i \texttt{solution/exercise-2}.
+  \item W repozytorium, w folderze \texttt{topics}, każde zagadnienie ma kod na początek (\texttt{start}) i na koniec (\texttt{solution}), w wersjach \texttt{hardware} (stanowisko ze sterownikiem) i \texttt{simulation} (symulacja na PC). Dla zagadnienia 1 jest to po prostu demo. Zagadnienie 2 ma tylko koniec (\texttt{solution}): projekt z konfiguracją bez programu PLC, który można otworzyć i sterować JOG-iem. Start zagadnienia 3 to koniec zagadnienia 2. Start zagadnienia 4 to rozwiązanie zagadnienia 3 (ruch w 6 DoF) bez metody \texttt{Execute6DoF}; rozwiązania zagadnienia 4 są w \texttt{solution\_exercise\_1} i \texttt{solution\_exercise\_2}.
 \end{itemize}
 
 \subsection*{Dokumentacja Beckhoff (Infosys)}
@@ -714,7 +714,7 @@ Napisać kod, który automatycznie stawia movery w stan \textit{enable}.
 Napisać automatyczną, cykliczną jazdę, np.\ jeden mover wykonuje ruch $\pm$100~mm w osi X. Zaplanowany ruch musi wykorzystać wszystkie stopnie swobody (X, Y, Z, A, B i C).
 
 \section{Odpalanie moverów przy pomocy PLC}\label{sec:programplc}
-Program PLC włącza (\textit{enable}) movery. Piszemy go w języku ST w pustym projekcie \texttt{XPlanarPusty}, z biblioteką \texttt{Tc3\_XPlanarStandard}.
+Program PLC włącza (\textit{enable}) movery. Piszemy go w języku ST w projekcie bez PLC (\texttt{T03\_start\_SIM}), z biblioteką \texttt{Tc3\_XPlanarStandard}.
 
 \podrozdzial{Utworzenie projektu PLC}
 \begin{enumerate}
@@ -723,7 +723,7 @@ Program PLC włącza (\textit{enable}) movery. Piszemy go w języku ST w pustym 
 \zrzutEkranu[0.55\linewidth]{02-konfiguracja/program-plc/plc-menu-add-new-item.png}{Menu kontekstowe \texttt{PLC} --- \textit{Add New Item}}
 \begin{enumerate}
   \setcounter{enumi}{1}
-  \item W oknie wybieramy \textit{Standard PLC Project} (szablon z zadaniem i programem), wpisujemy nazwę (domyślnie \texttt{Untitled1}) i klikamy \textit{Add}.
+  \item W oknie wybieramy \textit{Standard PLC Project} (szablon z zadaniem i programem), wpisujemy nazwę \texttt{PLC} (domyślna to \texttt{Untitled1}) i klikamy \textit{Add}.
 \end{enumerate}
 \zrzutEkranu[0.8\linewidth]{02-konfiguracja/program-plc/plc-dialog-standard-plc-project.png}{Okno \textit{Add New Item} --- \textit{Standard PLC Project}}
 \begin{enumerate}
@@ -733,7 +733,7 @@ Program PLC włącza (\textit{enable}) movery. Piszemy go w języku ST w pustym 
     \item \textit{References} --- biblioteki (domyślnie \texttt{Tc2\_Standard}, \texttt{Tc2\_System}, \texttt{Tc3\_Module}),
     \item \textit{DUTs}, \textit{GVLs}, \textit{POUs}, \textit{VISUs} --- typy danych, zmienne globalne, programy i wizualizacje,
     \item \texttt{PlcTask} --- zadanie, w którym działa program,
-    \item instancja projektu (\texttt{Untitled1 Instance}).
+    \item instancja projektu (\texttt{PLC Instance}).
   \end{itemize}
 \end{enumerate}
 \zrzutEkranu[0.4\linewidth]{02-konfiguracja/program-plc/plc-solution-explorer-nowy-projekt.png}{Solution Explorer --- nowy projekt PLC}
@@ -1081,16 +1081,7 @@ END_CASE
 
 fbMotionSystem.Cycle();
 \end{verbatim}}
-Gotowy projekt z tym kodem jest w repozytorium w folderze \texttt{topics/03-motion/solution-6dof/simulation}.
-
-\subsection*{Zadanie}
-Wykonaj ruch 4 moverów w tył i w przód w osi Y.
-
-\begin{itemize}
-  \item Punkty startowe: \texttt{Y = 360}; \texttt{X} pierwszego = \texttt{120}, ostatniego = \texttt{840}.
-  \item Po tym etapie student powinien rozumieć działanie cyklu, jak dodać movery itd.
-  \item \textit{(Rozszerzenie 6 DoF --- do decyzji: w punktach końcowych podnieść movery w Z i przechylić w A/B.)}
-\end{itemize}
+Gotowy projekt z tym kodem jest w repozytorium w folderze \texttt{topics/T03\_motion/solution\_exercise\_2/simulation}.
 
 \subsection*{Pozostałe punkty}
 \begin{itemize}
@@ -1126,7 +1117,7 @@ Stworzyć track. Za pomocą \textit{Motion UI} dołączyć do niego 4 movery i p
 Na podstawie kodu startowego stworzyć 3 tracki (zgodnie z instrukcją), zlinkować grupę i tracki oraz dopisać kod, w którym 4 movery jeżdżą po tych trackach w kółko.
 
 \section{Kod startowy}
-Pracujemy na projekcie z folderu \texttt{topics/04-tracks/start/simulation}. Jest to rozwiązanie z rozdziału 3 (ruch w 6 DoF) bez metody \texttt{Execute6DoF}: program PLC tylko włącza (\textit{enable}) movery, tracków jeszcze nie ma. Rozwiązania zadań są w folderach \texttt{topics/04-tracks/solution/exercise-1} i \texttt{exercise-2}. W części 1 nie piszemy żadnego kodu. Rozwiązanie części 1 (zamknięty prostokątny track \texttt{Loop}) jest opisane krok po kroku w tej instrukcji, a w \texttt{exercise-1} leży projekt z gotowym trackiem. Rozwiązanie części 2 (trzy tracki i kod) jest w \texttt{exercise-2}.
+Pracujemy na projekcie z folderu \texttt{topics/T04\_tracks/start/simulation}. Jest to rozwiązanie z rozdziału 3 (ruch w 6 DoF) bez metody \texttt{Execute6DoF}: program PLC tylko włącza (\textit{enable}) movery, tracków jeszcze nie ma. Rozwiązania zadań są w folderach \texttt{topics/T04\_tracks/solution\_exercise\_1} i \texttt{solution\_exercise\_2}. W części 1 nie piszemy żadnego kodu. Rozwiązanie części 1 (zamknięty prostokątny track \texttt{Loop}) jest opisane krok po kroku w tej instrukcji, a w \texttt{solution\_exercise\_1} leży projekt z gotowym trackiem. Rozwiązanie części 2 (trzy tracki i kod) jest w \texttt{solution\_exercise\_2}.
 
 \section{Część 1 --- track w UI}\label{sec:track-ui}
 \podrozdzial{Dodanie tracka w Configuratorze}
@@ -1657,7 +1648,7 @@ Odstęp między moverami na tracku (\texttt{Gap}, \textit{Gap Mode}) opisano w c
 
 \section{Zadania}
 \podrozdzial{Zadanie 1}
-Na podstawie kodu początkowego (\textit{link do dodania}), tak jak opisano w tym rozdziale, zbudować układ trzech tracków i pięciu stacji i napisać program, w którym 4 movery wykonują procesy na stacjach tak samo jak w demo (stacje 1, 2 i 3 --- obrót movera, rozjazd i łączenie, dynamiczny wybór stacji procesowej).
+Na podstawie kodu początkowego (folder \texttt{topics/T05\_stations/start/simulation}), tak jak opisano w tym rozdziale, zbudować układ trzech tracków i pięciu stacji i napisać program, w którym 4 movery wykonują procesy na stacjach tak samo jak w demo (stacje 1, 2 i 3 --- obrót movera, rozjazd i łączenie, dynamiczny wybór stacji procesowej).
 \podrozdzial{Zadanie 2}
 Dodać kolejną stację (około [240, 120]~mm), która wykonuje zadany ruch w sześciu stopniach swobody.
 

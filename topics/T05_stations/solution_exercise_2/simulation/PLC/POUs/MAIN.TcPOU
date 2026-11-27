@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{2767b9cb-02c7-4e83-9bc7-d611a48e2aad}">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fbMotionSystem	: FB_MotionSystem;
+	nState			: UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE nState OF
+	0:	nState := 1;
+	1:	IF fbMotionSystem.Startup() THEN
+			nState := 30;
+		END_IF
+	30:	IF fbMotionSystem.Starting(bReset := FALSE) THEN
+			nState := 40;
+		END_IF
+	40:	fbMotionSystem.Execute();	// movery jezdza miedzy stacjami
+END_CASE
+
+fbMotionSystem.Cycle();]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

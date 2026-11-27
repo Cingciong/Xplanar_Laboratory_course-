@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_Station" Id="{41960f75-da58-4348-8554-f3043bad8b46}">
+    <Declaration><![CDATA[TYPE ST_Station :
+STRUCT
+	nTrack			: UDINT;	// track, na ktorym lezy stacja
+	fX				: LREAL;	// polozenie stacji [mm]
+	fY				: LREAL;
+	fSendAwayDist	: LREAL;	// o ile za stacja mover dostaje cel po obrobce [mm]
+	fPosOnTrack		: LREAL;	// polozenie stacji wzdluz tracka [mm]
+	fSendAway		: LREAL;	// cel po obrobce wzdluz tracka [mm]
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

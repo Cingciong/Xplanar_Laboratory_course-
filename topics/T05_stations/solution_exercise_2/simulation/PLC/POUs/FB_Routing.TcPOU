@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_Routing" Id="{e26d5852-4b45-4f51-a644-d7c673f41bdd}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Routing
+VAR
+	eMode			: E_RoutingMode := E_RoutingMode.Alternate;	// zachowanie routingu - zmiana online
+	// Ile moverow jest przypisanych do stacji procesowej 2 i 3
+	// (jada do niej, czekaja w kolejce albo sa w niej obslugiwane)
+	nAssigned		: ARRAY[2..3] OF DINT;
+	nMergeHolder	: UDINT;	// mover, ktory ma teraz zgode na wjazd w punkt laczenia (stacja 5)
+	nRandom			: UDINT := 12345;
+	// Priorytet movera (indeks = numer movera). > 0 = mover preferuje stacje 2
+	aPriority		: ARRAY[1..4] OF UINT := [1, 0, 1, 0];
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="SelectStation" Id="{a8d470e3-2df2-4cf4-9cc9-c8bc798385db}">
+      <Declaration><![CDATA[METHOD SelectStation : UDINT
+VAR_INPUT
+	nMoverIndex	: UDINT;	// mover, ktory wyszedl ze stacji 1
+	nLastDest	: UDINT;	// stacja, do ktorej jechal poprzednio (0 = pierwszy raz)
+END_VAR
+VAR
+	nPreferred	: UDINT;
+	nOther		: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE eMode OF
+
+E_RoutingMode.Alternate:
+	// naprzemiennie: 2 -> 3 -> 2 ...
+	IF nLastDest = 2 THEN
+		SelectStation := 3;
+	ELSIF nLastDest = 3 THEN
+		SelectStation := 2;
+	ELSE
+		// pierwszy raz - tabela jak w demo
+		CASE nMoverIndex OF
+			1: SelectStation := 3;
+			2: SelectStation := 2;
+			3: SelectStation := 2;
+			4: SelectStation := 3;
+		ELSE
+			SelectStation := 2;
+		END_CASE
+	END_IF
+	// zabezpieczenie jak w demo: stacja 2 zajeta, a 3 wolna -> stacja 3
+	IF SelectStation = 2 AND nAssigned[2] > 0 AND nAssigned[3] = 0 THEN
+		SelectStation := 3;
+	END_IF
+
+E_RoutingMode.ByMover:
+	// parzyste movery -> stacja 2, nieparzyste -> stacja 3
+	IF (nMoverIndex MOD 2) = 0 THEN
+		SelectStation := 2;
+	ELSE
+		SelectStation := 3;
+	END_IF
+
+E_RoutingMode.FreeStation:
+	// pierwsza wolna stacja; gdy obie zajete - naprzemiennie
+	IF nAssigned[2] = 0 THEN
+		SelectStation := 2;
+	ELSIF nAssigned[3] = 0 THEN
+		SelectStation := 3;
+	ELSIF nLastDest = 2 THEN
+		SelectStation := 3;
+	ELSE
+		SelectStation := 2;
+	END_IF
+
+E_RoutingMode.ShortestQueue:
+	// stacja, do ktorej jedzie mniej moverow (remis -> stacja 2)
+	IF nAssigned[3] < nAssigned[2] THEN
+		SelectStation := 3;
+	ELSE
+		SelectStation := 2;
+	END_IF
+
+E_RoutingMode.Priority:
+	// mover z priorytetem preferuje stacje 2, pozostale stacje 3;
+	// gdy preferowana stacja ma kolejke (>= 2), a druga jest wolna - jedzie do drugiej
+	IF nMoverIndex >= 1 AND nMoverIndex <= 4 AND aPriority[nMoverIndex] > 0 THEN
+		nPreferred := 2;
+		nOther := 3;
+	ELSE
+		nPreferred := 3;
+		nOther := 2;
+	END_IF
+	SelectStation := nPreferred;
+	IF nAssigned[nPreferred] >= 2 AND nAssigned[nOther] = 0 THEN
+		SelectStation := nOther;
+	END_IF
+
+E_RoutingMode.Random:
+	// prosty generator liczb pseudolosowych
+	nRandom := nRandom * 1103515245 + 12345;
+	IF (SHR(nRandom, 16) AND 1) = 1 THEN
+		SelectStation := 3;
+	ELSE
+		SelectStation := 2;
+	END_IF
+
+ELSE
+	SelectStation := 2;
+END_CASE
+
+nAssigned[SelectStation] := nAssigned[SelectStation] + 1;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Release" Id="{ae08e959-8fb8-4e07-8908-3ed072a60c16}">
+      <Declaration><![CDATA[METHOD Release
+VAR_INPUT
+	nStation	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Mover opuscil stacje procesowa.
+IF nStation >= 2 AND nStation <= 3 THEN
+	IF nAssigned[nStation] > 0 THEN
+		nAssigned[nStation] := nAssigned[nStation] - 1;
+	END_IF
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="RequestMerge" Id="{326bdec6-b046-479d-9da3-47d3d3f4b8c0}">
+      <Declaration><![CDATA[METHOD RequestMerge : BOOL
+VAR_INPUT
+	nMover	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Stacja 5 (laczenie): w punkt laczenia wjezdza jeden mover naraz.
+IF nMergeHolder = 0 OR nMergeHolder = nMover THEN
+	nMergeHolder := nMover;
+	RequestMerge := TRUE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ReleaseMerge" Id="{5ffa7ca8-7ce7-4f69-ae02-0cc73c6a4357}">
+      <Declaration><![CDATA[METHOD ReleaseMerge
+VAR_INPUT
+	nMover	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF nMergeHolder = nMover THEN
+	nMergeHolder := 0;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reset" Id="{21512506-5965-4957-9f91-2a5c0e410579}">
+      <Declaration><![CDATA[METHOD Reset
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nAssigned[2] := 0;
+nAssigned[3] := 0;
+nMergeHolder := 0;]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
