@@ -25,6 +25,46 @@ FOR i := 1 TO moverCount DO
 END_FOR]]></ST>
       </Implementation>
     </Method>
+    <Method Name="Starting" Id="{04721e65-d0d5-4973-a78a-e55f3a27c0da}">
+      <Declaration><![CDATA[METHOD Starting : BOOL
+VAR_INPUT
+    bReset : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Brings the system to a ready state step by step. TRUE when done.
+IF bReset THEN
+    Starting := FALSE;
+    nStartingSequence := 0;
+END_IF
+CASE nStartingSequence OF
+    // start
+    0:  nStartingSequence := 10;
+	// reset movers (clears old errors)
+	10: IF fbXPlanarSystem.ResetMovers() THEN
+			nStartingSequence := 11;
+		END_IF
+	// wait for reset
+	11: IF fbXPlanarSystem.P_ResetMovers.Done THEN
+			nStartingSequence := 50;
+		ELSIF fbXPlanarSystem.P_ResetMovers.Error THEN
+			nStartingSequence := 90;
+		END_IF
+    // enable movers
+    50: IF fbXPlanarSystem.EnableMovers() THEN
+            nStartingSequence := 51;
+        END_IF
+    // wait for enable
+    51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
+            nStartingSequence := 80;
+        ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+            nStartingSequence := 90;   // enable failed
+        END_IF
+    // ready
+    80: Starting := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="Startup" Id="{ab1988d1-2b56-4e22-9706-835668cd8a23}">
       <Declaration><![CDATA[METHOD Startup : BOOL
 VAR
@@ -40,36 +80,6 @@ CASE nStartupSequence OF
         END_FOR
         nStartupSequence := 30;
     30: Startup := TRUE;
-END_CASE]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="Starting" Id="{04721e65-d0d5-4973-a78a-e55f3a27c0da}">
-      <Declaration><![CDATA[METHOD Starting : BOOL
-VAR_INPUT
-    bReset : BOOL;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[// Brings the system to a ready state step by step. TRUE when done.
-IF bReset THEN
-    Starting := FALSE;
-    nStartingSequence := 0;
-END_IF
-CASE nStartingSequence OF
-    // start
-    0:  nStartingSequence := 50;
-    // enable movers
-    50: IF fbXPlanarSystem.EnableMovers() THEN
-            nStartingSequence := 51;
-        END_IF
-    // wait for enable
-    51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
-            nStartingSequence := 80;
-        ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
-            nStartingSequence := 90;   // enable failed
-        END_IF
-    // ready
-    80: Starting := TRUE;
 END_CASE]]></ST>
       </Implementation>
     </Method>

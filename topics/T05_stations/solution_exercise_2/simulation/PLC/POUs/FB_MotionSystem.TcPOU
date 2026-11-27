@@ -311,61 +311,100 @@ END_VAR
 stRot.additionalTurns := 0;
 stRot.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionNonModulo;
 
-// station 6: 6 DoF motion (MoveOnTrack drives X, Y along the track; here Z, C, A, B)
 CASE nSub[nMover] OF
-	// lift Z to 4 mm
-	0:	fbXPlanarMover[nMover].MoveZ('S6: Z up', 4, 20, 100, 100, 1000);
-		nSub[nMover] := 1;
-	1:	IF fbXPlanarMover[nMover].P_MoveZ.Done THEN nSub[nMover] := 10;
-		ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveZ.ErrorID; nSub[nMover] := 900; END_IF
+    // lift Z to 4 mm
+    0:  fbXPlanarMover[nMover].MoveZ('S6: Z up', 4, 20, 100, 100, 1000);
+        nSub[nMover] := 1;
+    1:  IF fbXPlanarMover[nMover].P_MoveZ.Done THEN
+            nSub[nMover] := 10;
+        ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveZ.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-	// rotate C +90 deg
-	10:	fbXPlanarMover[nMover].MoveC('S6: C +90', 90, 720, 1800, 1800, 9000, stRot);
-		nSub[nMover] := 11;
-	11:	IF fbXPlanarMover[nMover].P_MoveC.Done THEN nSub[nMover] := 20;
-		ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveC.ErrorID; nSub[nMover] := 900; END_IF
+    // rotate C +90 deg
+    10: fbXPlanarMover[nMover].MoveC('S6: C +90', 90, 720, 1800, 1800, 9000, stRot);
+        nSub[nMover] := 11;
+    11: IF fbXPlanarMover[nMover].P_MoveC.Done THEN
+            nSub[nMover] := 30;
+        ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveC.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-	// lower Z
-	20:	fbXPlanarMover[nMover].MoveZ('S6: Z down', 0, 20, 100, 100, 1000);
-		nSub[nMover] := 21;
-	21:	IF fbXPlanarMover[nMover].P_MoveZ.Done THEN nSub[nMover] := 30;
-		ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveZ.ErrorID; nSub[nMover] := 900; END_IF
+    // lower Z
+    20: fbXPlanarMover[nMover].MoveZ('S6: Z down', 2, 20, 100, 100, 1000);
+        nSub[nMover] := 21;
+    21: IF fbXPlanarMover[nMover].P_MoveZ.Done THEN
+            nSub[nMover] := 100;
+        ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveZ.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-	// tilt A (while lifted)
-	30:	fbXPlanarMover[nMover].MoveA('S6: A tilt', 5, 20, 100, 100, 1000);
-		nSub[nMover] := 31;
-	31:	IF fbXPlanarMover[nMover].P_MoveA.Done THEN nSub[nMover] := 40;
-		ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveA.ErrorID; nSub[nMover] := 900; END_IF
+    // tilt A (while lifted)
+    30: fbXPlanarMover[nMover].MoveA('S6: A tilt', 2, 20, 100, 100, 1000);
+        nSub[nMover] := 31;
+    31: IF fbXPlanarMover[nMover].P_MoveA.Done THEN
+            nSub[nMover] := 40;
+        ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveA.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-	// tilt B
-	40:	fbXPlanarMover[nMover].MoveB('S6: B tilt', 5, 20, 100, 100, 1000);
-		nSub[nMover] := 41;
-	41:	IF fbXPlanarMover[nMover].P_MoveB.Done THEN nSub[nMover] := 50;
-		ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveB.ErrorID; nSub[nMover] := 900; END_IF
+    // tilt B
+    40: fbXPlanarMover[nMover].MoveB('S6: B tilt', 2, 20, 100, 100, 1000);
+        nSub[nMover] := 41;
+    41: IF fbXPlanarMover[nMover].P_MoveB.Done THEN
+            nSub[nMover] := 50;
+        ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveB.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-	// A back to 0
-	50:	fbXPlanarMover[nMover].MoveA('S6: A back', 0, 20, 100, 100, 1000);
-		nSub[nMover] := 51;
-	51:	IF fbXPlanarMover[nMover].P_MoveA.Done THEN nSub[nMover] := 60;
-		ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveA.ErrorID; nSub[nMover] := 900; END_IF
+    // A back to 0
+    50: fbXPlanarMover[nMover].MoveA('S6: A back', 0, 20, 100, 100, 1000);
+        nSub[nMover] := 51;
+    51: IF fbXPlanarMover[nMover].P_MoveA.Done THEN
+            nSub[nMover] := 60;
+        ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveA.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-	// B back to 0
-	60:	fbXPlanarMover[nMover].MoveB('S6: B back', 0, 20, 100, 100, 1000);
-		nSub[nMover] := 61;
-	61:	IF fbXPlanarMover[nMover].P_MoveB.Done THEN nSub[nMover] := 70;
-		ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveB.ErrorID; nSub[nMover] := 900; END_IF
+    // B back to 0
+    60: fbXPlanarMover[nMover].MoveB('S6: B back', 0, 20, 100, 100, 1000);
+        nSub[nMover] := 61;
+    61: IF fbXPlanarMover[nMover].P_MoveB.Done THEN
+            nSub[nMover] := 70;
+        ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveB.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-	// C back to 0
-	70:	fbXPlanarMover[nMover].MoveC('S6: C back', 0, 720, 1800, 1800, 9000, stRot);
-		nSub[nMover] := 71;
-	71:	IF fbXPlanarMover[nMover].P_MoveC.Done THEN nSub[nMover] := 100;
-		ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveC.ErrorID; nSub[nMover] := 900; END_IF
+    // C back to 0
+    70: fbXPlanarMover[nMover].MoveC('S6: C back', 0, 720, 1800, 1800, 9000, stRot);
+        nSub[nMover] := 71;
+    71: IF fbXPlanarMover[nMover].P_MoveC.Done THEN
+            nSub[nMover] := 20;
+        ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveC.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-	// finished
-	100: Process6DoF := TRUE;
-		nSub[nMover] := 0;
+    // finished
+    100: Process6DoF := TRUE;
+        nSub[nMover] := 0;
 
-	900: ;	// 6 DoF motion error: see nErrorID
+    900: ;  // error: see nErrorStep, nErrorID
 END_CASE]]></ST>
       </Implementation>
     </Method>
