@@ -18,7 +18,8 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[fbXPlanarSystem.Cycle();
+        <ST><![CDATA[// Call every PLC cycle: updates the XPlanar system and the movers.
+fbXPlanarSystem.Cycle();
 FOR i := 1 TO moverCount DO
     fbXPlanarMover[i].Cycle();
 END_FOR]]></ST>
@@ -31,28 +32,35 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF bReset THEN
+        <ST><![CDATA[// Brings the system to a ready state step by step. TRUE when done.
+IF bReset THEN
     Starting := FALSE;
     nStartingSequence := 0;
 END_IF
 CASE nStartingSequence OF
+    // start
     0:  nStartingSequence := 10;
+	// reset movers (clears old errors)
 	10: IF fbXPlanarSystem.ResetMovers() THEN
 			nStartingSequence := 11;
 		END_IF
+	// wait for reset
 	11: IF fbXPlanarSystem.P_ResetMovers.Done THEN
 			nStartingSequence := 50;
 		ELSIF fbXPlanarSystem.P_ResetMovers.Error THEN
 			nStartingSequence := 90;
 		END_IF
+    // enable movers
     50: IF fbXPlanarSystem.EnableMovers() THEN
             nStartingSequence := 51;
         END_IF
+    // wait for enable
     51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
             nStartingSequence := 80;
         ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
-            nStartingSequence := 90;   // blad enable
+            nStartingSequence := 90;   // enable failed
         END_IF
+    // ready
     80: Starting := TRUE;
 END_CASE]]></ST>
       </Implementation>
@@ -64,7 +72,8 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[CASE nStartupSequence OF
+        <ST><![CDATA[// One-time setup: register movers (and tracks) in the system. TRUE when done.
+CASE nStartupSequence OF
     0:  nStartupSequence := 1;
     1:  FOR i := 1 TO moverCount DO
             fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);

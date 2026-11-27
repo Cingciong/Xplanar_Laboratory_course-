@@ -798,7 +798,7 @@ Za co odpowiadają poszczególne elementy:
   \item \texttt{FB\_MotionSystem} --- blok funkcyjny; przechowuje system XPlanar i obiekty czterech moverów,
   \item \texttt{Cycle} --- odświeża stan systemu i moverów oraz przekazuje do nich polecenia; musi być wywoływana w każdym cyklu PLC,
   \item \texttt{Startup} --- przekazuje obiekty moverów systemowi (\texttt{SetMoverStandard}); zwraca \texttt{TRUE}, gdy skończy,
-  \item \texttt{Starting} --- włącza (\textit{enable}) movery: wysyła \texttt{EnableMovers()} i czeka na wynik (\texttt{Done} lub \texttt{Error}); zwraca \texttt{TRUE}, gdy movery są włączone,
+  \item \texttt{Starting} --- resetuje movery (kasuje stare błędy), a potem je włącza (\textit{enable}): wysyła \texttt{ResetMovers()} i \texttt{EnableMovers()} i czeka na wynik (\texttt{Done} lub \texttt{Error}); zwraca \texttt{TRUE}, gdy movery są włączone,
   \item \texttt{MAIN} --- program główny; wywołuje po kolei \texttt{Startup} i \texttt{Starting}, a w każdym cyklu \texttt{Cycle}.
 \end{itemize}
 Każda metoda ma w deklaracji lokalną zmienną \texttt{i : UDINT} (licznik pętli), \texttt{Starting} dodatkowo wejście \texttt{bReset}.
@@ -823,7 +823,7 @@ CASE nStartupSequence OF
     30: Startup := TRUE;
 END_CASE
 \end{verbatim}}
-\textbf{\texttt{Starting : BOOL}}, z wejściem \texttt{bReset : BOOL} w \texttt{VAR\_INPUT}. Włącza (\textit{enable}) wszystkie movery. Polecenie wysyłamy metodą \texttt{EnableMovers()}, a jego wynik sprawdzamy we właściwości \texttt{P\_EnableMovers} (\texttt{Done} lub \texttt{Error}):
+\textbf{\texttt{Starting : BOOL}}, z wejściem \texttt{bReset : BOOL} w \texttt{VAR\_INPUT}. Najpierw resetuje movery (\texttt{ResetMovers()}), a potem włącza (\textit{enable}) wszystkie. Polecenie włączenia wysyłamy metodą \texttt{EnableMovers()}, a jego wynik sprawdzamy we właściwości \texttt{P\_EnableMovers} (\texttt{Done} lub \texttt{Error}):
 {\footnotesize
 \begin{verbatim}
 IF bReset THEN
@@ -831,7 +831,15 @@ IF bReset THEN
     nStartingSequence := 0;
 END_IF
 CASE nStartingSequence OF
-    0:  nStartingSequence := 50;
+    0:  nStartingSequence := 10;
+    10: IF fbXPlanarSystem.ResetMovers() THEN
+            nStartingSequence := 11;
+        END_IF
+    11: IF fbXPlanarSystem.P_ResetMovers.Done THEN
+            nStartingSequence := 50;
+        ELSIF fbXPlanarSystem.P_ResetMovers.Error THEN
+            nStartingSequence := 90;   // blad resetu
+        END_IF
     50: IF fbXPlanarSystem.EnableMovers() THEN
             nStartingSequence := 51;
         END_IF
@@ -965,7 +973,15 @@ IF bReset THEN
     nStartingSequence := 0;
 END_IF
 CASE nStartingSequence OF
-    0:  nStartingSequence := 50;
+    0:  nStartingSequence := 10;
+    10: IF fbXPlanarSystem.ResetMovers() THEN
+            nStartingSequence := 11;
+        END_IF
+    11: IF fbXPlanarSystem.P_ResetMovers.Done THEN
+            nStartingSequence := 50;
+        ELSIF fbXPlanarSystem.P_ResetMovers.Error THEN
+            nStartingSequence := 90;   // blad resetu
+        END_IF
     50: IF fbXPlanarSystem.EnableMovers() THEN
             nStartingSequence := 51;
         END_IF
@@ -1016,7 +1032,7 @@ Po zalogowaniu do PLC na pasku narzędzi dostępne są przyciski sterujące prog
 \section{Ruch w sześciu stopniach swobody}
 \subsection*{Start}
 \begin{itemize}
-  \item Z GitHuba, z brancha 3, pobrać działający projekt albo kontynuować kolejny.
+  \item Kontynuujemy własny projekt z włączaniem moverów albo otwieramy gotowy: \texttt{topics/T03\_motion/solution\_exercise\_1}.
 \end{itemize}
 \subsection*{Cel dydaktyczny}
 \begin{itemize}
@@ -1047,11 +1063,12 @@ Do bloku \texttt{FB\_MotionSystem} dodajemy metodę \texttt{Execute6DoF}, któr�
   \item dojazd do środka stołu (X = 480~mm, Y = 360~mm) komendą \texttt{MoveToPosition},
   \item podniesienie w osi Z na 4~mm (\texttt{MoveZ}),
   \item obrót w osi C o $+90^\circ$ (\texttt{MoveC}); środek stołu leży na siatce punktów obrotu (co 120~mm), więc obrót jest tam możliwy,
-  \item opuszczenie w osi Z na normalną wysokość,
-  \item przechył w osi A, a potem w osi B (\texttt{MoveA}, \texttt{MoveB}; zakres $\pm6^\circ$, używamy $5^\circ$),
+  \item przechył w osi A, a potem w osi B, gdy mover jest nadal uniesiony (\texttt{MoveA}, \texttt{MoveB}; zakres $\pm6^\circ$, używamy $2^\circ$),
   \item powrót A, B i C do zera,
+  \item opuszczenie w osi Z na normalną wysokość (u nas 2~mm),
   \item powrót do zapisanej wcześniej pozycji startowej (\texttt{MoveToPosition}).
 \end{enumerate}
+\uwaga{Przechylamy tylko uniesionego movera (Z = 4~mm). Przy niskim Z krawędź movera nie ma miejsca i pojawia się błąd NC 17744 (\textit{following error}), mimo że kąt mieści się w zakresie $\pm6^\circ$.}
 Komenda \texttt{MoveC} używa typu \texttt{ST\_MoveCOptions} z biblioteki \texttt{Tc3\_Mc3PlanarMotion}. Dodajemy ją do \textit{References} tak samo jak pozostałe biblioteki (\textit{Add Library}, wyszukiwanie: \texttt{Mc3Planar}). Pozycję startową movera można wybrać dowolnie, ale mover musi być włączony (\texttt{Starting}).
 \uwaga{Komenda \texttt{MoveToPosition} jest przestarzała (\textit{obsolete}). Jej następcą jest \texttt{MoveToPositionExt}.}
 
@@ -1093,17 +1110,6 @@ END_CASE
 fbMotionSystem.Cycle();
 \end{verbatim}}
 Gotowy projekt z tym kodem jest w repozytorium w folderze \texttt{topics/T03\_motion/solution\_exercise\_2/simulation}.
-
-\subsection*{Pozostałe punkty}
-\begin{itemize}
-  \item \textbf{Lewitacja:} funkcje do kontroli w osi Z (\texttt{MoveZ}, zakres w konfiguracji osi: od -1 do 10 mm) \textit{(przeniesione z zagadnienia 3)}.
-  \item Metoda do usuwania i dodawania moverów + wytłumaczenie, po co jest potrzebna \textit{(przeniesione z zagadnienia 3)}.
-  \item Pokazanie, jak to działa dla \textbf{2 wariantów bibliotek}:
-  \begin{itemize}
-    \item \texttt{Tc3\_XPlanarUtility} --- ogólnie dostępna,
-    \item \texttt{Tc3\_XPlanarStandard} --- poza repozytorium Beckhoffa, udostępniana na prośbę.
-  \end{itemize}
-\end{itemize}
 
 \subsection*{Dokumentacja Beckhoff (Infosys)}
 \podpodrozdzial{Ruch moverów}
@@ -1641,7 +1647,7 @@ Odstęp między moverami na tracku (\texttt{Gap}, \textit{Gap Mode}) opisano w c
   \item Gdy w jednym punkcie łączą się więcej niż dwa tracki, powstaje zwrotnica (\textit{switch}).
   \item Skrzyżowanie tracków bez zwrotnicy oraz tracki biegnące zbyt blisko siebie nie są chronione przez unikanie kolizji.
   \item Track nie może zaczynać się i kończyć w tym samym punkcie; do zamknięcia tracka w pętlę służy osobna opcja (\textit{close the loop}).
-  \item Kolejny odcinek nie może zaczynać się w tym samym punkcie, w którym kończy się poprzedni. \textit{(do sprawdzenia: nazwa opcji, którą można wyłączyć to ograniczenie)}
+  \item Kolejny odcinek nie może zaczynać się w tym samym punkcie, w którym kończy się poprzedni.
 \end{itemize}
 
 \subsection*{Dokumentacja Beckhoff (Infosys)}
@@ -2300,7 +2306,7 @@ END_CASE
 \end{verbatim}}
 
 \podpodrozdzial{Metoda Process6DoF}
-Wykonuje zadany ruch w sześciu stopniach swobody na stacji 6: Z w górę, obrót C o +90$^\circ$, Z w dół, przechył A i B i powrót do zera. X i Y wzdłuż tracka robi \texttt{MoveOnTrack} z \texttt{Execute}, a ta metoda (wywoływana z kroku 70) robi pozostałe osie komendami \texttt{MoveZ}, \texttt{MoveC}, \texttt{MoveA} i \texttt{MoveB}. Zwraca TRUE do \texttt{Execute}, gdy sekwencja się skończy.
+Wykonuje zadany ruch w sześciu stopniach swobody na stacji 6: Z w górę, obrót C o +90$^\circ$, przechył A i B o 2$^\circ$ (mover nadal uniesiony), powrót A, B i C do zera i Z w dół. X i Y wzdłuż tracka robi \texttt{MoveOnTrack} z \texttt{Execute}, a ta metoda (wywoływana z kroku 70) robi pozostałe osie komendami \texttt{MoveZ}, \texttt{MoveC}, \texttt{MoveA} i \texttt{MoveB}. Zwraca TRUE do \texttt{Execute}, gdy sekwencja się skończy.
 
 \textbf{Zmienne:}
 {\scriptsize
@@ -2319,61 +2325,93 @@ END_VAR
 stRot.additionalTurns := 0;
 stRot.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionNonModulo;
 
-// Stacja 6: zadany ruch w szesciu stopniach swobody (X, Y wzdluz tracka robi MoveOnTrack, tu: Z,
-        C, A, B)
+// Stacja 6: ruch w 6 DoF (X, Y wzdluz tracka robi MoveOnTrack, tu: Z, C, A, B)
+// Kolejnosc krokow: 0 -> 10 -> 30 -> 40 -> 50 -> 60 -> 70 -> 20 -> 100
 CASE nSub[nMover] OF
     0:  fbXPlanarMover[nMover].MoveZ('S6: Z gora', 4, 20, 100, 100, 1000);
         nSub[nMover] := 1;
-    1:  IF fbXPlanarMover[nMover].P_MoveZ.Done THEN nSub[nMover] := 10;
-        ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN nErrorID :=
-                fbXPlanarMover[nMover].P_MoveZ.ErrorID; nSub[nMover] := 900; END_IF
+    1:  IF fbXPlanarMover[nMover].P_MoveZ.Done THEN
+            nSub[nMover] := 10;
+        ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveZ.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
     10: fbXPlanarMover[nMover].MoveC('S6: C +90', 90, 720, 1800, 1800, 9000, stRot);
         nSub[nMover] := 11;
-    11: IF fbXPlanarMover[nMover].P_MoveC.Done THEN nSub[nMover] := 20;
-        ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN nErrorID :=
-                fbXPlanarMover[nMover].P_MoveC.ErrorID; nSub[nMover] := 900; END_IF
+    11: IF fbXPlanarMover[nMover].P_MoveC.Done THEN
+            nSub[nMover] := 30;
+        ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveC.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-    20: fbXPlanarMover[nMover].MoveZ('S6: Z dol', 0, 20, 100, 100, 1000);
+    20: fbXPlanarMover[nMover].MoveZ('S6: Z dol', 2, 20, 100, 100, 1000);
         nSub[nMover] := 21;
-    21: IF fbXPlanarMover[nMover].P_MoveZ.Done THEN nSub[nMover] := 30;
-        ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN nErrorID :=
-                fbXPlanarMover[nMover].P_MoveZ.ErrorID; nSub[nMover] := 900; END_IF
+    21: IF fbXPlanarMover[nMover].P_MoveZ.Done THEN
+            nSub[nMover] := 100;
+        ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveZ.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-    30: fbXPlanarMover[nMover].MoveA('S6: A przechyl', 5, 20, 100, 100, 1000);
+    30: fbXPlanarMover[nMover].MoveA('S6: A przechyl', 2, 20, 100, 100, 1000);
         nSub[nMover] := 31;
-    31: IF fbXPlanarMover[nMover].P_MoveA.Done THEN nSub[nMover] := 40;
-        ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN nErrorID :=
-                fbXPlanarMover[nMover].P_MoveA.ErrorID; nSub[nMover] := 900; END_IF
+    31: IF fbXPlanarMover[nMover].P_MoveA.Done THEN
+            nSub[nMover] := 40;
+        ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveA.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
-    40: fbXPlanarMover[nMover].MoveB('S6: B przechyl', 5, 20, 100, 100, 1000);
+    40: fbXPlanarMover[nMover].MoveB('S6: B przechyl', 2, 20, 100, 100, 1000);
         nSub[nMover] := 41;
-    41: IF fbXPlanarMover[nMover].P_MoveB.Done THEN nSub[nMover] := 50;
-        ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN nErrorID :=
-                fbXPlanarMover[nMover].P_MoveB.ErrorID; nSub[nMover] := 900; END_IF
+    41: IF fbXPlanarMover[nMover].P_MoveB.Done THEN
+            nSub[nMover] := 50;
+        ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveB.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
     50: fbXPlanarMover[nMover].MoveA('S6: A powrot', 0, 20, 100, 100, 1000);
         nSub[nMover] := 51;
-    51: IF fbXPlanarMover[nMover].P_MoveA.Done THEN nSub[nMover] := 60;
-        ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN nErrorID :=
-                fbXPlanarMover[nMover].P_MoveA.ErrorID; nSub[nMover] := 900; END_IF
+    51: IF fbXPlanarMover[nMover].P_MoveA.Done THEN
+            nSub[nMover] := 60;
+        ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveA.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
     60: fbXPlanarMover[nMover].MoveB('S6: B powrot', 0, 20, 100, 100, 1000);
         nSub[nMover] := 61;
-    61: IF fbXPlanarMover[nMover].P_MoveB.Done THEN nSub[nMover] := 70;
-        ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN nErrorID :=
-                fbXPlanarMover[nMover].P_MoveB.ErrorID; nSub[nMover] := 900; END_IF
+    61: IF fbXPlanarMover[nMover].P_MoveB.Done THEN
+            nSub[nMover] := 70;
+        ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveB.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
     70: fbXPlanarMover[nMover].MoveC('S6: C powrot', 0, 720, 1800, 1800, 9000, stRot);
         nSub[nMover] := 71;
-    71: IF fbXPlanarMover[nMover].P_MoveC.Done THEN nSub[nMover] := 100;
-        ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN nErrorID :=
-                fbXPlanarMover[nMover].P_MoveC.ErrorID; nSub[nMover] := 900; END_IF
+    71: IF fbXPlanarMover[nMover].P_MoveC.Done THEN
+            nSub[nMover] := 20;
+        ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN
+            nErrorStep := nSub[nMover];
+            nErrorID := fbXPlanarMover[nMover].P_MoveC.ErrorID;
+            nSub[nMover] := 900;
+        END_IF
 
     100: Process6DoF := TRUE;
         nSub[nMover] := 0;
 
-    900: ;  // blad ruchu w 6 DoF: nErrorID
+    900: ;  // blad ruchu: nErrorStep, nErrorID
 END_CASE
 \end{verbatim}}
 
@@ -2900,7 +2938,7 @@ Ta część jest przeznaczona dla prowadzącego i osoby sprawdzającej, a nie dl
   \item Z doświadczenia: po zajęciach z PLC lub jakichkolwiek zajęciach z automatyki przemysłowej studenci nie dochodzą do wyjaśnienia zasady działania ani postępowania z maszyną. Typowy student nawet nie ma pojęcia, czym \textit{dokładnie} jest PLC.
   \item Wizualne przekazanie wiedzy, co można zrobić z danym sprzętem --- choćby na podstawie PLC nie od Beckhoffa, a np. Delty/Siemensa, na realnych przykładach.
   \item To kluczowe do efektywnego przeprowadzenia laboratoriów, ponieważ systemy Beckhoffa cechują się wysokim poziomem wejścia relatywnie do innych środowisk, jak TIA Portal czy ISPSoft.
-  \item Podkreślić, że na rok 2026 platforma XPlanar Beckhoff jest technologią jeszcze nie w 100\% dopracowaną: na razie jest rozwijana i mało jest systemów zaimplementowanych, jednakże jest to rozwiązanie bardzo rzeczowe / obiecujące \textit{(do doprecyzowania sformułowanie)}.
+  \item Podkreślić, że na rok 2026 platforma XPlanar Beckhoff jest technologią jeszcze nie w 100\% dopracowaną: na razie jest rozwijana i mało jest systemów zaimplementowanych, jednakże jest to rozwiązanie bardzo rzeczowe / obiecujące.
 \end{itemize}
 
 \end{document}

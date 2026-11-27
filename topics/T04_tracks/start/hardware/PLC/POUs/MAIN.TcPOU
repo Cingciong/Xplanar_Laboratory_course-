@@ -8,7 +8,8 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[CASE nState OF
+      <ST><![CDATA[// Main program: start up the system, enable it, then run the exercise.
+CASE nState OF
     0:  nState := 1;
     1:  IF fbMotionSystem.Startup() THEN
             nState := 30;
@@ -16,7 +17,7 @@ END_VAR
     30: IF fbMotionSystem.Starting(bReset := FALSE) THEN
             nState := 40;
         END_IF
-    40: ;   // movery wlaczone
+    40: ;   // movers enabled
 END_CASE
 
 fbMotionSystem.Cycle();]]></ST>

@@ -5,12 +5,12 @@
 {attribute 'strict'}
 TYPE E_RoutingMode :
 (
-	Alternate     := 0,	// naprzemiennie stacja 2, 3, 2, 3 (zachowanie demo)
-	ByMover       := 1,	// kazdy mover ma swoja stala stacje
-	FreeStation   := 2,	// wolna stacja, a gdy obie zajete - naprzemiennie
-	ShortestQueue := 3,	// stacja, do ktorej jedzie mniej moverow
-	Priority      := 4,	// movery z priorytetem jada do stacji 2, reszta do 3
-	Random        := 5	// losowo
+	Alternate     := 0,	// stations 2, 3, 2, 3, ... (like the demo)
+	ByMover       := 1,	// every mover has a fixed station
+	FreeStation   := 2,	// the free station; alternate if both are busy
+	ShortestQueue := 3,	// the station with fewer assigned movers
+	Priority      := 4,	// priority movers go to station 2, others to 3
+	Random        := 5	// random
 );
 END_TYPE
 ]]></Declaration>

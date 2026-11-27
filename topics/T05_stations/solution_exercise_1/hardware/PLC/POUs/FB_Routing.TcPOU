@@ -3,13 +3,13 @@
   <POU Name="FB_Routing" Id="{e26d5852-4b45-4f51-a644-d7c673f41bdd}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Routing
 VAR
-	eMode			: E_RoutingMode := E_RoutingMode.Alternate;	// zachowanie routingu - zmiana online
-	// Ile moverow jest przypisanych do stacji procesowej 2 i 3
-	// (jada do niej, czekaja w kolejce albo sa w niej obslugiwane)
+	eMode			: E_RoutingMode := E_RoutingMode.Alternate;	// routing mode, can be changed online
+	// movers assigned to process stations 2 and 3
+	// (driving there, queuing or being processed)
 	nAssigned		: ARRAY[2..3] OF DINT;
-	nMergeHolder	: UDINT;	// mover, ktory ma teraz zgode na wjazd w punkt laczenia (stacja 5)
+	nMergeHolder	: UDINT;	// mover that may enter the merge point (station 5) now
 	nRandom			: UDINT := 12345;
-	// Priorytet movera (indeks = numer movera). > 0 = mover preferuje stacje 2
+	// priority per mover; > 0 means it prefers station 2
 	aPriority		: ARRAY[1..4] OF UINT := [1, 0, 1, 0];
 END_VAR]]></Declaration>
     <Implementation>
@@ -18,8 +18,8 @@ END_VAR]]></Declaration>
     <Method Name="SelectStation" Id="{a8d470e3-2df2-4cf4-9cc9-c8bc798385db}">
       <Declaration><![CDATA[METHOD SelectStation : UDINT
 VAR_INPUT
-	nMoverIndex	: UDINT;	// mover, ktory wyszedl ze stacji 1
-	nLastDest	: UDINT;	// stacja, do ktorej jechal poprzednio (0 = pierwszy raz)
+	nMoverIndex	: UDINT;	// mover that is leaving station 1
+	nLastDest	: UDINT;	// station it went to last time (0 = first time)
 END_VAR
 VAR
 	nPreferred	: UDINT;
@@ -27,16 +27,17 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[CASE eMode OF
+        <ST><![CDATA[// Returns process station 2 or 3 for a mover, depending on eMode.
+CASE eMode OF
 
 E_RoutingMode.Alternate:
-	// naprzemiennie: 2 -> 3 -> 2 ...
+	// alternate: 2 -> 3 -> 2 ...
 	IF nLastDest = 2 THEN
 		SelectStation := 3;
 	ELSIF nLastDest = 3 THEN
 		SelectStation := 2;
 	ELSE
-		// pierwszy raz - tabela jak w demo
+		// first time: same table as the demo
 		CASE nMoverIndex OF
 			1: SelectStation := 3;
 			2: SelectStation := 2;
@@ -46,13 +47,13 @@ E_RoutingMode.Alternate:
 			SelectStation := 2;
 		END_CASE
 	END_IF
-	// zabezpieczenie jak w demo: stacja 2 zajeta, a 3 wolna -> stacja 3
+	// if station 2 is busy and 3 is free, use 3
 	IF SelectStation = 2 AND nAssigned[2] > 0 AND nAssigned[3] = 0 THEN
 		SelectStation := 3;
 	END_IF
 
 E_RoutingMode.ByMover:
-	// parzyste movery -> stacja 2, nieparzyste -> stacja 3
+	// even movers -> station 2, odd -> station 3
 	IF (nMoverIndex MOD 2) = 0 THEN
 		SelectStation := 2;
 	ELSE
@@ -60,7 +61,7 @@ E_RoutingMode.ByMover:
 	END_IF
 
 E_RoutingMode.FreeStation:
-	// pierwsza wolna stacja; gdy obie zajete - naprzemiennie
+	// first free station; alternate if both are busy
 	IF nAssigned[2] = 0 THEN
 		SelectStation := 2;
 	ELSIF nAssigned[3] = 0 THEN
@@ -72,7 +73,7 @@ E_RoutingMode.FreeStation:
 	END_IF
 
 E_RoutingMode.ShortestQueue:
-	// stacja, do ktorej jedzie mniej moverow (remis -> stacja 2)
+	// station with fewer movers (tie -> station 2)
 	IF nAssigned[3] < nAssigned[2] THEN
 		SelectStation := 3;
 	ELSE
@@ -80,8 +81,8 @@ E_RoutingMode.ShortestQueue:
 	END_IF
 
 E_RoutingMode.Priority:
-	// mover z priorytetem preferuje stacje 2, pozostale stacje 3;
-	// gdy preferowana stacja ma kolejke (>= 2), a druga jest wolna - jedzie do drugiej
+	// priority movers prefer station 2, others station 3;
+	// if the preferred one has a queue (>= 2) and the other is free, use the other
 	IF nMoverIndex >= 1 AND nMoverIndex <= 4 AND aPriority[nMoverIndex] > 0 THEN
 		nPreferred := 2;
 		nOther := 3;
@@ -95,7 +96,7 @@ E_RoutingMode.Priority:
 	END_IF
 
 E_RoutingMode.Random:
-	// prosty generator liczb pseudolosowych
+	// simple pseudo-random generator
 	nRandom := nRandom * 1103515245 + 12345;
 	IF (SHR(nRandom, 16) AND 1) = 1 THEN
 		SelectStation := 3;
@@ -117,7 +118,8 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[// Mover opuscil stacje procesowa.
+        <ST><![CDATA[// Frees the process station after a mover has left it.
+// the mover has left the process station
 IF nStation >= 2 AND nStation <= 3 THEN
 	IF nAssigned[nStation] > 0 THEN
 		nAssigned[nStation] := nAssigned[nStation] - 1;
@@ -132,7 +134,8 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[// Stacja 5 (laczenie): w punkt laczenia wjezdza jeden mover naraz.
+        <ST><![CDATA[// TRUE if this mover may enter the merge point now.
+// station 5 (merge): only one mover at a time
 IF nMergeHolder = 0 OR nMergeHolder = nMover THEN
 	nMergeHolder := nMover;
 	RequestMerge := TRUE;
@@ -146,7 +149,8 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF nMergeHolder = nMover THEN
+        <ST><![CDATA[// Gives the merge point back.
+IF nMergeHolder = nMover THEN
 	nMergeHolder := 0;
 END_IF]]></ST>
       </Implementation>
@@ -155,7 +159,8 @@ END_IF]]></ST>
       <Declaration><![CDATA[METHOD Reset
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[nAssigned[2] := 0;
+        <ST><![CDATA[// Clears all routing counters.
+nAssigned[2] := 0;
 nAssigned[3] := 0;
 nMergeHolder := 0;]]></ST>
       </Implementation>

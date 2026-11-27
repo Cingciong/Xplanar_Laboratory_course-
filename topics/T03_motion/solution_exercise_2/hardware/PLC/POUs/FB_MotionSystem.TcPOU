@@ -8,8 +8,8 @@ VAR
     nStartupSequence  : UDINT;
     nStartingSequence : UDINT;
     nExecutingSequence : UDINT;
-    nErrorStep         : UDINT;    // krok, w ktorym wystapil blad
-    nErrorID           : UDINT;    // kod bledu komendy ruchu
+    nErrorStep         : UDINT;    // step where the error happened
+    nErrorID           : UDINT;    // error code of the motion command
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[]]></ST>
@@ -21,7 +21,8 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[fbXPlanarSystem.Cycle();
+        <ST><![CDATA[// Call every PLC cycle: updates the XPlanar system and the movers.
+fbXPlanarSystem.Cycle();
 FOR i := 1 TO moverCount DO
     fbXPlanarMover[i].Cycle();
 END_FOR]]></ST>
@@ -41,7 +42,8 @@ VAR_INST
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF bReset THEN
+        <ST><![CDATA[// One 6 DoF sequence with mover 1. TRUE when finished. Stops in step 900 on error.
+IF bReset THEN
     Execute6DoF := FALSE;
     nExecutingSequence := 0;
     nErrorStep := 0;
@@ -49,6 +51,7 @@ END_VAR
 END_IF
 
 CASE nExecutingSequence OF
+    // store the start position
     0:  stStartPos.SetValuesXYC(fbXPlanarMover[1].P_ActPosition.x,
                                 fbXPlanarMover[1].P_ActPosition.y,
                                 fbXPlanarMover[1].P_ActPosition.c);
@@ -59,6 +62,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 10;
         END_IF
 
+    // drive to the table centre
     10: fbXPlanarMover[1].MoveToPosition('To center', stCenterPos, 500, 1250, 1250, 12500);
         nExecutingSequence := 11;
     11: IF fbXPlanarMover[1].P_MoveToPosition.Done THEN
@@ -69,6 +73,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+    // lift Z to 4 mm
     20: fbXPlanarMover[1].MoveZ('Z up', 4, 20, 100, 100, 1000);
         nExecutingSequence := 21;
     21: IF fbXPlanarMover[1].P_MoveZ.Done THEN
@@ -79,6 +84,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+    // rotate C +90 deg
     30: fbXPlanarMover[1].MoveC('C +90', 90, 720, 1800, 1800, 9000, stRotOptions);
         nExecutingSequence := 31;
     31: IF fbXPlanarMover[1].P_MoveC.Done THEN
@@ -89,6 +95,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+	// lower Z
 	40: fbXPlanarMover[1].MoveZ('Z down', 2, 20, 100, 100, 1000);
         nExecutingSequence := 41;
     41: IF fbXPlanarMover[1].P_MoveZ.Done THEN
@@ -99,6 +106,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+    // tilt A (while lifted)
     50: fbXPlanarMover[1].MoveA('A tilt', 2, 20, 100, 100, 1000);
         nExecutingSequence := 51;
     51: IF fbXPlanarMover[1].P_MoveA.Done THEN
@@ -109,6 +117,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+    // tilt B
     60: fbXPlanarMover[1].MoveB('B tilt', 2, 20, 100, 100, 1000);
         nExecutingSequence := 61;
     61: IF fbXPlanarMover[1].P_MoveB.Done THEN
@@ -119,6 +128,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+    // A back to 0
     70: fbXPlanarMover[1].MoveA('A back', 0, 20, 100, 100, 1000);
         nExecutingSequence := 71;
     71: IF fbXPlanarMover[1].P_MoveA.Done THEN
@@ -129,6 +139,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+    // B back to 0
     80: fbXPlanarMover[1].MoveB('B back', 0, 20, 100, 100, 1000);
         nExecutingSequence := 81;
     81: IF fbXPlanarMover[1].P_MoveB.Done THEN
@@ -139,6 +150,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+    // C back to 0
     90: fbXPlanarMover[1].MoveC('C back', 0, 720, 1800, 1800, 9000, stRotOptions);
         nExecutingSequence := 91;
     91: IF fbXPlanarMover[1].P_MoveC.Done THEN
@@ -149,6 +161,7 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+    // return to the start position
     100: fbXPlanarMover[1].MoveToPosition('Back to start', stStartPos, 500, 1250, 1250, 12500);
         nExecutingSequence := 101;
     101: IF fbXPlanarMover[1].P_MoveToPosition.Done THEN
@@ -159,8 +172,10 @@ CASE nExecutingSequence OF
             nExecutingSequence := 900;
         END_IF
 
+    // finished
     110: Execute6DoF := TRUE;
 
+    // motion error: see nErrorStep, nErrorID
     900: ;
 END_CASE]]></ST>
       </Implementation>
@@ -172,20 +187,25 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF bReset THEN
+        <ST><![CDATA[// Brings the system to a ready state step by step. TRUE when done.
+IF bReset THEN
     Starting := FALSE;
     nStartingSequence := 0;
 END_IF
 CASE nStartingSequence OF
+    // start
     0:  nStartingSequence := 50;
+    // enable movers
     50: IF fbXPlanarSystem.EnableMovers() THEN
             nStartingSequence := 51;
         END_IF
+    // wait for enable
     51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
             nStartingSequence := 80;
         ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
-            nStartingSequence := 90;   // blad enable
+            nStartingSequence := 90;   // enable failed
         END_IF
+    // ready
     80: Starting := TRUE;
 END_CASE]]></ST>
       </Implementation>
@@ -197,7 +217,8 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[CASE nStartupSequence OF
+        <ST><![CDATA[// One-time setup: register movers (and tracks) in the system. TRUE when done.
+CASE nStartupSequence OF
     0:  nStartupSequence := 1;
     1:  FOR i := 1 TO moverCount DO
             fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
