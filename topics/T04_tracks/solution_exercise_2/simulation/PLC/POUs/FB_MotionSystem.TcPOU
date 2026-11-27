@@ -5,13 +5,13 @@
 VAR
     fbXPlanarSystem   : FB_XPlanarSystem;
     fbXPlanarMover    : ARRAY[1..maxNumMover] OF FB_XPlanarMoverStandard;
-    fbTrackStandard   : ARRAY[1..maxTrackCount] OF FB_TrackStandard;  // 1 Main, 2 Top, 3 Bottom
-    nLoop             : ARRAY[1..maxNumMover] OF UDINT;  // tor movera: 2 = Top, 3 = Bottom
-    nStep             : ARRAY[1..maxNumMover] OF UDINT;  // krok ruchu kazdego movera
+    fbTrackStandard   : ARRAY[1..maxTrackCount] OF FB_TrackStandard;  // 1 = Main, 2 = Top, 3 = Bottom
+    nLoop             : ARRAY[1..maxNumMover] OF UDINT;  // loop of each mover: 2 = Top, 3 = Bottom
+    nStep             : ARRAY[1..maxNumMover] OF UDINT;  // motion step of each mover
     nStartupSequence  : UDINT;
     nStartingSequence : UDINT;
     nErrorID          : UDINT;
-    nErrorStep        : UDINT;   // krok, w ktorym wystapil blad
+    nErrorStep        : UDINT;   // step where the error happened
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[]]></ST>
@@ -23,7 +23,8 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[fbXPlanarSystem.Cycle();
+        <ST><![CDATA[// Call every PLC cycle: updates the XPlanar system and the movers.
+fbXPlanarSystem.Cycle();
 FOR i := 1 TO moverCount DO
     fbXPlanarMover[i].Cycle();
 END_FOR
@@ -39,9 +40,10 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[CASE nStartupSequence OF
+        <ST><![CDATA[// One-time setup: register movers (and tracks) in the system. TRUE when done.
+CASE nStartupSequence OF
     0:  nStartupSequence := 1;
-    1:  // czekamy, az system XPlanar sie zainicjalizuje (jak w demo)
+    1:  // wait until the XPlanar system is initialized
         IF fbXPlanarSystem.P_SystemInitialized THEN
             nStartupSequence := 2;
         END_IF
@@ -71,16 +73,18 @@ VAR_INST
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF bReset THEN
+        <ST><![CDATA[// Brings the system to a ready state step by step. TRUE when done.
+IF bReset THEN
     Starting := FALSE;
     nStartingSequence := 0;
 END_IF
 CASE nStartingSequence OF
+    // start
     0:  IF NOT bReset THEN
             nStartingSequence := 102;
         END_IF
 
-    // --- Resetting (jak w demo): reset moverow i trackow ---
+    // --- reset movers and tracks ---
     102: IF fbXPlanarSystem.ResetMovers() THEN
             nStartingSequence := 103;
         END_IF
@@ -102,11 +106,12 @@ CASE nStartingSequence OF
             nStartingSequence := 900;
         END_IF
 
-    // --- Prepare (jak w demo) ---
-    10: // wlaczenie grupy (unikanie kolizji)
+    // --- prepare ---
+    10: // enable the group (collision avoidance)
         IF fbXPlanarSystem.EnableGroup() THEN
             nStartingSequence := 11;
         END_IF
+    // wait for reset
     11: IF fbXPlanarSystem.P_EnableGroup.Done THEN
             nStartingSequence := 20;
         ELSIF fbXPlanarSystem.P_EnableGroup.Error THEN
@@ -115,7 +120,7 @@ CASE nStartingSequence OF
             nStartingSequence := 900;
         END_IF
 
-    20: // granice stolu do grupy
+    20: // add the table borders to the group
         IF fbXPlanarSystem.AddEnvironmentToGroup() THEN
             nStartingSequence := 21;
         END_IF
@@ -127,7 +132,7 @@ CASE nStartingSequence OF
             nStartingSequence := 900;
         END_IF
 
-    30: // wlaczenie trackow
+    30: // enable the tracks
         IF fbXPlanarSystem.EnableTracks() THEN
             nStartingSequence := 31;
         END_IF
@@ -139,7 +144,7 @@ CASE nStartingSequence OF
             nStartingSequence := 900;
         END_IF
 
-    40: // tracki do grupy
+    40: // add the tracks to the group
         IF fbXPlanarSystem.AddTracksToGroup() THEN
             nStartingSequence := 41;
         END_IF
@@ -151,10 +156,11 @@ CASE nStartingSequence OF
             nStartingSequence := 900;
         END_IF
 
-    50: // wlaczenie moverow
+    50: // enable the movers
         IF fbXPlanarSystem.EnableMovers() THEN
             nStartingSequence := 51;
         END_IF
+    // wait for enable
     51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
             nStartingSequence := 60;
         ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
@@ -163,7 +169,7 @@ CASE nStartingSequence OF
             nStartingSequence := 900;
         END_IF
 
-    60: // movery do grupy
+    60: // add the movers to the group
         IF fbXPlanarSystem.AddMoversToGroup() THEN
             nStartingSequence := 61;
         END_IF
@@ -175,7 +181,7 @@ CASE nStartingSequence OF
             nStartingSequence := 900;
         END_IF
 
-    70: // podzial: movery w gornej polowie stolu -> Top, w dolnej -> Bottom
+    70: // upper half of the table -> Top loop, lower half -> Bottom loop
         FOR i := 1 TO moverCount DO
             IF fbXPlanarMover[i].P_ActPosition.y > 360 THEN
                 nLoop[i] := 2;
@@ -208,9 +214,10 @@ CASE nStartingSequence OF
             nStartingSequence := 900;
         END_IF
 
+    // ready
     80: Starting := TRUE;
 
-    900: ;   // blad: nErrorID
+    900: ;   // error: see nErrorID
 END_CASE]]></ST>
       </Implementation>
     </Method>
@@ -220,22 +227,23 @@ VAR
     i : UDINT;
 END_VAR
 VAR_INST
-    fVelo : LREAL := 500;    // predkosc [mm/s]
-    fAcc  : LREAL := 1250;   // przyspieszenie [mm/s2]
-    fJerk : LREAL := 12500;  // szarpniecie [mm/s3]
-    fGap  : LREAL := 200;    // odstep srodek-srodek [mm]
+    fVelo : LREAL := 500;    // velocity [mm/s]
+    fAcc  : LREAL := 1250;   // acceleration [mm/s2]
+    fJerk : LREAL := 12500;  // jerk [mm/s3]
+    fGap  : LREAL := 200;    // gap between movers, centre to centre [mm]
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[FOR i := 1 TO moverCount DO
+        <ST><![CDATA[// The exercise motion, called every cycle after start-up.
+FOR i := 1 TO moverCount DO
     CASE nStep[i] OF
-        0:  // cel: koniec toru movera (Top albo Bottom), przez rozgalezienie na koncu Main
+        0:  // target: end of own loop (Top or Bottom), via the switch at the end of Main
             fbXPlanarMover[i].MoveOnTrack('To loop', fbTrackStandard[nLoop[i]],
                 fbTrackStandard[nLoop[i]].GetLength(), fVelo, fAcc, fJerk, fGap,
                 MC_DIRECTION.mcDirectionPositive);
             nStep[i] := 1;
 
-        1:  // mover jest na swoim torze -> od razu nowy cel: koniec Main
+        1:  // mover reached its loop -> next target: end of Main
             IF fbXPlanarMover[i].P_LastKnownTrackOID = fbTrackStandard[nLoop[i]].P_OID THEN
                 fbXPlanarMover[i].MoveOnTrack('To main', fbTrackStandard[1],
                     fbTrackStandard[1].GetLength(), fVelo, fAcc, fJerk, fGap,
@@ -245,14 +253,14 @@ END_VAR
                 nStep[i] := 900;
             END_IF
 
-        2:  // mover wjechal na Main -> znowu cel na jego torze
+        2:  // mover is on Main again -> target its loop
             IF fbXPlanarMover[i].P_LastKnownTrackOID = fbTrackStandard[1].P_OID THEN
                 nStep[i] := 0;
             ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
                 nStep[i] := 900;
             END_IF
 
-        900: ;   // blad ruchu movera
+        900: ;   // mover motion error
     END_CASE
 END_FOR]]></ST>
       </Implementation>

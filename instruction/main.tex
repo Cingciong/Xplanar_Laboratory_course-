@@ -22,7 +22,7 @@
 \usepackage[most]{tcolorbox}
 \usepackage[colorlinks=true,linkcolor=bkorange,urlcolor=bkorange,citecolor=bkorange]{hyperref}
 
-\graphicspath{{zdjęcia/}}
+\graphicspath{{images/}}
 
 % --- Paleta (Beckhoff: pomarańcz + szarości) ---
 \definecolor{bkorange}{RGB}{232,90,10}
@@ -112,19 +112,19 @@
 \newcommand{\zrzutEkranu}[3][0.8\linewidth]{%
   \begin{figure}[H]
     \centering
-    \IfFileExists{zdjęcia/#2}{%
+    \IfFileExists{images/#2}{%
       \includegraphics[width=#1,height=0.42\textheight,keepaspectratio]{#2}%
     }{%
       \begin{tcolorbox}[enhanced,width=#1,height=5.5cm,colback=bkgray,colframe=bkdark!30,
         boxrule=0.6pt,sharp corners,halign=center,valign=center]
-        \itshape Miejsce na zrzut ekranu\\[0.4em]\normalfont\ttfamily\small zdjęcia/#2
+        \itshape Miejsce na zrzut ekranu\\[0.4em]\normalfont\ttfamily\small images/#2
       \end{tcolorbox}%
     }
     \caption{#3}
   \end{figure}}
 
 % --- Ikona z paska narzędzi w tekście ---
-\newcommand{\ikona}[1]{\IfFileExists{zdjęcia/#1}{\raisebox{-0.25em}{\includegraphics[height=1.2em]{#1}}}{}}
+\newcommand{\ikona}[1]{\IfFileExists{images/#1}{\raisebox{-0.25em}{\includegraphics[height=1.2em]{#1}}}{}}
 
 \title{\textbf{Instrukcja laboratoryjna}\\\vspace{0.4em}\large XPlanar --- TwinCAT 3 (IEC~61131-3)}
 \author{}
@@ -203,7 +203,7 @@ Nad moverem jest zawsze więcej aktywnych cewek, niż potrzeba, żeby wytworzyć
 
 
 \section{Szafa sterownicza}
-\zrzutEkranu[0.8\linewidth]{01-wstep/szafa-sterownicza/szafa-sterownicza-widok-ogolny.png}{Szafa sterownicza --- widok ogólny (zdjęcie do dodania)}
+\zrzutEkranu[0.8\linewidth]{01-introduction/control-cabinet/control-cabinet-overview.png}{Szafa sterownicza --- widok ogólny (zdjęcie do dodania)}
 \begin{itemize}
   \item co znajduje się w szafie,
   \item jak elementy szafy komunikują się ze sobą i z peryferiami --- EtherCAT.
@@ -218,25 +218,25 @@ Projekty TwinCAT 3 tworzymy w środowisku \textbf{TcXaeShell 64-bit} (wersja 7.2
 Kod jest dostępny na GitHubie: \href{https://github.com/uzytkownik/xplanar-laboratory-course}{github.com/uzytkownik/xplanar-laboratory-course}. Otwieramy podany folder (xyz).
 
 Projekt otwieramy jako plik \texttt{.sln} (\textit{solution}) w aplikacji \textbf{TwinCAT XAE Shell 64-bit}. 
-\zrzutEkranu[0.3\linewidth]{01-wstep/srodowisko-tcxaeshell/tcxaeshell-ikona-menu-start.png}{Ikona \textit{TwinCAT XAE Shell 64-bit} }
+\zrzutEkranu[0.3\linewidth]{01-introduction/tcxaeshell-environment/tcxaeshell-start-menu-icon.png}{Ikona \textit{TwinCAT XAE Shell 64-bit} }
 
 \podrozdzial{Okno główne}
 Okno główne składa się z paska menu i paska narzędzi, Solution Explorera z drzewem projektu, obszaru edytora, w którym otwieramy wybrane elementy projektu, oraz okien pomocniczych (m.in.\ Error List i Output). 
 \podrozdzial{Pasek menu i narzędzi}
-\zrzutEkranu[0.95\linewidth]{01-wstep/srodowisko-tcxaeshell/tcxaeshell-pasek-narzedzi.png}{Edytor TcXaeShell --- pasek menu i pasek narzędzi}
+\zrzutEkranu[0.95\linewidth]{01-introduction/tcxaeshell-environment/tcxaeshell-toolbar.png}{Edytor TcXaeShell --- pasek menu i pasek narzędzi}
 
 Elementy paska, z których będziemy korzystać (od lewej):
 \begin{enumerate}
   \item \textbf{wybór wersji TwinCAT}, przez którą się komunikujemy, a następnie wersja aktywna (\textit{Active version}),
-\zrzutEkranu[0.3\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-wersja-twincat.png}{Lista wersji TwinCAT}
-  \item \textbf{Activate Configuration} \ikona{01-wstep/srodowisko-tcxaeshell/ikona-activate-configuration.png} --- wgranie konfiguracji projektu na wybrany target,
-  \item \textbf{Run Mode} \ikona{01-wstep/srodowisko-tcxaeshell/ikona-run-mode.png} i \textbf{Config Mode} \ikona{01-wstep/srodowisko-tcxaeshell/ikona-config-mode.png} --- przełączanie trybu pracy runtime'u (zielona --- Run, niebieska --- Config),
+\zrzutEkranu[0.3\linewidth]{01-introduction/tcxaeshell-environment/list-twincat-version.png}{Lista wersji TwinCAT}
+  \item \textbf{Activate Configuration} \ikona{01-introduction/tcxaeshell-environment/icon-activate-configuration.png} --- wgranie konfiguracji projektu na wybrany target,
+  \item \textbf{Run Mode} \ikona{01-introduction/tcxaeshell-environment/icon-run-mode.png} i \textbf{Config Mode} \ikona{01-introduction/tcxaeshell-environment/icon-config-mode.png} --- przełączanie trybu pracy runtime'u (zielona --- Run, niebieska --- Config),
   \item \textbf{aktywny projekt} (np.\ \texttt{T01\_demo\_HW}) --- lista rozwijana projektów TwinCAT w rozwiązaniu,
-\zrzutEkranu[0.3\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-aktywny-projekt.png}{Lista aktywnego projektu TwinCAT}
+\zrzutEkranu[0.3\linewidth]{01-introduction/tcxaeshell-environment/list-active-project.png}{Lista aktywnego projektu TwinCAT}
   \item \textbf{target} (\texttt{<Local>}) --- system, na którym uruchamiamy projekt; \textit{Choose Target System} otwiera wybór sterownika,
-\zrzutEkranu[0.4\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-target.png}{Lista targetów}
+\zrzutEkranu[0.4\linewidth]{01-introduction/tcxaeshell-environment/list-target.png}{Lista targetów}
   \item \textbf{projekt PLC} (\texttt{SK12\_StarterkitApplicationPLC\_V3}) --- projekt PLC, którego dotyczą polecenia \textit{Login}, \textit{Start} i \textit{Stop}.
-\zrzutEkranu[0.35\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-projekt-plc.png}{Lista projektów PLC}
+\zrzutEkranu[0.35\linewidth]{01-introduction/tcxaeshell-environment/list-plc-project.png}{Lista projektów PLC}
 \end{enumerate}
 
 
@@ -247,13 +247,13 @@ Solution Explorer dzieli projekt na części: SYSTEM, MOTION, PLC, SAFETY, C++, 
 \podpodrozdzial{SYSTEM}
 SYSTEM to konfiguracja komputera sterującego, na którym uruchamiamy projekt.
 
-\zrzutEkranu[0.4\linewidth]{01-wstep/czesci-projektu/solution-explorer-system.png}{Solution Explorer --- SYSTEM}
+\zrzutEkranu[0.4\linewidth]{01-introduction/project-parts/solution-explorer-system.png}{Solution Explorer --- SYSTEM}
 
 \textbf{License} --- licencje TwinCAT.
 
 \textbf{Real-Time} --- w tej zakładce określamy, które rdzenie procesora są wykorzystywane.
 
-\zrzutEkranu[0.95\linewidth]{01-wstep/czesci-projektu/solution-explorer-system-realtime.png}{Solution Explorer --- SYSTEM, Real-Time (Settings)}
+\zrzutEkranu[0.95\linewidth]{01-introduction/project-parts/solution-explorer-system-realtime.png}{Solution Explorer --- SYSTEM, Real-Time (Settings)}
 
 Rdzenie \textit{shared} (współdzielone) TwinCAT dzieli z systemem Windows, a \textit{Core Limit} określa, jaką część czasu rdzenia może zająć TwinCAT. Rdzenie \textit{isolated} (izolowane) są przydzielone wyłącznie do TwinCAT, a Windows z nich nie korzysta. Po zmianie parametrów trzeba zapisać konfigurację (\textit{Set on Target}).
 
@@ -268,7 +268,7 @@ BTN (\textit{Beckhoff Traceability Number}) to numer fabryczny movera z jego nak
 \podpodrozdzial{MOTION}
 \texttt{XPlanar MC Project} zawiera obiekty ruchu, które są pośrednikiem między programem PLC a światem rzeczywistym.
 
-\zrzutEkranu[0.5\linewidth]{01-wstep/czesci-projektu/solution-explorer-motion.png}{Solution Explorer --- MOTION}
+\zrzutEkranu[0.5\linewidth]{01-introduction/project-parts/solution-explorer-motion.png}{Solution Explorer --- MOTION}
 
 W jego skład wchodzą:
 \begin{itemize}
@@ -280,8 +280,8 @@ Tylko osie moverów mają odpowiednik w sprzęcie. Grupa, Environment i tracki s
 \podpodrozdzial{I/O}
 I/O opisuje fizyczne urządzenia i powiązania między nimi a resztą projektu.
 
-\zrzutEkranu[0.4\linewidth]{01-wstep/czesci-projektu/solution-explorer-io.png}{Solution Explorer --- I/O}
-\zrzutEkranu[0.6\linewidth]{01-wstep/czesci-projektu/solution-explorer-io-mappings.png}{Solution Explorer --- I/O, Mappings}
+\zrzutEkranu[0.4\linewidth]{01-introduction/project-parts/solution-explorer-io.png}{Solution Explorer --- I/O}
+\zrzutEkranu[0.6\linewidth]{01-introduction/project-parts/solution-explorer-io-mappings.png}{Solution Explorer --- I/O, Mappings}
 
 W I/O znajdują się:
 \begin{itemize}
@@ -297,10 +297,10 @@ W I/O znajdują się:
 Menu ikony TwinCAT w zasobniku systemu pozwala m.in. uruchomić środowisko, uruchomić lub zrestartować runtime, przełączyć go w tryb Config oraz otworzyć ustawienia routera ADS. Stan runtime'u widać po kolorze ikony: niebieska --- Config, zielona --- Run. 
 
 
-\zrzutEkranu[0.4\linewidth]{01-wstep/srodowisko-tcxaeshell/tcxaeshell-zasobnik-systemu.png}{Menu ikony TwinCAT w zasobniku systemu}
+\zrzutEkranu[0.4\linewidth]{01-introduction/tcxaeshell-environment/tcxaeshell-system-tray.png}{Menu ikony TwinCAT w zasobniku systemu}
 
 \section{Kod demo}
-\zrzutEkranu[0.4\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc.png}{Solution Explorer --- PLC}
+\zrzutEkranu[0.4\linewidth]{01-introduction/demo-code-sk12/solution-explorer-plc.png}{Solution Explorer --- PLC}
 
 W tym projekcie skupiamy się tylko na folderze \texttt{2\_Application}.
 
@@ -329,7 +329,7 @@ Językiem programowania jest \textbf{ST} (\textit{Structured Text}).
 \textbf{Dobre praktyki nazewnictwa.} Nazwy zmiennych mają prefiks oznaczający typ: \texttt{b} --- \texttt{BOOL}, \texttt{n} --- liczba całkowita, \texttt{f} --- zmiennoprzecinkowa, \texttt{s} --- \texttt{STRING}, \texttt{fb} --- instancja bloku funkcyjnego, \texttt{ip} --- interfejs. Typy i listy mają prefiks rodzaju: \texttt{FB\_}, \texttt{ST\_} (struktura), \texttt{E\_} (wyliczenie), \texttt{I\_} (interfejs), \texttt{GVL\_}; stałe globalne zaczynamy od \texttt{gc\_}.
 
 \podrozdzial{Program}
-\zrzutEkranu[0.4\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc-kod.png}{Solution Explorer --- PLC, kod aplikacji}
+\zrzutEkranu[0.4\linewidth]{01-introduction/demo-code-sk12/solution-explorer-plc-code.png}{Solution Explorer --- PLC, kod aplikacji}
 
 \begin{itemize}
   \item \texttt{Machine} --- \texttt{FB\_MotionSystem} to główna maszyna stanów systemu: zatrzymanie, reset, przygotowanie i praca. W przygotowaniu sprawdza zasilanie kafelków, wykrywa i identyfikuje movery, określa ich orientację, włącza je i wprowadza na tory. \texttt{FB\_MoverTarget} wysyła movery do zadanych pozycji,
@@ -340,12 +340,12 @@ Językiem programowania jest \textbf{ST} (\textit{Structured Text}).
 \end{itemize}
 
 \podrozdzial{References}
-\zrzutEkranu[0.4\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc-references.png}{Solution Explorer --- PLC, References}
+\zrzutEkranu[0.4\linewidth]{01-introduction/demo-code-sk12/solution-explorer-plc-references.png}{Solution Explorer --- PLC, References}
 
 References to biblioteki dołączone do projektu: gotowe bloki i typy, z których korzysta program. Używamy między innymi \texttt{Tc3\_XPlanarStandard}, która nie jest ogólnie udostępniana przez Beckhoff. Dzięki niej program pisze się na wyższym poziomie abstrakcji: zamiast niskopoziomowych komend ruchu używamy gotowych obiektów systemu i movera, np.\ wywołania \texttt{std.cycle()}.
 
 \podrozdzial{Linki Inputs i Outputs}
-\zrzutEkranu[0.8\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc-instance-linki.png}{Solution Explorer --- instancja PLC (Inputs, Outputs)}
+\zrzutEkranu[0.8\linewidth]{01-introduction/demo-code-sk12/solution-explorer-plc-instance-linki.png}{Solution Explorer --- instancja PLC (Inputs, Outputs)}
 
 Instancja projektu PLC ma dwie listy zmiennych wymienianych z resztą systemu w każdym cyklu zadania. \textbf{PlcTask Inputs} to dane wchodzące do PLC, a także statusy z MOTION (\texttt{MCTOPLC}) dla Environment, grupy, czterech moverów i trzech torów. \textbf{PlcTask Outputs} to dane wychodzące z PLC: komendy dla czterech moverów (\texttt{PLCTOMC}). \textbf{Link} to połączenie zmiennej PLC ze zmienną drugiej strony, np.\ osi w MOTION. Dzięki niemu wartości są kopiowane automatycznie w każdym cyklu, a PLC może sterować moverami. Cewki (zmienne wejściowe) w programie są zadeklarowane jako wejścia (\texttt{AT \%I*}), czyli bez stałego adresu, który nadaje dopiero link.
 
@@ -354,7 +354,7 @@ Instancja projektu PLC ma dwie listy zmiennych wymienianych z resztą systemu w 
 \podrozdzial{Rodzaje pracy: Normal, BasicSimulation, AdvancedSimulation}
 Tryb ustawiamy w obiekcie XPlanar: \texttt{SYSTEM} $\rightarrow$ \texttt{TcCOM Objects} $\rightarrow$ \texttt{XPlanar} $\rightarrow$ \texttt{Parameter (Init)} $\rightarrow$ \texttt{OperationMode}.
 
-\zrzutEkranu[0.9\linewidth]{01-wstep/odpalenie-projektu/tccom-xplanar-parameter-init-operationmode.png}{Obiekt XPlanar --- Parameter (Init), wybór OperationMode}
+\zrzutEkranu[0.9\linewidth]{01-introduction/running-the-project/tccom-xplanar-parameter-init-operationmode.png}{Obiekt XPlanar --- Parameter (Init), wybór OperationMode}
 
 \begin{center}\small
 \begin{tabular}{@{}p{2.7cm}p{3.2cm}p{4.1cm}p{4.4cm}@{}}
@@ -412,7 +412,7 @@ Wizualizacja to ekran operatora zapisany w projekcie PLC. Znajduje się w \textt
 
 \podpodrozdzial{XPlanar Environment View}\phantomsection\label{sec:environmentview}
 \textit{XPlanar Environment View} to podgląd płytek i moverów wbudowany w TwinCAT. Działa niezależnie od wizualizacji PLC, więc można go użyć także w projekcie bez wizualizacji.
-\zrzutEkranu[0.6\linewidth]{01-wstep/odpalenie-projektu/twincat-menu-mc3-environment-view.png}{Menu TwinCAT --- MC3 $\rightarrow$ XPlanar Environment View}
+\zrzutEkranu[0.6\linewidth]{01-introduction/running-the-project/twincat-menu-mc3-environment-view.png}{Menu TwinCAT --- MC3 $\rightarrow$ XPlanar Environment View}
 \begin{enumerate}
   \item Z paska menu wybieramy \textit{TwinCAT} $\rightarrow$ \textit{MC3} $\rightarrow$ \textit{XPlanar Environment View}.
   \item Okno pokazuje aktualne położenie moverów, gdy konfiguracja jest aktywna, a program uruchomiony.
@@ -424,7 +424,7 @@ W symulacji projekt działa bez maszyny: symulowany jest sprzęt XPlanar (płytk
 
 
 \podpodrozdzial{Krok 1: tryb pracy XPlanar}
-\zrzutEkranu[0.95\linewidth]{01-wstep/odpalenie-projektu/tccom-xplanar-operationmode-basicsimulation.png}{Obiekt XPlanar --- Init Parameter, lista trybów w \texttt{OperationMode}}
+\zrzutEkranu[0.95\linewidth]{01-introduction/running-the-project/tccom-xplanar-operationmode-basicsimulation.png}{Obiekt XPlanar --- Init Parameter, lista trybów w \texttt{OperationMode}}
 \begin{enumerate}
   \item W Solution Explorerze klikamy dwukrotnie \texttt{SYSTEM} $\rightarrow$ \texttt{TcCOM Objects} $\rightarrow$ \texttt{XPlanar}.
   \item Przechodzimy na zakładkę \textit{Init Parameter}.
@@ -433,20 +433,20 @@ W symulacji projekt działa bez maszyny: symulowany jest sprzęt XPlanar (płytk
 
 \podpodrozdzial{Krok 2: urządzenia I/O}
 W symulacji nie ma prawdziwych urządzeń, więc TwinCAT nie może się z nimi łączyć. Urządzenia EtherCAT przełączamy w tryb symulacji, a urządzenie USB wyłączamy.
-\zrzutEkranu[0.5\linewidth]{01-wstep/odpalenie-projektu/io-menu-simulation-mode.png}{Menu kontekstowe urządzenia I/O --- \textit{Simulation Mode} i \textit{Disable}}
+\zrzutEkranu[0.5\linewidth]{01-introduction/running-the-project/io-menu-simulation-mode.png}{Menu kontekstowe urządzenia I/O --- \textit{Simulation Mode} i \textit{Disable}}
 \begin{enumerate}
   \item W Solution Explorerze rozwijamy \texttt{I/O} $\rightarrow$ \texttt{Devices}.
   \item Klikamy prawym przyciskiem \texttt{Device 1 (EtherCAT)} i wybieramy \textit{Simulation Mode}.
   \item To samo robimy dla \texttt{Device 2 (EtherCAT)} i \texttt{Device 3 (EtherCAT)}; to do nich podłączone są kafelki \texttt{APS4322}.
   \item Klikamy prawym przyciskiem \texttt{Device 6 (USB)} i wybieramy \textit{Disable}.
 \end{enumerate}
-\zrzutEkranu[0.4\linewidth]{01-wstep/odpalenie-projektu/io-urzadzenia-symulacja.png}{Drzewo I/O przygotowane do symulacji}
+\zrzutEkranu[0.4\linewidth]{01-introduction/running-the-project/io-devices-simulation.png}{Drzewo I/O przygotowane do symulacji}
 Na koniec drzewo I/O wygląda jak na rysunku: trzy urządzenia EtherCAT mają ikonę symulacji, a urządzenie USB jest przekreślone (wyłączone).
 
 \podpodrozdzial{Krok 3: ustawienia Real-Time}
 \uwaga{Krok dotyczy wyłącznie symulacji na prywatnym komputerze. Przy pracy na PLC jest pomijany.}
 Ustawienia otwieramy przez \texttt{SYSTEM} $\rightarrow$ \texttt{Real-Time}, zakładka \textit{Settings}. Górna tabela pokazuje rdzenie procesora, dolna --- zadania i rdzeń, na którym każde działa.
-\zrzutEkranu[0.95\linewidth]{01-wstep/odpalenie-projektu/realtime-ustawienia-symulacja.png}{Real-Time --- 6 rdzeni współdzielonych, każde zadanie XPlanar na osobnym rdzeniu}
+\zrzutEkranu[0.95\linewidth]{01-introduction/running-the-project/realtime-settings-simulation.png}{Real-Time --- 6 rdzeni współdzielonych, każde zadanie XPlanar na osobnym rdzeniu}
 
 Ustawienia zależą od komputera, bo projekt przygotowano na innym sprzęcie. Muszą być spełnione warunki:
 \begin{itemize}
@@ -467,7 +467,7 @@ Potrzeba więc co najmniej 5 rdzeni.
 \end{enumerate}
 
 \textbf{Zmiana czasu cyklu.} Jeśli zadanie XPlanar ma inny czas cyklu, zmieniamy go w samym zadaniu (w tabeli Real-Time \textit{Cycle Ticks} bywa niedostępne): \texttt{SYSTEM} $\rightarrow$ \texttt{Tasks} $\rightarrow$ \texttt{XPlanar Task\_}\textit{nr}, zakładka \textit{Task}, \textit{Cycle ticks} = 1 (0,250~ms).
-\zrzutEkranu[0.8\linewidth]{01-wstep/odpalenie-projektu/task-xplanar-cycle-ticks.png}{Zadanie \texttt{XPlanar Task\_7} --- \textit{Cycle ticks} = 1 (0,250~ms)}
+\zrzutEkranu[0.8\linewidth]{01-introduction/running-the-project/task-xplanar-cycle-ticks.png}{Zadanie \texttt{XPlanar Task\_7} --- \textit{Cycle ticks} = 1 (0,250~ms)}
 
 \textbf{Gdy warunki nie są spełnione}, \textit{Activate Configuration} kończy się oknem \textit{fatal error} (\texttt{AdsError: 1792}). Przyczynę podaje \textit{Error List}:
 \begin{itemize}
@@ -539,7 +539,7 @@ Kopię zapasową wykonujemy, kopiując folder \texttt{Boot} do folderu, który j
 \section{Utworzenie projektu}
 Projekt tworzymy w TcXaeShell: \textit{File} $\rightarrow$ \textit{New} $\rightarrow$ \textit{Project}, a następnie wybieramy szablon \textbf{TwinCAT XAE Project (XML format)}.
 
-\zrzutEkranu[0.8\linewidth]{02-konfiguracja/utworzenie-projektu/tcxaeshell-nowy-projekt-wybor-szablonu.png}{TcXaeShell --- wybór szablonu nowego projektu}
+\zrzutEkranu[0.8\linewidth]{02-configuration/project-creation/tcxaeshell-new-project-template-selection.png}{TcXaeShell --- wybór szablonu nowego projektu}
 
 Po otwarciu projektu przechodzimy w tryb \textbf{Config}. Na pasku narzędzi jest to niebieska zębatka.
 
@@ -553,7 +553,7 @@ W drzewie projektu wybieramy \textit{I/O} $\rightarrow$ \textit{Devices}, klikam
 
 TwinCAT wyświetli listę urządzeń, które może zeskanować.
 
-\zrzutEkranu[0.7\linewidth]{02-konfiguracja/skanowanie-urzadzen/io-scan-wybor-urzadzen.png}{I/O --- lista znalezionych urządzeń}
+\zrzutEkranu[0.7\linewidth]{02-configuration/device-scan/io-scan-device-selection.png}{I/O --- lista znalezionych urządzeń}
 
 Zaznaczamy jak na załącoznym obrazie.
 \begin{itemize}
@@ -579,7 +579,7 @@ W sumie 12 kafelków XPlanara, po 6 na każdym z dwóch EtherCAT-ów. Urządzeni
 \section{Configurator XPlanar}
 Configurator otwieramy z paska menu na górze okna TcXaeShell: \textit{TwinCAT} $\rightarrow$ \textit{XPlanar} $\rightarrow$ \textit{Configurator}. Pozwala zbudować stół: dodać kafelki, movery i tracki.
 
-\zrzutEkranu[0.95\linewidth]{02-konfiguracja/configurator/xplanar-configurator-okno-glowne.png}{XPlanar Configurator --- okno główne}
+\zrzutEkranu[0.95\linewidth]{02-configuration/configurator/xplanar-configurator-main-window.png}{XPlanar Configurator --- okno główne}
 
 Okno Configuratora składa się z zakładek:
 \begin{itemize}
@@ -623,7 +623,7 @@ Stół budujemy w pięciu kolejnych etapach.
 \end{enumerate}
 Ważne jest, aby każdy kafelek miał przypisany odpowiedni numer BTN.
 
-\zrzutEkranu[0.4\linewidth]{02-konfiguracja/configurator/xplanar-configurator-part-lista-btn.png}{Part1 --- kafelki z przypisanymi BTN}
+\zrzutEkranu[0.4\linewidth]{02-configuration/configurator/xplanar-configurator-part-lista-btn.png}{Part1 --- kafelki z przypisanymi BTN}
 
 \begin{figure}[H]
 \centering
@@ -669,7 +669,7 @@ Movera można podnieść i poruszać ręcznie, bez programu PLC. Robimy to po zb
   \item Klikamy \textit{Activate Configuration}.
   \item Z paska menu wybieramy \textit{TwinCAT} $\rightarrow$ \textit{MC3} $\rightarrow$ \textit{XPlanar Environment View}. Otwiera się okno ze stołem i moverami.
 \end{enumerate}
-\zrzutEkranu[\linewidth]{02-konfiguracja/uruchomienie/xplanar-environment-ui-jog.png}{XPlanar Environment View --- movery na stole i panel sterowania (\textit{Basic Controls})}
+\zrzutEkranu[\linewidth]{02-configuration/startup/xplanar-environment-ui-jog.png}{XPlanar Environment View --- movery na stole i panel sterowania (\textit{Basic Controls})}
 \begin{enumerate}
   \setcounter{enumi}{2}
   \item Po lewej stronie widać movery, każdy z numerem BTN, pozycją $X$, $Y$ i stanem (\textit{State}).
@@ -720,12 +720,12 @@ Program PLC włącza (\textit{enable}) movery. Piszemy go w języku ST w projekc
 \begin{enumerate}
   \item W Solution Explorerze klikamy prawym przyciskiem \texttt{PLC} i wybieramy \textit{Add New Item\ldots}.
 \end{enumerate}
-\zrzutEkranu[0.55\linewidth]{02-konfiguracja/program-plc/plc-menu-add-new-item.png}{Menu kontekstowe \texttt{PLC} --- \textit{Add New Item}}
+\zrzutEkranu[0.55\linewidth]{02-configuration/plc-program/plc-menu-add-new-item.png}{Menu kontekstowe \texttt{PLC} --- \textit{Add New Item}}
 \begin{enumerate}
   \setcounter{enumi}{1}
   \item W oknie wybieramy \textit{Standard PLC Project} (szablon z zadaniem i programem), wpisujemy nazwę \texttt{PLC} (domyślna to \texttt{Untitled1}) i klikamy \textit{Add}.
 \end{enumerate}
-\zrzutEkranu[0.8\linewidth]{02-konfiguracja/program-plc/plc-dialog-standard-plc-project.png}{Okno \textit{Add New Item} --- \textit{Standard PLC Project}}
+\zrzutEkranu[0.8\linewidth]{02-configuration/plc-program/plc-dialog-standard-plc-project.png}{Okno \textit{Add New Item} --- \textit{Standard PLC Project}}
 \begin{enumerate}
   \setcounter{enumi}{2}
   \item W drzewie pojawia się projekt PLC z elementami:
@@ -736,38 +736,38 @@ Program PLC włącza (\textit{enable}) movery. Piszemy go w języku ST w projekc
     \item instancja projektu (\texttt{PLC Instance}).
   \end{itemize}
 \end{enumerate}
-\zrzutEkranu[0.4\linewidth]{02-konfiguracja/program-plc/plc-solution-explorer-nowy-projekt.png}{Solution Explorer --- nowy projekt PLC}
+\zrzutEkranu[0.4\linewidth]{02-configuration/plc-program/plc-solution-explorer-new-project.png}{Solution Explorer --- nowy projekt PLC}
 \uwaga{Zadanie \texttt{PlcTask} nie może pracować na rdzeniu zadań XPlanar (\texttt{SYSTEM} $\rightarrow$ \texttt{Real-Time}).}
 
 \podrozdzial{Dodanie bibliotek}
 \begin{enumerate}
   \item Klikamy dwukrotnie \textit{References}. Otwiera się \textit{Library Manager}. Klikamy \textit{Add Library}.
 \end{enumerate}
-\zrzutEkranu[0.8\linewidth]{02-konfiguracja/program-plc/plc-library-manager-add-library.png}{\textit{Library Manager} --- przycisk \textit{Add Library}}
+\zrzutEkranu[0.8\linewidth]{02-configuration/plc-program/plc-library-manager-add-library.png}{\textit{Library Manager} --- przycisk \textit{Add Library}}
 \begin{enumerate}
   \setcounter{enumi}{1}
   \item W polu wyszukiwania wpisujemy \texttt{stand}, wybieramy \texttt{Tc3\_XPlanarStandard} i klikamy \textit{OK}. Biblioteka musi być wcześniej wgrana do repozytorium bibliotek (dodatek \hyperref[sec:instalacja]{\ref*{sec:instalacja}}).
 \end{enumerate}
-\zrzutEkranu[0.65\linewidth]{02-konfiguracja/program-plc/plc-add-library-xplanarstandard.png}{Dodawanie biblioteki \texttt{Tc3\_XPlanarStandard}}
+\zrzutEkranu[0.65\linewidth]{02-configuration/plc-program/plc-add-library-xplanarstandard.png}{Dodawanie biblioteki \texttt{Tc3\_XPlanarStandard}}
 \begin{enumerate}
   \setcounter{enumi}{2}
   \item Tak samo dodajemy \texttt{Tc3\_Physics} (wyszukiwanie: \texttt{phys}).
 \end{enumerate}
-\zrzutEkranu[0.6\linewidth]{02-konfiguracja/program-plc/plc-add-library-physics.png}{Dodawanie biblioteki \texttt{Tc3\_Physics}}
+\zrzutEkranu[0.6\linewidth]{02-configuration/plc-program/plc-add-library-physics.png}{Dodawanie biblioteki \texttt{Tc3\_Physics}}
 \begin{enumerate}
   \setcounter{enumi}{3}
   \item Tak samo dodajemy \texttt{Tc3\_XPlanarUtility} (wyszukiwanie: \texttt{utili}).
 \end{enumerate}
-\zrzutEkranu[0.65\linewidth]{02-konfiguracja/program-plc/plc-add-library-xplanarutility.png}{Dodawanie biblioteki \texttt{Tc3\_XPlanarUtility}}
+\zrzutEkranu[0.65\linewidth]{02-configuration/plc-program/plc-add-library-xplanarutility.png}{Dodawanie biblioteki \texttt{Tc3\_XPlanarUtility}}
 Po dodaniu bibliotek \textit{Library Manager} i \textit{References} wyglądają jak niżej.
-\zrzutEkranu[\linewidth]{02-konfiguracja/program-plc/plc-library-manager-po-dodaniu.png}{\textit{Library Manager} i \textit{References} po dodaniu bibliotek}
+\zrzutEkranu[\linewidth]{02-configuration/plc-program/plc-library-manager-after-adding.png}{\textit{Library Manager} i \textit{References} po dodaniu bibliotek}
 \textbf{Liczba moverów.} Biblioteka \texttt{Tc3\_XPlanarStandard} domyślnie przewiduje 20 moverów, a nasz stół ma 4. W programie powstaje wtedy 20 obiektów \texttt{fbXPlanarMover[1..20]} i system próbuje obsłużyć 20 moverów, co kończy się błędem. Dlatego w \textit{Library Managerze} klikamy \textit{Library Parameters\ldots} i ustawiamy \texttt{maxNumMover} oraz \texttt{moverCount} na 4. Po zmianie budujemy projekt ponownie i sprawdzamy w widoku zmiennych, że tablica \texttt{fbXPlanarMover} ma 4 elementy.
-\zrzutEkranu[\linewidth]{02-konfiguracja/program-plc/plc-library-parameters-maxnummover.png}{\textit{Library Parameters} --- \texttt{moverCount} i \texttt{maxNumMover} ustawione na 4 (domyślnie \texttt{maxNumMover} wynosi 20)}
+\zrzutEkranu[\linewidth]{02-configuration/plc-program/plc-library-parameters-maxnummover.png}{\textit{Library Parameters} --- \texttt{moverCount} i \texttt{maxNumMover} ustawione na 4 (domyślnie \texttt{maxNumMover} wynosi 20)}
 
 \podrozdzial{Okno programu ST}
 Program tworzymy jako blok funkcyjny. Klikamy prawym przyciskiem \texttt{POUs}, wybieramy \textit{Add} $\rightarrow$ \textit{POU\ldots}, wpisujemy nazwę \texttt{FB\_MotionSystem}, jako typ wybieramy \textit{Function Block}, a jako język \textit{Structured Text (ST)}. W drzewie jest już \texttt{MAIN (PRG)} --- program główny.
-\zrzutEkranu[0.8\linewidth]{02-konfiguracja/program-plc/plc-menu-add-pou.png}{Menu kontekstowe \texttt{POUs} --- \textit{Add} $\rightarrow$ \textit{POU}}
-\zrzutEkranu[\linewidth]{02-konfiguracja/program-plc/plc-okno-st-fb-motionsystem.png}{Edytor ST --- blok \texttt{FB\_MotionSystem}: u góry deklaracja zmiennych, u dołu kod}
+\zrzutEkranu[0.8\linewidth]{02-configuration/plc-program/plc-menu-add-pou.png}{Menu kontekstowe \texttt{POUs} --- \textit{Add} $\rightarrow$ \textit{POU}}
+\zrzutEkranu[\linewidth]{02-configuration/plc-program/plc-okno-st-fb-motionsystem.png}{Edytor ST --- blok \texttt{FB\_MotionSystem}: u góry deklaracja zmiennych, u dołu kod}
 Okno edytora ma dwie części:
 \begin{itemize}
   \item \textbf{część górna} --- deklaracja zmiennych. Zmienne wejściowe (\texttt{VAR\_INPUT}), wyjściowe (\texttt{VAR\_OUTPUT}) i lokalne (\texttt{VAR}) kończą się słowem \texttt{END\_VAR},
@@ -790,9 +790,9 @@ END_VAR
 \texttt{FB\_XPlanarSystem} zarządza całym systemem, a każdy mover jest osobnym obiektem \texttt{FB\_XPlanarMoverStandard}. Tablice zaczynają się od indeksu 1.
 
 Do bloku \texttt{FB\_MotionSystem} dodajemy trzy metody. Metody tworzymy \textbf{wewnątrz bloku}, a nie osobno w \texttt{POUs}: klikamy prawym przyciskiem \texttt{FB\_MotionSystem}, wybieramy \textit{Add} $\rightarrow$ \textit{Method\ldots}, wpisujemy nazwę (\texttt{Cycle}, \texttt{Startup}, \texttt{Starting}) i język \textit{Structured Text (ST)}.
-\zrzutEkranu[0.7\linewidth]{02-konfiguracja/program-plc/plc-menu-add-method.png}{Menu kontekstowe \texttt{FB\_MotionSystem} --- \textit{Add} $\rightarrow$ \textit{Method}}
+\zrzutEkranu[0.7\linewidth]{02-configuration/plc-program/plc-menu-add-method.png}{Menu kontekstowe \texttt{FB\_MotionSystem} --- \textit{Add} $\rightarrow$ \textit{Method}}
 Po dodaniu wszystkich elementów folder \texttt{POUs} wygląda jak na rysunku.
-\zrzutEkranu[0.45\linewidth]{02-konfiguracja/program-plc/plc-folder-pous-efekt-koncowy.png}{Folder \texttt{POUs} po dodaniu bloku \texttt{FB\_MotionSystem} (FB) z metodami \texttt{Cycle}, \texttt{Starting}, \texttt{Startup} oraz programu \texttt{MAIN} (PRG)}
+\zrzutEkranu[0.45\linewidth]{02-configuration/plc-program/plc-folder-pous-result.png}{Folder \texttt{POUs} po dodaniu bloku \texttt{FB\_MotionSystem} (FB) z metodami \texttt{Cycle}, \texttt{Starting}, \texttt{Startup} oraz programu \texttt{MAIN} (PRG)}
 Za co odpowiadają poszczególne elementy:
 \begin{itemize}
   \item \texttt{FB\_MotionSystem} --- blok funkcyjny; przechowuje system XPlanar i obiekty czterech moverów,
@@ -998,13 +998,13 @@ END_CASE
 Linkowanie wykonujemy po stronie MOTION, w \textit{Axes}, a nie w PLC. \textbf{Link} łączy zmienną PLC z osią: dzięki niemu polecenia z PLC (\texttt{PLCTOMC}) trafiają do osi, a stan osi (\texttt{MCTOPLC}) wraca do PLC. Bez linku movery nie reagują, a program kończy się błędem.
 
 Każda oś w \textit{MOTION} $\rightarrow$ \textit{XPlanar MC Project} $\rightarrow$ \textit{Axes} ma cztery gałęzie. \texttt{IoToMc} i \texttt{McToIo} to wymiana danych z moverem w obiekcie XPlanar, ustawiona przez Configurator. \texttt{PlcToMc} i \texttt{McToPlc} to wymiana danych z PLC; te gałęzie uzupełniamy, linkując oś.
-\zrzutEkranu[0.4\linewidth]{02-konfiguracja/program-plc/motion-axes-po-linkowaniu.png}{MOTION --- osie moverów; zlinkowana oś \texttt{0000kyte} ma w gałęziach zmienne \texttt{STD}}
+\zrzutEkranu[0.4\linewidth]{02-configuration/plc-program/motion-axes-after-linking.png}{MOTION --- osie moverów; zlinkowana oś \texttt{0000kyte} ma w gałęziach zmienne \texttt{STD}}
 \begin{enumerate}
   \item Zapisujemy projekt i budujemy PLC (\textit{Build}), żeby zmienne się pojawiły.
   \item W \textit{Axes} klikamy pierwszą oś (\texttt{0000kyte}) i przechodzimy na zakładkę \textit{Settings}. Pole \textit{Link To I/O\ldots} pokazuje powiązanie osi z moverem w obiekcie XPlanar --- zostawiamy je bez zmian. Klikamy \textit{Link To PLC\ldots}.
   \item W oknie wyboru zaznaczamy zmienną \texttt{MAIN.fbMotionSystem.fbXPlanarMover[1].stMoverRef} i klikamy \textit{OK}. Jeden link łączy oba kierunki naraz. Na liście są cztery zmienne, bo ustawiliśmy 4 movery w parametrach biblioteki.
 \end{enumerate}
-\zrzutEkranu[0.7\linewidth]{02-konfiguracja/program-plc/axes-settings-link-to-plc.png}{Oś \texttt{0000kyte} --- zakładka \textit{Settings}, \textit{Link To PLC} i okno wyboru zmiennej}
+\zrzutEkranu[0.7\linewidth]{02-configuration/plc-program/axes-settings-link-to-plc.png}{Oś \texttt{0000kyte} --- zakładka \textit{Settings}, \textit{Link To PLC} i okno wyboru zmiennej}
 \begin{enumerate}
   \setcounter{enumi}{3}
   \item To samo robimy dla pozostałych osi: kolejna oś z \texttt{fbXPlanarMover[2]}, następna z \texttt{[3]}, ostatnia z \texttt{[4]}. Każdy element tablicy linkujemy raz.
@@ -1020,10 +1020,10 @@ Każda oś w \textit{MOTION} $\rightarrow$ \textit{XPlanar MC Project} $\rightar
 
 \podrozdzial{Pasek online PLC --- reset i zapis zmiennych}
 Po zalogowaniu do PLC na pasku narzędzi dostępne są przyciski sterujące programem.
-\zrzutEkranu[0.45\linewidth]{03-ruch/pasek-plc/pasek-online-plc.png}{Pasek online PLC}
+\zrzutEkranu[0.45\linewidth]{03-motion/plc-toolbar/plc-online-toolbar.png}{Pasek online PLC}
 \begin{itemize}
-  \item \textbf{Reset cold} \ikona{03-ruch/pasek-plc/ikona-reset-cold.png} --- zmienne wracają do wartości początkowych (zachowują się tylko zmienne \texttt{PERSISTENT}), program zostaje na sterowniku i jest zatrzymany. Po resecie klikamy \textit{Start}. Przydatne, gdy program utknął, np.\ po błędzie \textit{enable}.
-  \item \textbf{Reset origin} \ikona{03-ruch/pasek-plc/ikona-reset-origin.png} --- usuwa program ze sterownika razem ze wszystkimi zmiennymi, także \texttt{PERSISTENT}. Potem trzeba ponownie się zalogować i wgrać program.
+  \item \textbf{Reset cold} \ikona{03-motion/plc-toolbar/icon-reset-cold.png} --- zmienne wracają do wartości początkowych (zachowują się tylko zmienne \texttt{PERSISTENT}), program zostaje na sterowniku i jest zatrzymany. Po resecie klikamy \textit{Start}. Przydatne, gdy program utknął, np.\ po błędzie \textit{enable}.
+  \item \textbf{Reset origin} \ikona{03-motion/plc-toolbar/icon-reset-origin.png} --- usuwa program ze sterownika razem ze wszystkimi zmiennymi, także \texttt{PERSISTENT}. Potem trzeba ponownie się zalogować i wgrać program.
   \item \textbf{Write values} (\textit{Ctrl+F7}) --- jednorazowo zapisuje przygotowane wartości (\textit{Prepared value}) do zmiennych. Program może je zaraz nadpisać.
   \item \textbf{Force values} (\textit{F7}) --- wymusza przygotowane wartości w każdym cyklu, dopóki ich nie zwolnimy (\textit{Unforce values}, \textit{Alt+F7}). Po zakończeniu testów zawsze zwalniamy wymuszone zmienne.
 \end{itemize}
@@ -1144,10 +1144,10 @@ Pracujemy na projekcie z folderu \texttt{topics/T04\_tracks/start/simulation}. J
   \item W \textit{Created Tracks} przyciskiem \textit{+} dodajemy nowy track (przycisk \textit{--} usuwa zaznaczony). Klikamy go i w \textit{Track Settings}, w polu \textit{Name}, nadajemy mu nazwę \texttt{Loop}.
   \item Rysujemy track z elementów: punktów (\textit{Point}), odcinków (\textit{Line}) i łuków (\textit{Circle}).
   \item Jeśli mover ma jeździć w kółko, oznaczamy track jako zamknięty: klikamy sam track (jego nazwę w \textit{Created Tracks}, nie pojedynczą linię) i po prawej stronie, w \textit{Track Settings}, zaznaczamy \textit{Closed Track}. W tym samym panelu można też połączyć track z innymi (\textit{Start from Track}, \textit{End at Track}), wyczyścić go (\textit{Clear Track}) lub usunąć (\textit{Delete Track}).
-\zrzutEkranu[0.4\linewidth]{04-tracki/configurator/configurator-track-settings-closed-track.png}{Configurator --- \textit{Track Settings}, zaznaczone \textit{Closed Track}}
+\zrzutEkranu[0.4\linewidth]{04-tracks/configurator/configurator-track-settings-closed-track.png}{Configurator --- \textit{Track Settings}, zaznaczone \textit{Closed Track}}
   \item Klikamy \textit{Validate Tracks}, a potem \textit{Export}. Track pojawia się w drzewie projektu w \textit{MOTION} $\rightarrow$ \textit{Groups} $\rightarrow$ \texttt{Loop}.
 \end{enumerate}
-\zrzutEkranu[0.4\linewidth]{04-tracki/configurator/configurator-factory-settings-created-tracks.png}{Configurator --- \textit{Factory Settings} i lista \textit{Created Tracks}}
+\zrzutEkranu[0.4\linewidth]{04-tracks/configurator/configurator-factory-settings-created-tracks.png}{Configurator --- \textit{Factory Settings} i lista \textit{Created Tracks}}
 
 \textbf{Kolejność odcinków.} Odcinki definiujemy po kolei, w kierunku jazdy: każdy następny zaczyna się tam, gdzie skończył się poprzedni. Ważne jest, aby kolejne linie były dobrze zdefiniowane --- odcinek dodany w złej kolejności albo w złym kierunku psuje cały track.
 
@@ -1197,22 +1197,22 @@ Po eksporcie sam track powinien być już zlinkowany --- nie trzeba niczego łą
   \item Klikamy \textit{Activate Configuration}, logujemy się do PLC i uruchamiamy program --- movery zostają włączone.
   \item Otwieramy \textit{TwinCAT} $\rightarrow$ \textit{MC3} $\rightarrow$ \textit{XPlanar Environment View} i w lewym górnym rogu zaznaczamy \textit{Show Tracks}. Track \texttt{Loop} pojawia się na stole; linią przerywaną widać przejścia między odcinkami.
 \end{enumerate}
-\zrzutEkranu[0.9\linewidth]{04-tracki/environment-view/environment-view-show-tracks.png}{XPlanar Environment View --- movery i track \texttt{Loop} (zaznaczone \textit{Show Tracks})}
+\zrzutEkranu[0.9\linewidth]{04-tracks/environment-view/environment-view-show-tracks.png}{XPlanar Environment View --- movery i track \texttt{Loop} (zaznaczone \textit{Show Tracks})}
 \begin{enumerate}
   \setcounter{enumi}{2}
   \item Panel \textit{Basic Controls} można dowolnie dostosować: przyciskiem \textit{...} w jego prawym górnym rogu dodajemy i usuwamy karty. Do pracy z trackiem dodajemy karty z \textit{Track Motion}: \textit{Join Track}, \textit{Leave Track} i \textit{Jog On Track}.
 \end{enumerate}
-\zrzutEkranu[0.8\linewidth]{04-tracki/environment-view/basic-controls-menu-track-motion.png}{\textit{Basic Controls} --- menu dodawania kart, \textit{Track Motion}}
+\zrzutEkranu[0.8\linewidth]{04-tracks/environment-view/basic-controls-menu-track-motion.png}{\textit{Basic Controls} --- menu dodawania kart, \textit{Track Motion}}
 \begin{enumerate}
   \setcounter{enumi}{3}
   \item Włączamy track. Z poziomu \textit{XPlanar Environment View} nie da się tego zrobić, więc w drzewie projektu klikamy dwukrotnie \textit{MOTION} $\rightarrow$ \textit{Groups} $\rightarrow$ \texttt{Loop}, przechodzimy na zakładkę \textit{Motion UI} i w \textit{Enable Dialog} przełączamy \textit{Enable}. Status tracka zmienia się na \textit{Enabled}. Bez włączonego tracka mover nie dołączy do niego, a TwinCAT nie zgłasza błędu.
-\zrzutEkranu[\linewidth]{04-tracki/environment-view/track-loop-motion-ui-enable.png}{Track \texttt{Loop} --- zakładka \textit{Motion UI}, track włączony (\textit{Enabled}); w drzewie widać jego zmienne w \texttt{McToPlc}}
+\zrzutEkranu[\linewidth]{04-tracks/environment-view/track-loop-motion-ui-enable.png}{Track \texttt{Loop} --- zakładka \textit{Motion UI}, track włączony (\textit{Enabled}); w drzewie widać jego zmienne w \texttt{McToPlc}}
   \item W \textit{General Information} wybieramy movera (\textit{Selected Mover}).
   \item W karcie \textit{Join Track} wybieramy track \texttt{Loop}, zaznaczamy \textit{Use Orientation} i klikamy \textit{Join Track}. Mover sam dojeżdża na track. Tak samo dołączamy kolejne movery --- na jednym tracku może być kilka moverów.
   \item W karcie \textit{Jog On Track} najpierw wybieramy track (bez tego karta nie działa), potem odstęp (\textit{Gap}), tryb odstępu (\textit{Gap Mode}) i prędkość. Strzałkami przesuwamy wybranego movera po tracku.
   \item Kartą \textit{Leave Track} mover zjeżdża z tracka do podanej pozycji X, Y. Tu również zaznaczamy \textit{Use Orientation} --- bez tej opcji NC może odrzucić ruch.
 \end{enumerate}
-\zrzutEkranu[0.8\linewidth]{04-tracki/environment-view/basic-controls-karty-track.png}{Karty \textit{Join Track}, \textit{Leave Track} i \textit{Jog On Track}}
+\zrzutEkranu[0.8\linewidth]{04-tracks/environment-view/basic-controls-track-cards.png}{Karty \textit{Join Track}, \textit{Leave Track} i \textit{Jog On Track}}
 
 \textbf{Use Orientation.} Przy dołączaniu do tracka najlepiej zaznaczyć \textit{Use Orientation}. Bez tej opcji mover korzysta z domyślnej interpolacji, która jest mało wygodna: jeśli wynika z niej obrót w osi C, mover go wykona. Często mover zahacza wtedy o inny obiekt albo się zatrzymuje, a system unikania kolizji blokuje ruch moverów.
 
@@ -1309,7 +1309,7 @@ Relacje ustawiamy w \textit{Track Settings} tracków \texttt{Top} i \texttt{Bott
   Movery linkujemy jak w rozdziale 3. Po poprawnym linkowaniu każdy obiekt w \textit{Groups} ma pod sobą \texttt{McToPlc} $\rightarrow$ \texttt{STD}.
   \item Aktywujemy konfigurację i uruchamiamy PLC. Tracki włącza kod (\texttt{EnableTracks}), więc nie trzeba ich włączać w \textit{Motion UI}.
 \end{enumerate}
-\zrzutEkranu[0.4\linewidth]{04-tracki/plc/motion-groups-linkowanie.png}{\textit{MOTION} $\rightarrow$ \textit{Groups} po linkowaniu --- grupa \texttt{XPlanar}, \texttt{Environment} i tracki \texttt{Main}, \texttt{Bottom}, \texttt{Top} połączone z PLC (\texttt{McToPlc})}
+\zrzutEkranu[0.4\linewidth]{04-tracks/plc/motion-groups-linking.png}{\textit{MOTION} $\rightarrow$ \textit{Groups} po linkowaniu --- grupa \texttt{XPlanar}, \texttt{Environment} i tracki \texttt{Main}, \texttt{Bottom}, \texttt{Top} połączone z PLC (\texttt{McToPlc})}
 \uwaga{Grupa i środowisko nie są linkowane automatycznie. Brak linkowania powoduje błąd 33093 w metodzie \texttt{EnableGroup}.}
 \uwaga{Indeks tracka w tablicy \texttt{fbTrackStandard} musi odpowiadać linkowaniu (1 = \texttt{Main}, 2 = \texttt{Top}, 3 = \texttt{Bottom}).}
 
@@ -1825,7 +1825,7 @@ Projekt budujemy na bazie projektu z rozdziału 4 (4 movery, \texttt{maxNumMover
 
 \podrozdzial{Rozmieszczenie plików}
 Kod dzielimy na pliki w folderach \texttt{DUTs} (typy danych) i \texttt{POUs} (bloki programu). Metody dodajemy prawym przyciskiem na bloku funkcyjnym (\textit{Add} $\rightarrow$ \textit{Method}).
-\zrzutEkranu[0.4\linewidth]{05-stacje/projekt-poup-struktura.png}{Folder \texttt{POUs}: \texttt{FB\_MotionSystem} z metodami \texttt{BuildTrack}, \texttt{Cycle}, \texttt{Execute}, \texttt{InitStations}, \texttt{Process6DoF}, \texttt{Starting}, \texttt{Startup}; \texttt{FB\_Routing} z metodami \texttt{Release}, \texttt{ReleaseMerge}, \texttt{RequestMerge}, \texttt{Reset}, \texttt{SelectStation}; program \texttt{MAIN}}
+\zrzutEkranu[0.4\linewidth]{05-stations/project-pou-structure.png}{Folder \texttt{POUs}: \texttt{FB\_MotionSystem} z metodami \texttt{BuildTrack}, \texttt{Cycle}, \texttt{Execute}, \texttt{InitStations}, \texttt{Process6DoF}, \texttt{Starting}, \texttt{Startup}; \texttt{FB\_Routing} z metodami \texttt{Release}, \texttt{ReleaseMerge}, \texttt{RequestMerge}, \texttt{Reset}, \texttt{SelectStation}; program \texttt{MAIN}}
 \begin{center}\small
 \begin{tabular}{@{}lll@{}}
 \toprule

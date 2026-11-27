@@ -3,12 +3,12 @@
   <DUT Name="ST_Station" Id="{41960f75-da58-4348-8554-f3043bad8b46}">
     <Declaration><![CDATA[TYPE ST_Station :
 STRUCT
-	nTrack			: UDINT;	// track, na ktorym lezy stacja
-	fX				: LREAL;	// polozenie stacji [mm]
+	nTrack			: UDINT;	// track the station is on
+	fX				: LREAL;	// station position [mm]
 	fY				: LREAL;
-	fSendAwayDist	: LREAL;	// o ile za stacja mover dostaje cel po obrobce [mm]
-	fPosOnTrack		: LREAL;	// polozenie stacji wzdluz tracka [mm]
-	fSendAway		: LREAL;	// cel po obrobce wzdluz tracka [mm]
+	fSendAwayDist	: LREAL;	// target after processing: distance past the station [mm]
+	fPosOnTrack		: LREAL;	// station position along the track [mm]
+	fSendAway		: LREAL;	// target after processing, along the track [mm]
 END_STRUCT
 END_TYPE
 ]]></Declaration>

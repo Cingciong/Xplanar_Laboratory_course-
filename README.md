@@ -6,10 +6,10 @@ Lab exercises and instruction for the Beckhoff XPlanar transport stand (engineer
 
 | Folder | Content |
 |---|---|
-| `instrukcja/` | Lab instruction in LaTeX (Polish): `main.tex`, `main.pdf`, screenshots, style rules |
+| `instruction/` | Lab instruction in LaTeX (Polish): `main.tex`, `main.pdf`, screenshots, style rules |
 | `topics/` | TwinCAT projects for each topic, see `topics/README.md` |
 | `setup/` | TwinCAT and library versions needed to rebuild the environment |
-| `PRZEGLAD.md` | Repository review notes (Polish) |
+| `REVIEW.md` | Repository review notes (state of 2026-10-13) |
 
 ## Reference environment
 
@@ -38,7 +38,7 @@ Open the `.sln` in the `simulation` or `hardware` folder and follow the `README.
 
 ## Building the instruction
 
-`pdflatex main.tex` in `instrukcja/` (two passes).
+`pdflatex main.tex` in `instruction/` (two passes).
 
 ## License
 

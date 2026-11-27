@@ -1,19 +1,19 @@
-# Claude Code — lokalny kontekst/handoffy sesji roboczych, nie wchodzi do repo
+# Local working notes, not part of the repository
 .claude/
 
-# Pliki pomocnicze LaTeX (generowane przy kompilacji instrukcja/main.tex)
-instrukcja/*.aux
-instrukcja/*.log
-instrukcja/*.out
-instrukcja/*.toc
-instrukcja/*.fls
-instrukcja/*.fdb_latexmk
-instrukcja/*.synctex.gz
-instrukcja/*.bbl
-instrukcja/*.blg
-instrukcja/*.lof
-instrukcja/*.lot
-instrukcja/*.xdv
+# LaTeX build files (instruction/main.tex)
+instruction/*.aux
+instruction/*.log
+instruction/*.out
+instruction/*.toc
+instruction/*.fls
+instruction/*.fdb_latexmk
+instruction/*.synctex.gz
+instruction/*.bbl
+instruction/*.blg
+instruction/*.lof
+instruction/*.lot
+instruction/*.xdv
 kontekst
 
 TODO.md
@@ -69,7 +69,7 @@ LineIDs.dbg.bak
 *.project.~u
 *.suo
 *.user
-# Praca dyplomowa — szablon WETI (licencja: tylko użytek wewnętrzny) i tekst przed weryfikacją JSA
+# Thesis: faculty template (internal use only) and text before plagiarism check
 thesis/
 
 # TwinCAT - lokalna kopia bibliotek (odtwarzana z zainstalowanych bibliotek)

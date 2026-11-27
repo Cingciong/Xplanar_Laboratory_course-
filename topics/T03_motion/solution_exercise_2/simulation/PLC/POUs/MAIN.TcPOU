@@ -8,7 +8,8 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[CASE nState OF
+      <ST><![CDATA[// Main program: start up the system, enable it, then run the exercise.
+CASE nState OF
     0:  nState := 1;
     1:  IF fbMotionSystem.Startup() THEN
             nState := 30;
@@ -19,7 +20,7 @@ END_VAR
     40: IF fbMotionSystem.Execute6DoF(bReset := FALSE) THEN
             nState := 50;
         END_IF
-    50: fbMotionSystem.Execute6DoF(bReset := TRUE);   // od nowa: ruch cykliczny
+    50: fbMotionSystem.Execute6DoF(bReset := TRUE);   // start again: cyclic motion
         nState := 40;
 END_CASE
 
