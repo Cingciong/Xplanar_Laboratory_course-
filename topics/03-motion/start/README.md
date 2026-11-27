@@ -1,7 +1,6 @@
-# Ruch wysterowany — Zadanie
+# Topic 3 - start
 
-**Wersja startowa dla studenta.** Rozdział 3 instrukcji.
+Same as the end of topic 2:
 
-**Treść zadania:** Wykonaj ruch 4 moverów w tył i w przód w osi Y. Punkty startowe: `Y = 360`; `X` pierwszego = `120`, ostatniego = `840`. *(Rozszerzenie 6 DoF — do decyzji: w punktach końcowych podnieść movery w Z i przechylić w A/B.)*
-
-*Status: kod do uzupełnienia.*
+- `hardware/` - real stand, no PLC project
+- `simulation/` - PC simulation, no PLC project

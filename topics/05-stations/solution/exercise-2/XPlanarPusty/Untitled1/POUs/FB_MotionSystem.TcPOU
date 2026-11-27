@@ -1,0 +1,546 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_MotionSystem" Id="{78de72f9-d558-4c77-acdb-1b01eb58a62a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MotionSystem
+VAR
+	fbXPlanarSystem		: FB_XPlanarSystem;
+	fbXPlanarMover		: ARRAY[1..maxNumMover] OF FB_XPlanarMoverStandard;
+	fbTrackStandard		: ARRAY[1..maxTrackCount] OF FB_TrackStandard;	// tracki jak w demo: 1, 2, 3
+	fbRouting			: FB_Routing;
+	// Stacje: 1, 2, 3 - procesowe, 4 - rozdzielenie (rozjazd), 5 - laczenie, 6 - ruch w 6 DoF
+	aStation			: ARRAY[1..6] OF ST_Station;
+	// Stan kazdego movera
+	nStep				: ARRAY[1..maxNumMover] OF UDINT;
+	nDest				: ARRAY[1..maxNumMover] OF UDINT;	// stacja procesowa, do ktorej jedzie mover
+	nLastDest			: ARRAY[1..maxNumMover] OF UDINT;
+	nLap				: ARRAY[1..maxNumMover] OF UDINT;	// ile okrazen wykonal mover
+	nSub				: ARRAY[1..maxNumMover] OF UDINT;	// podkrok ruchu w 6 DoF (stacja 6)
+	bSkipS1				: ARRAY[1..maxNumMover] OF BOOL;	// mover po starcie jest juz za stacja 1
+	nStartupSequence	: UDINT;
+	nStartingSequence	: UDINT;
+	nTrackToBuild		: UDINT;
+	nErrorID			: UDINT;
+	nErrorStep			: UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="BuildTrack" Id="{2a74e38c-20be-4b88-896f-f68bf8c0171b}">
+      <Declaration><![CDATA[METHOD BuildTrack : BOOL
+VAR_INPUT
+	nTrack	: UDINT;
+END_VAR
+VAR_INST
+	fbTrackTable	: FB_TrackTable;
+	nBuildStep		: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE nBuildStep OF
+	0:	// pusta tablica punktow
+		IF fbTrackTable.ClearTrackTable() THEN
+			nBuildStep := 10;
+		END_IF
+
+	10:	// punkty tracka (linie: Line_Start -> Line_End; naroza wylicza system)
+		CASE nTrack OF
+			1:	// lewa petla: dol -> lewy bok -> gora; tu leza stacje 1 i 5
+				fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 480.0, 120.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 240.0, 120.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 120.0, 240.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 120.0, 480.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 240.0, 600.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 480.0, 600.0, 0.0);
+			2:	// srodkowy odcinek: stacja 2
+				fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 600.0, 480.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 600.0, 240.0, 0.0);
+			3:	// prawa petla: stacja 3
+				fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 480.0, 600.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 720.0, 600.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 840.0, 480.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 840.0, 240.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 720.0, 120.0, 0.0);
+				fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 480.0, 120.0, 0.0);
+		END_CASE
+		// relacje: tracki 2 i 3 zaczynaja sie na koncu tracka 1 (rozjazd) i koncza na jego poczatku (laczenie)
+		IF nTrack > 1 THEN
+			fbTrackTable.P_StartFromTrack := fbTrackStandard[1];
+			fbTrackTable.P_EndAtTrack     := fbTrackStandard[1];
+		END_IF
+		fbTrackTable.P_CloseTheLoop := FALSE;
+		nBuildStep := 20;
+
+	20:	// sprawdzenie tablicy
+		IF fbTrackTable.CheckTrackTable() <> 0 THEN
+			IF fbTrackTable.P_TrackTableCheckResult THEN
+				nBuildStep := 30;
+			ELSE
+				nErrorStep := 20 + nTrack * 1000;
+				nBuildStep := 900;
+			END_IF
+		END_IF
+
+	30:	// budowa tracka
+		IF fbTrackStandard[nTrack].BuildTrackExt(fbTrackTable) THEN
+			nBuildStep := 31;
+		END_IF
+	31:	IF fbTrackStandard[nTrack].P_BuildTrackExt.Done THEN
+			nBuildStep := 100;
+		ELSIF fbTrackStandard[nTrack].P_BuildTrackExt.Error THEN
+			nErrorID := fbTrackStandard[nTrack].P_BuildTrackExt.ErrorID;
+			nErrorStep := 31 + nTrack * 1000;
+			nBuildStep := 900;
+		END_IF
+
+	100: BuildTrack := TRUE;
+		nBuildStep := 0;
+
+	900: ;	// blad budowy tracka: nErrorID, nErrorStep
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cycle" Id="{9e307b01-3109-4d84-8deb-dd2ce52af845}">
+      <Declaration><![CDATA[METHOD Cycle
+VAR
+	i : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[fbXPlanarSystem.Cycle();
+FOR i := 1 TO moverCount DO
+	fbXPlanarMover[i].Cycle();
+END_FOR
+FOR i := 1 TO maxTrackCount DO
+	fbTrackStandard[i].Cycle();
+END_FOR]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Execute" Id="{3117dcb1-b0b9-4e53-b565-312179b3da7e}">
+      <Declaration><![CDATA[METHOD Execute
+VAR
+	i		: UDINT;
+	fDx		: LREAL;
+	fDy		: LREAL;
+END_VAR
+VAR_INST
+	fVelo	: LREAL := 300;		// predkosc [mm/s]
+	fAcc	: LREAL := 1000;	// przyspieszenie [mm/s2]
+	fJerk	: LREAL := 10000;	// szarpniecie [mm/s3]
+	fGap	: LREAL := 240;		// odstep miedzy moverami na tracku [mm]
+	fRotVel	: LREAL := 720;		// predkosc obrotu [deg/s]
+	fRotAcc	: LREAL := 1800;
+	fRotJerk: LREAL := 9000;
+	stRot	: ST_MoveCOptions;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[stRot.additionalTurns := 0;
+stRot.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionNonModulo;
+
+FOR i := 1 TO moverCount DO
+	CASE nStep[i] OF
+
+		// ---------------- STACJA 1 (proces): dojazd i obrot ----------------
+		10:	// na pierwszym okrazeniu mover, ktory po starcie stoi juz za stacja 1, pomija ja
+			// (track jest otwarty, a przed nim stoja inne movery - nie moze jechac do tylu)
+			IF nLap[i] = 0 AND fbXPlanarMover[i].P_ActPosition.y > aStation[1].fY THEN
+				bSkipS1[i] := TRUE;
+				nStep[i] := 30;
+			ELSE
+				fbXPlanarMover[i].MoveOnTrack('S1: dojazd', fbTrackStandard[aStation[1].nTrack], aStation[1].fPosOnTrack,
+					fVelo, fAcc, fJerk, fGap, Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive);
+				nStep[i] := 11;
+			END_IF
+		11:	IF fbXPlanarMover[i].P_MoveOnTrack.Done THEN
+				nStep[i] := 20;
+			ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+				nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+				nStep[i] := 900;
+			END_IF
+		20:	IF NOT fbXPlanarMover[i].P_MoveC.Busy THEN
+				fbXPlanarMover[i].MoveC('S1: obrot', 90.0, fRotVel, fRotAcc, fRotAcc, fRotJerk, stRot);
+				nStep[i] := 21;
+			END_IF
+		21:	IF fbXPlanarMover[i].P_MoveC.Done THEN
+				nStep[i] := 30;
+			ELSIF fbXPlanarMover[i].P_MoveC.Error THEN
+				nErrorID := fbXPlanarMover[i].P_MoveC.ErrorID;
+				nStep[i] := 900;
+			END_IF
+
+		// ---------------- decyzja: dokad jedzie mover (dynamiczny routing) ----------------
+		30:	nDest[i] := fbRouting.SelectStation(i, nLastDest[i]);
+			nLastDest[i] := nDest[i];
+			IF bSkipS1[i] THEN
+				// mover jest juz za stacja 1 - jedzie od razu przez rozjazd (stacja 4) do wybranej stacji
+				bSkipS1[i] := FALSE;
+				nStep[i] := 40;
+			ELSE
+				nStep[i] := 31;
+			END_IF
+
+		// po obrobce mover jedzie dalej po tracku 1 w strone rozjazdu (stacja 4)
+		31:	fbXPlanarMover[i].MoveOnTrack('S1: wyjazd', fbTrackStandard[aStation[1].nTrack], aStation[1].fSendAway,
+				fVelo, fAcc, fJerk, fGap, Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive);
+			nStep[i] := 32;
+		32:	IF fbXPlanarMover[i].P_MoveOnTrack.Active OR fbXPlanarMover[i].P_MoveOnTrack.Done THEN
+				nStep[i] := 33;
+			ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+				nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+				nStep[i] := 900;
+			END_IF
+
+		// ---------------- STACJA 4 (rozdzielenie): przejecie movera przed rozjazdem ----------------
+		33:	IF fbXPlanarMover[i].P_LastKnownTrackOID = fbTrackStandard[1].P_OID THEN
+				// odleglosc movera od rozjazdu (kwadrat odleglosci, bez pierwiastka)
+				fDx := fbXPlanarMover[i].P_ActPosition.x - aStation[4].fX;
+				fDy := fbXPlanarMover[i].P_ActPosition.y - aStation[4].fY;
+				IF (fDx * fDx + fDy * fDy) < (aStation[4].fSendAwayDist * aStation[4].fSendAwayDist) THEN
+					nStep[i] := 40;
+				END_IF
+			END_IF
+
+		// stacja 4 kieruje movera na track wybranej stacji procesowej (2 albo 3) i dalej do stacji
+		40:	fbXPlanarMover[i].MoveOnTrack('S4: na stacje', fbTrackStandard[aStation[nDest[i]].nTrack], aStation[nDest[i]].fPosOnTrack,
+				fVelo, fAcc, fJerk, fGap, Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive);
+			nStep[i] := 41;
+		41:	IF fbXPlanarMover[i].P_MoveOnTrack.Done THEN
+				nStep[i] := 50;
+			ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+				nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+				nStep[i] := 900;
+			END_IF
+
+		// ---------------- STACJA 2 albo 3 (proces): obrot o 180 stopni ----------------
+		50:	IF NOT fbXPlanarMover[i].P_MoveC.Busy THEN
+				fbXPlanarMover[i].MoveC('S2/S3: obrot', 180.0, fRotVel, fRotAcc, fRotAcc, fRotJerk, stRot);
+				nStep[i] := 51;
+			END_IF
+		51:	IF fbXPlanarMover[i].P_MoveC.Done THEN
+				nStep[i] := 60;
+			ELSIF fbXPlanarMover[i].P_MoveC.Error THEN
+				nErrorID := fbXPlanarMover[i].P_MoveC.ErrorID;
+				nStep[i] := 900;
+			END_IF
+
+		// ---------------- STACJA 5 (laczenie): zgoda na wjazd w punkt laczenia ----------------
+		60:	IF fbRouting.RequestMerge(i) THEN
+				// stacja procesowa zwolniona
+				fbRouting.Release(nDest[i]);
+				fbXPlanarMover[i].MoveOnTrack('S5: laczenie', fbTrackStandard[aStation[6].nTrack], aStation[6].fPosOnTrack,
+					fVelo, fAcc, fJerk, fGap, Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive);
+				nStep[i] := 61;
+			END_IF
+		61:	IF fbXPlanarMover[i].P_LastKnownTrackOID = fbTrackStandard[aStation[5].nTrack].P_OID THEN
+				// mover jest juz na tracku 1: nastepny moze wjechac w punkt laczenia
+				fbRouting.ReleaseMerge(i);
+				nLap[i] := nLap[i] + 1;
+				nStep[i] := 62;
+			ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+				nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+				nStep[i] := 900;
+			END_IF
+
+		// ---------------- STACJA 6 (ruch w 6 DoF): dojazd i sekwencja ruchow ----------------
+		62:	IF fbXPlanarMover[i].P_MoveOnTrack.Done THEN
+				nSub[i] := 0;
+				nStep[i] := 70;
+			ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+				nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+				nStep[i] := 900;
+			END_IF
+		70:	IF Process6DoF(i) THEN
+				nStep[i] := 10;		// mover wraca do stacji 1
+			END_IF
+
+		900: ;	// blad ruchu movera: nErrorID
+	END_CASE
+END_FOR]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="InitStations" Id="{f61e22df-1218-4531-86a3-25dd4a443949}">
+      <Declaration><![CDATA[METHOD InitStations
+VAR
+	k		: UDINT;
+	fPos	: PositionXYC;
+	fLen	: LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Polozenia stacji jak w demo (X, Y [mm]); polozenie na tracku liczy system.
+aStation[1].nTrack := 1;  aStation[1].fX := 120.0;  aStation[1].fY := 360.0;  aStation[1].fSendAwayDist := 300.0;	// proces 1
+aStation[2].nTrack := 2;  aStation[2].fX := 600.0;  aStation[2].fY := 360.0;  aStation[2].fSendAwayDist := 5.0;	// proces 2
+aStation[3].nTrack := 3;  aStation[3].fX := 840.0;  aStation[3].fY := 360.0;  aStation[3].fSendAwayDist := 5.0;	// proces 3
+aStation[5].nTrack := 1;  aStation[5].fX := 480.0;  aStation[5].fY := 120.0;  aStation[5].fSendAwayDist := 300.0;	// laczenie
+aStation[6].nTrack := 1;  aStation[6].fX := 240.0;  aStation[6].fY := 120.0;  aStation[6].fSendAwayDist := 5.0;	// ruch w 6 DoF
+
+FOR k := 1 TO 6 DO
+	IF k <> 4 THEN
+		fPos.SetValuesXYC(aStation[k].fX, aStation[k].fY, 0.0);
+		aStation[k].fPosOnTrack := fbTrackStandard[aStation[k].nTrack].GetTrackPositionAt(fPos);
+		fLen := fbTrackStandard[aStation[k].nTrack].GetLength();
+		aStation[k].fSendAway := aStation[k].fPosOnTrack + aStation[k].fSendAwayDist;
+		IF aStation[k].fSendAway > fLen THEN
+			aStation[k].fSendAway := fLen;
+		END_IF
+	END_IF
+END_FOR
+
+// Stacja 4 (rozdzielenie) to rozjazd na koncu tracka 1: tam rozjazd kieruje movera na track 2 albo 3
+aStation[4].nTrack := 1;
+aStation[4].fX := 480.0;
+aStation[4].fY := 600.0;
+aStation[4].fSendAwayDist := 300.0;	// zasieg [mm]: w tej odleglosci od rozjazdu stacja 4 przejmuje movera]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Process6DoF" Id="{1ef641a9-1802-472a-bc4f-6c7aa3a95996}">
+      <Declaration><![CDATA[METHOD Process6DoF : BOOL
+VAR_INPUT
+	nMover	: UDINT;
+END_VAR
+VAR_INST
+	stRot	: ST_MoveCOptions;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[stRot.additionalTurns := 0;
+stRot.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionNonModulo;
+
+// Stacja 6: zadany ruch w szesciu stopniach swobody (X, Y wzdluz tracka robi MoveOnTrack, tu: Z, C, A, B)
+CASE nSub[nMover] OF
+	0:	fbXPlanarMover[nMover].MoveZ('S6: Z gora', 4, 20, 100, 100, 1000);
+		nSub[nMover] := 1;
+	1:	IF fbXPlanarMover[nMover].P_MoveZ.Done THEN nSub[nMover] := 10;
+		ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveZ.ErrorID; nSub[nMover] := 900; END_IF
+
+	10:	fbXPlanarMover[nMover].MoveC('S6: C +90', 90, 720, 1800, 1800, 9000, stRot);
+		nSub[nMover] := 11;
+	11:	IF fbXPlanarMover[nMover].P_MoveC.Done THEN nSub[nMover] := 20;
+		ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveC.ErrorID; nSub[nMover] := 900; END_IF
+
+	20:	fbXPlanarMover[nMover].MoveZ('S6: Z dol', 0, 20, 100, 100, 1000);
+		nSub[nMover] := 21;
+	21:	IF fbXPlanarMover[nMover].P_MoveZ.Done THEN nSub[nMover] := 30;
+		ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveZ.ErrorID; nSub[nMover] := 900; END_IF
+
+	30:	fbXPlanarMover[nMover].MoveA('S6: A przechyl', 5, 20, 100, 100, 1000);
+		nSub[nMover] := 31;
+	31:	IF fbXPlanarMover[nMover].P_MoveA.Done THEN nSub[nMover] := 40;
+		ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveA.ErrorID; nSub[nMover] := 900; END_IF
+
+	40:	fbXPlanarMover[nMover].MoveB('S6: B przechyl', 5, 20, 100, 100, 1000);
+		nSub[nMover] := 41;
+	41:	IF fbXPlanarMover[nMover].P_MoveB.Done THEN nSub[nMover] := 50;
+		ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveB.ErrorID; nSub[nMover] := 900; END_IF
+
+	50:	fbXPlanarMover[nMover].MoveA('S6: A powrot', 0, 20, 100, 100, 1000);
+		nSub[nMover] := 51;
+	51:	IF fbXPlanarMover[nMover].P_MoveA.Done THEN nSub[nMover] := 60;
+		ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveA.ErrorID; nSub[nMover] := 900; END_IF
+
+	60:	fbXPlanarMover[nMover].MoveB('S6: B powrot', 0, 20, 100, 100, 1000);
+		nSub[nMover] := 61;
+	61:	IF fbXPlanarMover[nMover].P_MoveB.Done THEN nSub[nMover] := 70;
+		ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveB.ErrorID; nSub[nMover] := 900; END_IF
+
+	70:	fbXPlanarMover[nMover].MoveC('S6: C powrot', 0, 720, 1800, 1800, 9000, stRot);
+		nSub[nMover] := 71;
+	71:	IF fbXPlanarMover[nMover].P_MoveC.Done THEN nSub[nMover] := 100;
+		ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN nErrorID := fbXPlanarMover[nMover].P_MoveC.ErrorID; nSub[nMover] := 900; END_IF
+
+	100: Process6DoF := TRUE;
+		nSub[nMover] := 0;
+
+	900: ;	// blad ruchu w 6 DoF: nErrorID
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Starting" Id="{76b69464-5772-47f9-bff0-d287e818ff6b}">
+      <Declaration><![CDATA[METHOD Starting : BOOL
+VAR_INPUT
+	bReset : BOOL;
+END_VAR
+VAR_INST
+	stJoinOptions	: ST_JoinTrackOptions;
+	nJoin			: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF bReset THEN
+	Starting := FALSE;
+	nStartingSequence := 0;
+END_IF
+CASE nStartingSequence OF
+	0:	IF NOT bReset THEN
+			nStartingSequence := 102;
+		END_IF
+
+	// --- Resetting (jak w demo): reset moverow i trackow ---
+	102: IF fbXPlanarSystem.ResetMovers() THEN
+			nStartingSequence := 103;
+		END_IF
+	103: IF fbXPlanarSystem.P_ResetMovers.Done THEN
+			nStartingSequence := 104;
+		ELSIF fbXPlanarSystem.P_ResetMovers.Error THEN
+			nErrorID := fbXPlanarSystem.P_ResetMovers.ErrorID;
+			nErrorStep := nStartingSequence;
+			nStartingSequence := 900;
+		END_IF
+	104: IF fbXPlanarSystem.ResetTracks() THEN
+			nStartingSequence := 105;
+		END_IF
+	105: IF fbXPlanarSystem.P_ResetTracks.Done THEN
+			nStartingSequence := 10;
+		ELSIF fbXPlanarSystem.P_ResetTracks.Error THEN
+			nErrorID := fbXPlanarSystem.P_ResetTracks.ErrorID;
+			nErrorStep := nStartingSequence;
+			nStartingSequence := 900;
+		END_IF
+
+	// --- Prepare (jak w demo) ---
+	10: // wlaczenie grupy (unikanie kolizji)
+		IF fbXPlanarSystem.EnableGroup() THEN
+			nStartingSequence := 11;
+		END_IF
+	11: IF fbXPlanarSystem.P_EnableGroup.Done THEN
+			nStartingSequence := 20;
+		ELSIF fbXPlanarSystem.P_EnableGroup.Error THEN
+			nErrorID := fbXPlanarSystem.P_EnableGroup.ErrorID;
+			nErrorStep := nStartingSequence;
+			nStartingSequence := 900;
+		END_IF
+
+	20: // granice stolu do grupy
+		IF fbXPlanarSystem.AddEnvironmentToGroup() THEN
+			nStartingSequence := 21;
+		END_IF
+	21: IF fbXPlanarSystem.P_AddEnviromentToGroup.Done THEN
+			nStartingSequence := 30;
+		ELSIF fbXPlanarSystem.P_AddEnviromentToGroup.Error THEN
+			nErrorID := fbXPlanarSystem.P_AddEnviromentToGroup.ErrorID;
+			nErrorStep := nStartingSequence;
+			nStartingSequence := 900;
+		END_IF
+
+	30: // wlaczenie trackow
+		IF fbXPlanarSystem.EnableTracks() THEN
+			nStartingSequence := 31;
+		END_IF
+	31: IF fbXPlanarSystem.P_EnableTracks.Done THEN
+			nStartingSequence := 40;
+		ELSIF fbXPlanarSystem.P_EnableTracks.Error THEN
+			nErrorID := fbXPlanarSystem.P_EnableTracks.ErrorID;
+			nErrorStep := nStartingSequence;
+			nStartingSequence := 900;
+		END_IF
+
+	40: // tracki do grupy
+		IF fbXPlanarSystem.AddTracksToGroup() THEN
+			nStartingSequence := 41;
+		END_IF
+	41: IF fbXPlanarSystem.P_AddTracksToGroup.Done THEN
+			nStartingSequence := 50;
+		ELSIF fbXPlanarSystem.P_AddTracksToGroup.Error THEN
+			nErrorID := fbXPlanarSystem.P_AddTracksToGroup.ErrorID;
+			nErrorStep := nStartingSequence;
+			nStartingSequence := 900;
+		END_IF
+
+	50: // wlaczenie moverow
+		IF fbXPlanarSystem.EnableMovers() THEN
+			nStartingSequence := 51;
+		END_IF
+	51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
+			nStartingSequence := 60;
+		ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+			nErrorID := fbXPlanarSystem.P_EnableMovers.ErrorID;
+			nErrorStep := nStartingSequence;
+			nStartingSequence := 900;
+		END_IF
+
+	60: // movery do grupy
+		IF fbXPlanarSystem.AddMoversToGroup() THEN
+			nStartingSequence := 61;
+		END_IF
+	61: IF fbXPlanarSystem.P_AddMoversToGroup.Done THEN
+			nStartingSequence := 70;
+		ELSIF fbXPlanarSystem.P_AddMoversToGroup.Error THEN
+			nErrorID := fbXPlanarSystem.P_AddMoversToGroup.ErrorID;
+			nErrorStep := nStartingSequence;
+			nStartingSequence := 900;
+		END_IF
+
+	70:	// movery wjezdzaja na track 1 jeden po drugim
+		nJoin := 1;
+		stJoinOptions.useOrientation := TRUE;
+		nStartingSequence := 71;
+	71:	fbXPlanarMover[nJoin].JoinTrack('Join track 1', fbTrackStandard[1], 250, 1250, 12500, stJoinOptions);
+		nStartingSequence := 72;
+	72:	IF fbXPlanarMover[nJoin].P_JoinTrack.Done THEN
+			IF nJoin < moverCount THEN
+				nJoin := nJoin + 1;
+				nStartingSequence := 71;
+			ELSE
+				nStartingSequence := 80;
+			END_IF
+		ELSIF fbXPlanarMover[nJoin].P_JoinTrack.Error THEN
+			nErrorID := fbXPlanarMover[nJoin].P_JoinTrack.ErrorID;
+			nErrorStep := nStartingSequence;
+			nStartingSequence := 900;
+		END_IF
+
+	80:	// koniec: movery sa na tracku 1, system gotowy
+		FOR nJoin := 1 TO moverCount DO
+			nStep[nJoin] := 10;
+			nDest[nJoin] := 0;
+			nLastDest[nJoin] := 0;
+			nLap[nJoin] := 0;
+			nSub[nJoin] := 0;
+			bSkipS1[nJoin] := FALSE;
+		END_FOR
+		fbRouting.Reset();
+		// polozenia stacji liczymy dopiero teraz, gdy tracki sa zbudowane, wlaczone i w grupie (jak Init stacji w demo)
+		InitStations();
+		Starting := TRUE;
+
+	900: ;	// blad: nErrorID, nErrorStep
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Startup" Id="{b507d60c-1c36-47f5-bcf3-f57938e7d9d2}">
+      <Declaration><![CDATA[METHOD Startup : BOOL
+VAR
+	i : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE nStartupSequence OF
+	0:	nStartupSequence := 1;
+	1:	// czekamy na inicjalizacje systemu XPlanar
+		IF fbXPlanarSystem.P_SystemInitialized THEN
+			nStartupSequence := 2;
+		END_IF
+	2:	// przekazanie moverow i trackow systemowi
+		FOR i := 1 TO moverCount DO
+			fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
+		END_FOR
+		FOR i := 1 TO maxTrackCount DO
+			fbXPlanarSystem.SetTrackStandard(i, fbTrackStandard[i]);
+		END_FOR
+		nTrackToBuild := 1;
+		nStartupSequence := 10;
+	10:	// budowa trackow 1, 2, 3 (track 1 musi byc pierwszy)
+		IF BuildTrack(nTrackToBuild) THEN
+			IF nTrackToBuild < maxTrackCount THEN
+				nTrackToBuild := nTrackToBuild + 1;
+			ELSE
+				nStartupSequence := 20;
+			END_IF
+		END_IF
+	20:	nStartupSequence := 30;
+	30:	Startup := TRUE;
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

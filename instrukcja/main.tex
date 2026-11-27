@@ -82,6 +82,27 @@
   \textbf{\color{bkblue}Note}\par #1
   \end{tcolorbox}}
 
+\newcommand{\ostrzezenie}[2]{%
+  \begin{tcolorbox}[beckbox,colback=bkwarn,borderline west={3pt}{0pt}{bkorange}]
+  \textbf{\color{bkorange}OSTRZEŻENIE: #1}\par #2
+  \end{tcolorbox}}
+
+\newcommand{\ostrzezenia}[1]{%
+  \begin{tcolorbox}[beckbox,colback=bkwarn,borderline west={3pt}{0pt}{bkorange}]
+  \textbf{\color{bkorange}OSTRZEŻENIE}
+  \begin{itemize}[leftmargin=1.2em,itemsep=2pt,topsep=3pt]#1\end{itemize}
+  \end{tcolorbox}}
+
+\newcommand{\notice}[2]{%
+  \begin{tcolorbox}[beckbox,colback=bknote,borderline west={3pt}{0pt}{bkblue}]
+  \textbf{\color{bkblue}UWAGA: #1}\par #2
+  \end{tcolorbox}}
+
+\newcommand{\uwagaautora}[1]{%
+  \begin{tcolorbox}[beckbox,colback=bkgray,borderline west={3pt}{0pt}{bkdark}]
+  \textbf{Uwaga autora}\par #1
+  \end{tcolorbox}}
+
 \newcommand{\zadanie}[2]{%
   \begin{tcolorbox}[beckbox,colback=bkwarn,borderline west={3pt}{0pt}{bkwarnbd}]
   \textbf{\color{bkorange}#1}\par #2
@@ -102,6 +123,9 @@
     \caption{#3}
   \end{figure}}
 
+% --- Ikona z paska narzędzi w tekście ---
+\newcommand{\ikona}[1]{\IfFileExists{zdjęcia/#1}{\raisebox{-0.25em}{\includegraphics[height=1.2em]{#1}}}{}}
+
 \title{\textbf{Instrukcja laboratoryjna}\\\vspace{0.4em}\large XPlanar --- TwinCAT 3 (IEC~61131-3)}
 \author{}
 \date{}
@@ -113,27 +137,70 @@
 \newpage
 
 \chapter{Wstęp}
-\textbf{Forma:} prowadzący pokazuje technologię wizualnie (na maszynie), nie na slajdach.
 
-\subsection*{Komentarz / zalecenia}
+\section{Zagrożenia i wytyczne bezpieczeństwa}\label{sec:zagrozenia}
+Przed pracą ze stanowiskiem należy zapoznać się z zagrożeniami związanymi z systemem XPlanar.
+
+
+\podrozdzial{Obchodzenie się z systemem XPlanar}
+\ostrzezenia{
+  \item \textbf{Pola magnetyczne.} Pola magnetyczne mogą stanowić zagrożenie dla osób z rozrusznikiem serca, implantami i defibrylatorami oraz uszkodzić nośniki danych i elektronikę. Należy zachować odstęp od części magnetycznych.
+  \item \textbf{Silne magnesy trwałe.} Magnesy movera działają także przy wyłączonym zasilaniu. Przyciągnięcie do metalu lub innych magnesów grozi zmiażdżeniem palców i odpryskami.
+  \item \textbf{Miejsce pracy.} Stanowisko musi być wolne od metali i materiałów magnetycznych. Movera wyjmuje się z zabezpieczenia transportowego tylko w razie konieczności.
+  \item \textbf{Transport.} Movera przenosi się piktogramem do góry, w zabezpieczeniu transportowym.
+  \item \textbf{Nie sięgać pod movera.} Sięganie pod movera grozi zmiażdżeniem palców. Movery wyjmuje się pojedynczo.
+  \item \textbf{Porażenie prądem.} Przed pracami przy elementach pod napięciem należy wyłączyć zasilanie i uziemić elementy przewodzące.
+}
+\notice{Pole a produkty wrażliwe}{Pole jest najsilniejsze od spodu movera. Niewielki odstęp między moverem a produktem zmniejsza jego wpływ.}
+
+
+\notice{Narzędzia i płytka}{Magnesy mogą przyciągnąć narzędzia. Przed pracą należy sprawdzić powierzchnię płytki pod kątem uszkodzeń i ciał obcych.}
+
+\podrozdzial{Elektryka i obsługa}
 \begin{itemize}
-  \item Student musi otrzymać wiedzę przed przystąpieniem do laboratorium numer 1.
-  \item Wytłumaczenie musi wystąpić \textbf{wizualnie} --- ilość wiedzy jest zbyt duża, by przedstawić ją na wykładzie, którego slajdy nie odzwierciedlają ani nie uczą realnej pracy przy maszynie.
-  \item Z doświadczenia: po zajęciach z PLC lub jakichkolwiek zajęciach z automatyki przemysłowej studenci nie dochodzą do wyjaśnienia zasady działania ani postępowania z maszyną. Typowy student nawet nie ma pojęcia, czym \textit{dokładnie} jest PLC.
-  \item Wizualne przekazanie wiedzy, co można zrobić z danym sprzętem --- choćby na podstawie PLC nie od Beckhoffa, a np. Delty/Siemensa, na realnych przykładach.
-  \item To kluczowe do efektywnego przeprowadzenia laboratoriów, ponieważ systemy Beckhoffa cechują się wysokim poziomem wejścia relatywnie do innych środowisk, jak TIA Portal czy ISPSoft.
-  \item Podkreślić, że na rok 2026 platforma XPlanar Beckhoff jest technologią jeszcze nie w 100\% dopracowaną: na razie jest rozwijana i mało jest systemów zaimplementowanych, jednakże jest to rozwiązanie bardzo rzeczowe / obiecujące \textit{(do doprecyzowania sformułowanie)}.
+  \item Przed pracą wyłączamy maszynę i zabezpieczamy ją przed niezamierzonym uruchomieniem.
+  \item Nie używamy uszkodzonych elementów i przestrzegamy warunków przechowywania, transportu i pracy.
+  \item Przestrzegamy momentów dokręcania i sprawdzamy połączenia (np.\ śruby M3 dokręca się momentem 1,5~Nm).
+  \item Elementy przewozimy i przechowujemy w oryginalnym lub nieprzewodzącym opakowaniu.
+  \item Nie wolno wyjmować elementów z produktów --- może to zrobić tylko producent.
+  \item Pracujemy bez pośpiechu i zachowujemy porządek na stanowisku.
+\end{itemize}
+
+
+
+
+\notice{Źródła}{Beckhoff, \href{https://infosys.beckhoff.com/content/1033/xplanar_ba/index.html}{XPlanar APS4322 Operating Instructions}, w tym rozdziały \href{https://infosys.beckhoff.com/content/1033/xplanar_ba/16228568715.html}{Safety pictograms}, \href{https://infosys.beckhoff.com/content/1033/xplanar_ba/16228504203.html}{Before operation}, \href{https://infosys.beckhoff.com/content/1033/xplanar_ba/18432527243.html}{Installing the movers} i \href{https://infosys.beckhoff.com/content/1033/xplanar_ba/20777562507.html}{Disassembly}. Treść streszczono i przetłumaczono. Obowiązuje wersja oryginalna.}
+
+\section{Opis autora}\label{sec:opis-autora}
+\podrozdzial{Czym jest XPlanar i do czego się go używa}
+XPlanar to planarny system transportu z lewitacją magnetyczną: swobodnie unoszące się movery poruszają się nad płytkami z cewkami, bez kontaktu mechanicznego. Platforma nie jest jeszcze w pełni dopracowana. Wiele jej funkcji nie działa perfekcyjnie, a ich zachowanie może się zmieniać wraz z aktualizacjami oprogramowania. Należy o tym pamiętać podczas ćwiczeń.
+
+Najczęściej stosuje się go w przemyśle higienicznym, który ostatnio dynamicznie się rozwija. Wiele firm tworzy obecnie wyspecjalizowane produkty do pracy bez zabrudzeń, takich jak smary. Ruch bez styku mechanicznego pomaga zapewnić wysoki rygor czystości, potrzebny np.\ w badaniach nad DNA.
+
+\podrozdzial{Cel laboratorium}
+Laboratorium ma trzy cele:
+\begin{itemize}
+  \item wprowadzić w możliwości systemu i pokazać, jak zbudować stanowisko transportu wewnątrzmaszynowego,
+  \item przybliżyć specyfikę pracy z PLC w oparciu o \textbf{ST} (\textit{Structured Text}), który coraz częściej wypiera klasyczne LD i FBD,
+  \item pokazać, jak szybko można budować złożone systemy osiowe przy użyciu TwinCAT, a nie tylko samego XPlanara, a także przybliżyć specyfikę pracy w Przemyśle~4.0.
+\end{itemize}
+
+
+
+\podrozdzial{Wytyczne dla studentów}
+\begin{itemize}
+  \item Zadania podano na początku każdego rozdziału. Większość z nich rozwiązujemy wspólnie w treści rozdziału, a miejscami pojawiają się dodatkowe zadania.
+  \item Większość kodu jest dostępna na GitHubie, a według autora student powinien móc korzystać z generatywnej AI. Celem laboratorium nie jest pisanie kodu opartego na bibliotekach, które ciągle się zmieniają, ani zapamiętywanie wszystkich metod biblioteki XPlanar. Celem jest zrozumienie pracy maszyny jako całości: problemów, jakie stwarza programowanie PLC, sposobów ich omijania oraz wpływu fizycznych ograniczeń XPlanara na przebieg procesu (\textit{flow}). Pozwala to skupić się na automatyzacji całego stanowiska i głębokim zrozumieniu jego ograniczeń, a nie na samym kodzie.
 \end{itemize}
 
 \section{Jak działa XPlanar i jego możliwości}
-\begin{itemize}
-  \item jak działa,
-  \item jakie są maksymalne zakresy działania,
-  \item jakie typy i rozmiary,
-  \item możliwości i miejsca zastosowania,
-  \item ograniczenia moverów.
-\end{itemize}
-\opisDoUzupelnienia{}
+\podrozdzial{Jak działa}
+XPlanar składa się z płytek stojana (inaczej tile'ów), moverów i komputera przemysłowego. Płytki łączy się krawędziami w dowolny układ, a nad całą powierzchnią unoszą się niezależnie sterowane movery. Płytka zawiera cewki, elektronikę mocy, zasilacz i detekcję położenia, więc jest w pełni zintegrowanym napędem. Mover jest elementem biernym: składa się wyłącznie z magnesów trwałych ułożonych w macierze Halbacha i zamkniętych w aluminiowej obudowie. Siła pochodzi z oddziaływania prądów w cewkach płytki z polem magnesów.
+
+Nad moverem jest zawsze więcej aktywnych cewek, niż potrzeba, żeby wytworzyć siłę i moment w sześciu stopniach swobody. Oprogramowanie dobiera prądy tak, żeby mover dostał zadaną siłę, niezależnie od położenia nad cewkami. Położenie movera mierzą czujniki Halla w płytce. Unikanie kolizji między moverami realizuje oprogramowanie, które planuje trasę każdego movera z uwzględnieniem tras pozostałych.
+
+
+
 
 \section{Szafa sterownicza}
 \zrzutEkranu[0.8\linewidth]{01-wstep/szafa-sterownicza/szafa-sterownicza-widok-ogolny.png}{Szafa sterownicza --- widok ogólny (zdjęcie do dodania)}
@@ -144,25 +211,35 @@
 \opisDoUzupelnienia{}
 
 \section{Środowisko TwinCAT XAE Shell}
-Projekty TwinCAT 3 tworzymy w środowisku \textbf{TcXaeShell 64-bit} (wersja 7.21.11, oparte na Visual Studio 2022) wraz z \textbf{TwinCAT XAE 4026.27}.
+\uwaga{Jak zainstalować TwinCAT na własnym komputerze, opisano w dodatku \hyperref[sec:instalacja]{\ref*{sec:instalacja}~\textit{Instalacja środowiska TwinCAT}}.}
+Projekty TwinCAT 3 tworzymy w środowisku \textbf{TcXaeShell 64-bit} (wersja 7.21.11, opartym na Visual Studio 2022) wraz z \textbf{TwinCAT XAE 4026.27}.
+
+\podrozdzial{Otwarcie projektu demo}
+Kod jest dostępny na GitHubie: \href{https://github.com/uzytkownik/xplanar-laboratory-course}{github.com/uzytkownik/xplanar-laboratory-course}. Otwieramy podany folder (xyz).
+
+Projekt otwieramy jako plik \texttt{.sln} (\textit{solution}) w aplikacji \textbf{TwinCAT XAE Shell 64-bit}. 
+\zrzutEkranu[0.3\linewidth]{01-wstep/srodowisko-tcxaeshell/tcxaeshell-ikona-menu-start.png}{Ikona \textit{TwinCAT XAE Shell 64-bit} }
 
 \podrozdzial{Okno główne}
 Okno główne składa się z paska menu i paska narzędzi, Solution Explorera z drzewem projektu, obszaru edytora, w którym otwieramy wybrane elementy projektu, oraz okien pomocniczych (m.in.\ Error List i Output). 
 \podrozdzial{Pasek menu i narzędzi}
 \zrzutEkranu[0.95\linewidth]{01-wstep/srodowisko-tcxaeshell/tcxaeshell-pasek-narzedzi.png}{Edytor TcXaeShell --- pasek menu i pasek narzędzi}
 
-Z paska, z którego będziemy realnie korzystać, od lewej:
+Elementy paska, z których będziemy korzystać (od lewej):
 \begin{enumerate}
   \item \textbf{wybór wersji TwinCAT}, przez którą się komunikujemy, a następnie wersja aktywna (\textit{Active version}),
-  \item \textbf{Activate Configuration} --- wgranie konfiguracji projektu na wybrany target,
-  \item \textbf{Run Mode} i \textbf{Config Mode} --- przełączanie trybu pracy runtime'u (zielona --- Run, niebieska --- Config),
-  \item \textbf{aktywny projekt} (\texttt{StarterkitBase}) --- lista rozwijana projektów w rozwiązaniu,
-  \item \textbf{target} (\texttt{<Local>}) --- system, na którym uruchamiamy projekt.
+\zrzutEkranu[0.3\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-wersja-twincat.png}{Lista wersji TwinCAT}
+  \item \textbf{Activate Configuration} \ikona{01-wstep/srodowisko-tcxaeshell/ikona-activate-configuration.png} --- wgranie konfiguracji projektu na wybrany target,
+  \item \textbf{Run Mode} \ikona{01-wstep/srodowisko-tcxaeshell/ikona-run-mode.png} i \textbf{Config Mode} \ikona{01-wstep/srodowisko-tcxaeshell/ikona-config-mode.png} --- przełączanie trybu pracy runtime'u (zielona --- Run, niebieska --- Config),
+  \item \textbf{aktywny projekt} (\texttt{StarterkitBase}) --- lista rozwijana projektów TwinCAT w rozwiązaniu,
+\zrzutEkranu[0.3\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-aktywny-projekt.png}{Lista aktywnego projektu TwinCAT}
+  \item \textbf{target} (\texttt{<Local>}) --- system, na którym uruchamiamy projekt; \textit{Choose Target System} otwiera wybór sterownika,
+\zrzutEkranu[0.4\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-target.png}{Lista targetów}
+  \item \textbf{projekt PLC} (\texttt{SK12\_StarterkitApplicationPLC\_V3}) --- projekt PLC, którego dotyczą polecenia \textit{Login}, \textit{Start} i \textit{Stop}.
+\zrzutEkranu[0.35\linewidth]{01-wstep/srodowisko-tcxaeshell/lista-projekt-plc.png}{Lista projektów PLC}
 \end{enumerate}
 
 
-
-Sterownik zewnętrzny wybieramy po nazwie lub numerze seryjnym; wymaga to wcześniej dodanej trasy komunikacji (\textit{Edit Routes w Zasobniku}).
 
 \podrozdzial{Solution Explorer}
 Solution Explorer dzieli projekt na części: SYSTEM, MOTION, PLC, SAFETY, C++, VISION, ANALYTICS i I/O. W laboratorium korzystamy z SYSTEM, MOTION, I/O i PLC.
@@ -174,13 +251,13 @@ SYSTEM to konfiguracja komputera sterującego, na którym uruchamiamy projekt.
 
 \textbf{License} --- licencje TwinCAT.
 
-\textbf{Real-Time} --- w tej zakładce definiujemy rdzenie procesora, które pracują, aby system działał szybko.
+\textbf{Real-Time} --- w tej zakładce określamy, które rdzenie procesora są wykorzystywane.
 
 \zrzutEkranu[0.95\linewidth]{01-wstep/czesci-projektu/solution-explorer-system-realtime.png}{Solution Explorer --- SYSTEM, Real-Time (Settings)}
 
-Rdzenie \textit{shared} (współdzielone) TwinCAT dzieli z Windows, a \textit{Core Limit} określa, jaką część czasu rdzenia może zająć TwinCAT. Rdzenie \textit{isolated} (izolowane) są przydzielone wyłącznie TwinCAT i Windows z nich nie korzysta. Po zmianie parametrów trzeba zapisać konfigurację (\textit{Set on Target}).
+Rdzenie \textit{shared} (współdzielone) TwinCAT dzieli z systemem Windows, a \textit{Core Limit} określa, jaką część czasu rdzenia może zająć TwinCAT. Rdzenie \textit{isolated} (izolowane) są przydzielone wyłącznie do TwinCAT, a Windows z nich nie korzysta. Po zmianie parametrów trzeba zapisać konfigurację (\textit{Set on Target}).
 
-\textbf{TcCOM Objects} --- obiekty, w których żyje system XPlanar. Obiekt \texttt{XPlanar} zawiera:
+\textbf{TcCOM Objects} --- obiekty, w których znajduje się system XPlanar. Obiekt \texttt{XPlanar} zawiera:
 \begin{itemize}
   \item \texttt{Part1} --- kafelki, po których poruszają się movery,
   \item \texttt{Area1} --- obszar ruchu, czyli zdefiniowane środowisko, w którym movery mogą się poruszać,
@@ -195,10 +272,10 @@ BTN (\textit{Beckhoff Traceability Number}) to numer fabryczny movera z jego nak
 
 W jego skład wchodzą:
 \begin{itemize}
-  \item \texttt{Axes} --- po jednej osi na każdy mover (to nie są osie silników). Oś jest zlinkowana z obiektem movera w TcCOM oraz ze zmiennymi PLC (\texttt{PlcToMc}: komendy, \texttt{McToPlc}: stany i pozycja); linki PLC wykonujemy sami (\textit{Change Axis PLC Links}),
-  \item \texttt{Groups} --- grupa \textbf{XPlanar} (sprawdzanie kolizji movery--tracki--środowisko), \textbf{Environment} (powierzchnia kafelków, czyli obszar, w którym się poruszamy) oraz \textbf{tracki} (\textit{Track1--3}, „ulice'' dla moverów).
+  \item \texttt{Axes} --- po jednym obiekcie na każdy mover. Oś jest zlinkowana z obiektem movera w TcCOM oraz ze zmiennymi PLC: \texttt{PlcToMc} (komendy) i \texttt{McToPlc} (stany i pozycja).
+  \item \texttt{Groups} --- grupa \textbf{XPlanar} sprawdza kolizje między moverami, trackami i środowiskiem; \textbf{Environment} to powierzchnia kafelków, czyli obszar ruchu; \textbf{tracki} \textit{Track1--3} to zdefiniowane trasy moverów.
 \end{itemize}
-Tylko osie moverów mają odpowiednik w sprzęcie. Grupa, Environment i tracki są czysto programowe, więc linkuje się je tylko z PLC (\texttt{MCTOPLC\_STD}), aby PLC mogło nimi sterować.
+Tylko osie moverów mają odpowiednik w sprzęcie. Grupa, Environment i tracki są czysto programowe.
 
 \podpodrozdzial{I/O}
 I/O opisuje fizyczne urządzenia i powiązania między nimi a resztą projektu.
@@ -206,19 +283,19 @@ I/O opisuje fizyczne urządzenia i powiązania między nimi a resztą projektu.
 \zrzutEkranu[0.4\linewidth]{01-wstep/czesci-projektu/solution-explorer-io.png}{Solution Explorer --- I/O}
 \zrzutEkranu[0.6\linewidth]{01-wstep/czesci-projektu/solution-explorer-io-mappings.png}{Solution Explorer --- I/O, Mappings}
 
-Na zrzutach widać:
+W I/O znajdują się:
 \begin{itemize}
   \item trzy urządzenia EtherCAT: Device 1, Device 2 i Device 3,
   \item w Device 1 sprzęgacz EK1200,
-  \item w Device 2 terminale APS4322-7000 o numerach 5, 7, 9, 11, 13 i 15, czyli kafelki XPlanara,
-  \item w Device 3 terminale APS4322-7000 o numerach 17, 19, 21, 23, 25 i 27, również kafelki,
-  \item w każdym urządzeniu EtherCAT elementy wspólne: Image, Image-Info, SyncUnits, Inputs, Outputs i InfoData,
+  \item w Device 2 terminale APS4322-7000 o numerach 5, 7, 9, 11, 13 i 15, czyli kafle XPlanara,
+  \item w Device 3 terminale APS4322-7000 o numerach 17, 19, 21, 23, 25 i 27, również kafle,
   \item urządzenie USB: Device 6,
-  \item Mappings, czyli wszystkie linki w jednym miejscu: obiekty moverów 0000kyte, 0000kyto, 0000kytm i 0000kytn powiązane ze swoimi osiami, a także Context, XPlanar, Environment i Track1--3 powiązane z instancją projektu PLC.
+  \item Mappings, czyli linki między obiektem PLC a I/O oraz obiektami NC/MOTION. Obiekty moverów 0000kyte, 0000kyto, 0000kytm i 0000kytn są powiązane ze swoimi obiektami, a Context, XPlanar, Environment i Track1--3 --- z instancją projektu PLC.
 \end{itemize}
 
 \podrozdzial{Ikona TwinCAT w zasobniku systemu}
-Menu ikony TwinCAT w zasobniku systemu pozwala m.in. uruchomić środowisko (TcXaeShell 32/64-bit, Visual Studio), uruchomić lub zrestartować runtime (\texttt{Start/Restart}), przełączyć go w tryb Config (\texttt{Config}) oraz otworzyć ustawienia routera ADS (\texttt{Router}: \texttt{Info}, \texttt{Cleanup}, \texttt{Change AMS NetId}, \texttt{Edit Routes}). Stan runtime'u widać po kolorze ikony (niebieska --- Config, zielona --- Run); szczegóły: \href{https://infosys.beckhoff.com/content/1033/tc3_userinterface/2867291659.html}{Information bar} w Infosys.
+Menu ikony TwinCAT w zasobniku systemu pozwala m.in. uruchomić środowisko, uruchomić lub zrestartować runtime, przełączyć go w tryb Config oraz otworzyć ustawienia routera ADS. Stan runtime'u widać po kolorze ikony: niebieska --- Config, zielona --- Run. 
+
 
 \zrzutEkranu[0.4\linewidth]{01-wstep/srodowisko-tcxaeshell/tcxaeshell-zasobnik-systemu.png}{Menu ikony TwinCAT w zasobniku systemu}
 
@@ -238,11 +315,11 @@ Językiem programowania jest \textbf{ST} (\textit{Structured Text}).
 
 \textbf{Jednostki organizacyjne (POU).} Program składa się z jednostek organizacyjnych (\textit{Program Organization Unit}), które dodajemy w Solution Explorer:
 \begin{itemize}
-  \item \textbf{Program} --- jednostka wywoływana bezpośrednio przez zadanie; jest jedna i zachowuje stan między cyklami,
+  \item \textbf{Program} --- jednostka wywoływana bezpośrednio przez zadanie, jest jedna i zachowuje stan między cyklami,
   \item \textbf{Function Block} --- jednostka z własną pamięcią: tworzymy jej instancje, a każda pamięta swój stan. Może mieć metody i właściwości, dziedziczyć po innym bloku i implementować interfejsy,
   \item \textbf{Function}  --- jednostka bez pamięci, która dla tych samych argumentów zwraca ten sam wynik,
   \item \textbf{Method}  --- funkcja należąca do bloku funkcyjnego lub programu, wywoływana na jego instancji, z dostępem do jego zmiennych,
-  \item \textbf{Property} (właściwość) --- z zewnątrz działa jak zmienna bloku, ale odczyt i zapis wykonuje kod (\textit{Get} i \textit{Set}),
+  \item \textbf{Property}  --- z zewnątrz działa jak zmienna bloku, ale odczyt i zapis wykonuje kod (\textit{Get} i \textit{Set}),
   \item \textbf{Action}  --- dodatkowy fragment kodu bloku lub programu, bez własnych argumentów, pracujący na jego zmiennych,
   \item \textbf{Interface}  --- lista metod i właściwości bez kodu; blok, który go implementuje, musi je zawierać, dzięki czemu różne bloki można traktować jednakowo,
   \item \textbf{DUT} (\textit{Data Unit Type}) --- definicja własnego typu danych: struktury, wyliczenia lub aliasu,
@@ -265,14 +342,15 @@ Językiem programowania jest \textbf{ST} (\textit{Structured Text}).
 \podrozdzial{References}
 \zrzutEkranu[0.4\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc-references.png}{Solution Explorer --- PLC, References}
 
-References to biblioteki dołączone do projektu: gotowe bloki i typy, z których korzysta program. Używamy między innymi \texttt{Tc3\_XPlanarStandard}, która nie jest ogólnie udostępniana przez Beckhoff. Dzięki niej pisanie programu jest wyższego poziomu: zamiast niskopoziomowych komend ruchu używamy gotowych obiektów systemu i movera, np.\ wywołania \texttt{std.cycle()}.
+References to biblioteki dołączone do projektu: gotowe bloki i typy, z których korzysta program. Używamy między innymi \texttt{Tc3\_XPlanarStandard}, która nie jest ogólnie udostępniana przez Beckhoff. Dzięki niej program pisze się na wyższym poziomie abstrakcji: zamiast niskopoziomowych komend ruchu używamy gotowych obiektów systemu i movera, np.\ wywołania \texttt{std.cycle()}.
 
 \podrozdzial{Linki Inputs i Outputs}
 \zrzutEkranu[0.8\linewidth]{01-wstep/kod-demo-sk12/solution-explorer-plc-instance-linki.png}{Solution Explorer --- instancja PLC (Inputs, Outputs)}
 
-Instancja projektu PLC ma dwie listy zmiennych wymienianych z resztą systemu w każdym cyklu zadania. \textbf{PlcTask Inputs} to dane wchodzące do PLC: przyciski pierścienia CX, a także statusy z MOTION (\texttt{MCTOPLC}) dla Environment, grupy, czterech moverów i trzech torów. \textbf{PlcTask Outputs} to dane wychodzące z PLC: komendy dla czterech moverów (\texttt{PLCTOMC}). \textbf{Link} to połączenie zmiennej PLC ze zmienną drugiej strony, np.\ osi w MOTION; dzięki niemu wartości są kopiowane automatycznie w każdym cyklu, a PLC może sterować moverami. Zmienne przyciskowe w programie są zadeklarowane jako wejścia (\texttt{AT \%I*}), czyli bez stałego adresu, który nadaje dopiero link.
+Instancja projektu PLC ma dwie listy zmiennych wymienianych z resztą systemu w każdym cyklu zadania. \textbf{PlcTask Inputs} to dane wchodzące do PLC, a także statusy z MOTION (\texttt{MCTOPLC}) dla Environment, grupy, czterech moverów i trzech torów. \textbf{PlcTask Outputs} to dane wychodzące z PLC: komendy dla czterech moverów (\texttt{PLCTOMC}). \textbf{Link} to połączenie zmiennej PLC ze zmienną drugiej strony, np.\ osi w MOTION. Dzięki niemu wartości są kopiowane automatycznie w każdym cyklu, a PLC może sterować moverami. Cewki (zmienne wejściowe) w programie są zadeklarowane jako wejścia (\texttt{AT \%I*}), czyli bez stałego adresu, który nadaje dopiero link.
 
 \section{Odpalenie projektu}
+\uwaga{Uruchomienie symulacji na prywatnym komputerze wymaga wykonania kroków z dodatku \hyperref[sec:instalacja]{\ref*{sec:instalacja}~\textit{Instalacja środowiska TwinCAT}}.}
 \podrozdzial{Rodzaje pracy: Normal, BasicSimulation, AdvancedSimulation}
 Tryb ustawiamy w obiekcie XPlanar: \texttt{SYSTEM} $\rightarrow$ \texttt{TcCOM Objects} $\rightarrow$ \texttt{XPlanar} $\rightarrow$ \texttt{Parameter (Init)} $\rightarrow$ \texttt{OperationMode}.
 
@@ -285,9 +363,9 @@ Tryb ustawiamy w obiekcie XPlanar: \texttt{SYSTEM} $\rightarrow$ \texttt{TcCOM O
 \midrule
 \texttt{Normal} & wymagany & wymagany & rzeczywisty system\\
 \midrule[0.3pt]
-\texttt{BasicSimulation} & praca na komputerze & nie musi być spełniony, można symulwoać na jednym rdzeniu& symulowany ruch moverów, bez obliczania prądów i sprzężenia zwrotnego\\
+\texttt{BasicSimulation} & praca na komputerze & nie musi być spełniony, można symulować na jednym rdzeniu& symulowany ruch moverów, bez obliczania prądów i sprzężenia zwrotnego\\
 \midrule[0.3pt]
-\texttt{Advanced-\allowbreak Simulation} & ? & wymagany; układ zadań jak w rzeczywistej konfiguracji (czas cyklu, rozłożenie obciążenia na rdzenie) & aktywne obliczanie prądów i sprzężenia zwrotnego, bliżej trybu \texttt{Normal}\\
+\texttt{Advanced-\allowbreak Simulation} & symulacja na PLC bez samego ruchu & wymagany, układ zadań jak w rzeczywistej konfiguracji  & aktywne obliczanie prądów i sprzężenia zwrotnego, bliżej trybu \texttt{Normal}\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -295,49 +373,130 @@ Tryb ustawiamy w obiekcie XPlanar: \texttt{SYSTEM} $\rightarrow$ \texttt{TcCOM O
 
 
 
+\podrozdzial{Początkowe ustawienie moverów}\label{sec:ustawienie-poczatkowe}
+We wszystkich zadaniach wykorzystujemy początkowe ustawienie czterech moverów w narożnikach stołu (rys.~\ref{fig:ustawienie-poczatkowe}). Dokładne położenie $X$ i $Y$ oraz jego niewielki błąd nie mają większego znaczenia dla ćwiczeń. Istotny jest natomiast obrót movera wokół własnej osi, czyli parametr $C$: zgodnie ze specyfikacją moverów nie może on przekraczać $10^\circ$. Obrót o większy kąt jest możliwy tylko w wyznaczonych punktach stołu.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.012cm,y=0.012cm]
+  \foreach \i in {0,...,3} \foreach \j in {0,...,2}
+    \draw[bkdark!40,fill=bkgray] (\i*240,\j*240) rectangle ++(240,240);
+  \draw[very thick,bkdark] (0,0) rectangle (960,720);
+  % movery APM4330: 155 x 155 mm, polozenie X, Y z symulacji
+  \foreach \cx/\cy in {129/130, 836/125, 129/581, 822/572}
+    \filldraw[fill=bkorange!70,draw=bkorange!80!black,thick] (\cx-77.5,\cy-77.5) rectangle ++(155,155);
+\end{tikzpicture}
+\caption{Początkowe ustawienie czterech moverów }
+\label{fig:ustawienie-poczatkowe}
+\end{figure}
+
 \podrozdzial{Odpalenie w trybie Normal na PLC}
 Tryb \texttt{Normal} to praca z rzeczywistym sprzętem na sterowniku XPlanara.
 \begin{enumerate}
-  \item Otwieramy rozwiązanie (aktualnie: \texttt{StarterkitBase}) w TcXaeShell.
-  \item Wybieramy target: sterownik XPlanara (np.\ \texttt{CX-94E797}); wymaga to dodanej wcześniej trasy komunikacji.
+  \item Wybieramy pracę normalną.
+  \item Wybieramy target: sterownik XPlanara (np.\ \texttt{CX-94E797}).
   \item Sprawdzamy, czy \texttt{OperationMode} to \texttt{Normal}.
-  \item Sprawdzamy, urządzenia I/O są enablowane.
+  \item Sprawdzamy, czy urządzenia I/O są włączone (\textit{enabled}).
   \item Upewniamy się, że movery stoją na kafelkach.
   \item Wykonujemy \textit{Activate Configuration}, logujemy się do PLC i uruchamiamy program.
   \item Maszynę obsługujemy z wizualizacji: Start, Stop, wprowadzenie w stan Execute.
 \end{enumerate}
 
-\podrozdzial{Odpalenie w symulacji}
-W symulacji projekt działa bez maszyny: symulowany jest sprzęt XPlanar (kafelki i movery), a program PLC wykonuje się normalnie. Wspólne kroki:
+\podpodrozdzial{Wizualizacja}\phantomsection\label{sec:wizualizacja}
+Wizualizacja to ekran operatora zapisany w projekcie PLC. Znajduje się w \texttt{PLC} $\rightarrow$ \texttt{SK12\_StarterkitApplicationPLC\_V3} $\rightarrow$ \texttt{VISU} $\rightarrow$ \texttt{Visualization}.
 \begin{enumerate}
-  \item w obiekcie XPlanar ustawiamy \texttt{OperationMode} na \texttt{BasicSimulation} lub \texttt{AdvancedSimulation},
-  \item urządzenia I/O ustawiamy na disable albo na simulation mode.
-  \item wykonujemy \textit{Activate Configuration}, logujemy się do PLC i uruchamiamy program,
-  \item zmiany w symulacji obserwujemy na dwa sposoby:
-  \begin{itemize}
-    \item \textit{TwinCAT} $\rightarrow$ \textit{MC3-XPlanar Environment View},
-    \item \textit{TwinCAT} $\rightarrow$ \textit{XPlanar} $\rightarrow$ \textit{Configurator} $\rightarrow$ \textit{Live View}; po zmianach w projekcie klikamy \textit{Reload},
-  \end{itemize}
+  \item Klikamy dwukrotnie \texttt{Visualization} --- otwiera się karta \textit{Visualization} w obszarze edytora.
+  \item Wizualizacja działa dopiero po zalogowaniu do PLC (\textit{Login}) i uruchomieniu programu (\textit{Start}). Wcześniej widać tylko jej projekt, bez aktualnych wartości.
+  \item Na wizualizacji widać płytki i movery (M1--M4) oraz przyciski do sterowania maszyną.
+\end{enumerate}
+
+\podpodrozdzial{XPlanar Environment View}\phantomsection\label{sec:environmentview}
+\textit{XPlanar Environment View} to podgląd płytek i moverów wbudowany w TwinCAT. Działa niezależnie od wizualizacji PLC, więc można go użyć także w projekcie bez wizualizacji.
+\zrzutEkranu[0.6\linewidth]{01-wstep/odpalenie-projektu/twincat-menu-mc3-environment-view.png}{Menu TwinCAT --- MC3 $\rightarrow$ XPlanar Environment View}
+\begin{enumerate}
+  \item Z paska menu wybieramy \textit{TwinCAT} $\rightarrow$ \textit{MC3} $\rightarrow$ \textit{XPlanar Environment View}.
+  \item Okno pokazuje aktualne położenie moverów, gdy konfiguracja jest aktywna, a program uruchomiony.
+\end{enumerate}
+Przy pracy z maszyną jest to dodatkowe sprawdzenie: \textbf{ruch moverów w Environment View powinien pokrywać się z ruchem na prawdziwym XPlanarze}. Różnica oznacza, że położenie w sterowniku nie zgadza się z rzeczywistym, np.\ po ręcznym przesunięciu movera albo przy błędnym przypisaniu moverów.
+
+\podrozdzial{Odpalenie w symulacji}\phantomsection\label{sec:symulacja}
+W symulacji projekt działa bez maszyny: symulowany jest sprzęt XPlanar (płytki i movery), a program PLC wykonuje się normalnie. Wspólne kroki:
+
+
+\podpodrozdzial{Krok 1: tryb pracy XPlanar}
+\zrzutEkranu[0.95\linewidth]{01-wstep/odpalenie-projektu/tccom-xplanar-operationmode-basicsimulation.png}{Obiekt XPlanar --- Init Parameter, lista trybów w \texttt{OperationMode}}
+\begin{enumerate}
+  \item W Solution Explorerze klikamy dwukrotnie \texttt{SYSTEM} $\rightarrow$ \texttt{TcCOM Objects} $\rightarrow$ \texttt{XPlanar}.
+  \item Przechodzimy na zakładkę \textit{Init Parameter}.
+  \item W grupie \textit{General} rozwijamy listę w polu \texttt{OperationMode} (\texttt{Normal}, \texttt{BasicSimulation}, \texttt{AdvancedSimulation}) i wybieramy \texttt{BasicSimulation}.
+\end{enumerate}
+
+\podpodrozdzial{Krok 2: urządzenia I/O}
+W symulacji nie ma prawdziwych urządzeń, więc TwinCAT nie może się z nimi łączyć. Urządzenia EtherCAT przełączamy w tryb symulacji, a urządzenie USB wyłączamy.
+\zrzutEkranu[0.5\linewidth]{01-wstep/odpalenie-projektu/io-menu-simulation-mode.png}{Menu kontekstowe urządzenia I/O --- \textit{Simulation Mode} i \textit{Disable}}
+\begin{enumerate}
+  \item W Solution Explorerze rozwijamy \texttt{I/O} $\rightarrow$ \texttt{Devices}.
+  \item Klikamy prawym przyciskiem \texttt{Device 1 (EtherCAT)} i wybieramy \textit{Simulation Mode}.
+  \item To samo robimy dla \texttt{Device 2 (EtherCAT)} i \texttt{Device 3 (EtherCAT)}; to do nich podłączone są kafelki \texttt{APS4322}.
+  \item Klikamy prawym przyciskiem \texttt{Device 6 (USB)} i wybieramy \textit{Disable}.
+\end{enumerate}
+\zrzutEkranu[0.4\linewidth]{01-wstep/odpalenie-projektu/io-urzadzenia-symulacja.png}{Drzewo I/O przygotowane do symulacji}
+Na koniec drzewo I/O wygląda jak na rysunku: trzy urządzenia EtherCAT mają ikonę symulacji, a urządzenie USB jest przekreślone (wyłączone).
+
+\podpodrozdzial{Krok 3: ustawienia Real-Time}
+\uwaga{Krok dotyczy wyłącznie symulacji na prywatnym komputerze. Przy pracy na PLC jest pomijany.}
+Ustawienia otwieramy przez \texttt{SYSTEM} $\rightarrow$ \texttt{Real-Time}, zakładka \textit{Settings}. Górna tabela pokazuje rdzenie procesora, dolna --- zadania i rdzeń, na którym każde działa.
+\zrzutEkranu[0.95\linewidth]{01-wstep/odpalenie-projektu/realtime-ustawienia-symulacja.png}{Real-Time --- 6 rdzeni współdzielonych, każde zadanie XPlanar na osobnym rdzeniu}
+
+Ustawienia zależą od komputera, bo projekt przygotowano na innym sprzęcie. Muszą być spełnione warunki:
+\begin{itemize}
+  \item każde zadanie XPlanar (\texttt{Task\_4}, \texttt{\_5}, \texttt{\_6}, \texttt{\_7}) działa na \textbf{osobnym} rdzeniu,
+  \item wszystkie zadania XPlanar mają czas cyklu \textbf{0,250~ms},
+  \item pozostałe zadania działają na innych rdzeniach (na rysunku: 0 i 1).
+\end{itemize}
+Potrzeba więc co najmniej 5 rdzeni.
+
+\textbf{Na komputerze prywatnym ustawiamy wszystkie rdzenie jako współdzielone} (\textit{Shared}, na rysunku: 6 / 0). Rdzeń izolowany Windows traci przy każdym uruchomieniu komputera, nawet gdy TwinCAT nie działa --- łatwo więc nieświadomie zmniejszyć liczbę rdzeni (np.\ przy 4 izolowanych z 6 Windows widzi tylko 2). Rdzenie izolowane stosuje się na sterowniku maszyny.
+
+\begin{enumerate}
+  \item Klikamy \textit{Read from Target}, potem ustawiamy \textit{Shared / Isolated} na wszystkie rdzenie współdzielone (6 / 0).
+  \item Jeśli liczba się zmieniła, klikamy \textit{Set on Target}. \textbf{Wymaga to restartu komputera.}
+  \item W górnej tabeli ustawiamy \textit{Base Time} 250~µs dla rdzeni 2--5.
+  \item W dolnej tabeli w kolumnie \textit{RT-Core} przypisujemy \texttt{Task\_4}--\texttt{Task\_7} do rdzeni 2--5, a resztę zadań do rdzeni 0 i 1.
+  \item Sprawdzamy, czy zadania XPlanar mają \textit{Cycle Time} 0,250~ms, i zapisujemy projekt (\textit{Ctrl+S}).
+\end{enumerate}
+
+\textbf{Zmiana czasu cyklu.} Jeśli zadanie XPlanar ma inny czas cyklu, zmieniamy go w samym zadaniu (w tabeli Real-Time \textit{Cycle Ticks} bywa niedostępne): \texttt{SYSTEM} $\rightarrow$ \texttt{Tasks} $\rightarrow$ \texttt{XPlanar Task\_}\textit{nr}, zakładka \textit{Task}, \textit{Cycle ticks} = 1 (0,250~ms).
+\zrzutEkranu[0.8\linewidth]{01-wstep/odpalenie-projektu/task-xplanar-cycle-ticks.png}{Zadanie \texttt{XPlanar Task\_7} --- \textit{Cycle ticks} = 1 (0,250~ms)}
+
+\textbf{Gdy warunki nie są spełnione}, \textit{Activate Configuration} kończy się oknem \textit{fatal error} (\texttt{AdsError: 1792}). Przyczynę podaje \textit{Error List}:
+\begin{itemize}
+  \item \texttt{Multiple tasks are running on the same CPU} --- dwa zadania na jednym rdzeniu; przenosimy jedno na inny,
+  \item \texttt{Not all tasks have the same cycle time} --- któreś zadanie XPlanar ma cykl inny niż 0,250~ms; ustawiamy \textit{Cycle ticks} na 1.
+\end{itemize}
+\uwaga{Ograniczenia obowiązują także w \texttt{BasicSimulation}.}
+
+\podpodrozdzial{Krok 4: uruchomienie}
+\begin{enumerate}
+  \item Jako target wybieramy \texttt{<Local>}.
+  \item Klikamy \textit{Activate Configuration}. Jeśli brakuje licencji, TwinCAT zaproponuje bezpłatną licencję próbną na 7 dni.
+  \item Logujemy się do PLC (\textit{Login}) i uruchamiamy program (\textit{Start}).
+  \item Otwieramy wizualizację (\hyperref[sec:wizualizacja]{\textit{Wizualizacja}}) i uruchamiamy ruch moverów.
+  \item Ruch obserwujemy w wizualizacji, w \hyperref[sec:environmentview]{\textit{XPlanar Environment View}} albo w \textit{Live View} Configuratora.
 \end{enumerate}
 
 \podpodrozdzial{Symulacja na PLC Beckhoffa}
-Jako target wybieramy sterownik. Runtime jest na nim już zainstalowany i skonfigurowany pod czas rzeczywisty, więc kroki dotyczące wirtualizacji i pakietów z następnego podrozdziału nie mają zastosowania. \texttt{BasicSimulation} nie wymaga czasu rzeczywistego, a \texttt{AdvancedSimulation} wymaga rzeczywistego układu zadań, który sterownik zapewnia. Przy niezgodności ustawień Real-Time wykonujemy \textit{Read from Target}.
+Jako target wybieramy \texttt{<Local>}. Runtime jest na nim już zainstalowany i skonfigurowany pod czas rzeczywisty, więc kroki dotyczące wirtualizacji i pakietów z następnego podrozdziału nie mają zastosowania. \texttt{BasicSimulation} nie wymaga czasu rzeczywistego, a \texttt{AdvancedSimulation} wymaga rzeczywistego układu zadań, który sterownik zapewnia. Przy niezgodności ustawień Real-Time wykonujemy \textit{Read from Target}.
 
 \podpodrozdzial{Symulacja na zewnętrznym PC}
-Jako target wybieramy \texttt{<Local>}. Komputer musi spełniać wymagania:
-\begin{itemize}
-  \item zainstalwoanwego środowiska TwinCAT w pdoanej konfigruacji. TODO DODOAĆ KONFIURACJE WYŁAUMCZYĆ PBORANIE NA KOMPUTER
-  \item wyłączona wirtualizacja: Hyper-V, WSL, VBS (Memory integrity) i Windows Hello Enhanced Sign-in; zmiana wymaga uprawnień administratora i restartu,
-  \item biblioteka \texttt{Tc3\_XPlanarStandard} w wersji, której wymaga projekt (References),
-  \item ustawienia Real-Time dopasowane do komputera: \textit{Read from Target}, potem przypisanie zadań do istniejących rdzeni; dla \texttt{BasicSimulation} wystarczy jeden rdzeń, dla \texttt{AdvancedSimulation} układ zadań jak w rzeczywistej konfiguracji.
-\end{itemize}
+Jako target wybieramy \texttt{<Local>}. Przed pierwszym uruchomieniem na własnym komputerze wykonujemy kroki z dodatku \hyperref[sec:instalacja]{\textit{Instalacja środowiska TwinCAT}} (TwinCAT, wyłączenie wirtualizacji: Hyper-V, WSL, VBS i Windows Hello Enhanced Sign-in, biblioteka \texttt{Tc3\_XPlanarStandard}), a następnie kroki 1--4 powyżej, w tym ustawienia Real-Time.
 
 
 \section{Zadania}
 \podrozdzial{Zadanie 1}
-Uruchomienie projektu na PLC lub przez własny komputer w trybie Normal, odpalić z visualizacji ruch moverów 
+Uruchomić projekt w trybie Normal na PLC lub z własnego komputera i włączyć ruch moverów z wizualizacji.
 \podrozdzial{Zadanie 2}
-Odpalenie Symualcji w trybie BasicSimulation na PLC lub przez własny komputer, odpalić z visualizacji ruch moverów oraz sprawdic ruch
+Uruchomić symulację w trybie BasicSimulation na PLC lub na własnym komputerze, włączyć ruch moverów z wizualizacji i sprawdzić ruch.
 
 \subsection*{Dokumentacja Beckhoff (Infosys)}
 \begin{itemize}
@@ -350,6 +509,12 @@ Odpalenie Symualcji w trybie BasicSimulation na PLC lub przez własny komputer, 
 
 \chapter{Konfiguracja oraz włączenie systemu}
 \textit{Ćwiczenia: \textbf{inicjalizacja systemu}, \textbf{lewitacja}}
+
+\section{Zadania}
+\podrozdzial{Zadanie 1}
+Stworzyć kopię zapasową projektu w folderze \texttt{Backup} na pulpicie. Nazwa kopii ma zawierać datę i godzinę w formacie \texttt{Backup\_RRRR-MM-DD\_GG-MM}, np.\ \texttt{Backup\_2026-11-07\_14-30}.
+\podrozdzial{Zadanie 2}
+Skonfigurować środowisko TwinCAT, uruchomić projekt na PLC i włączyć (\textit{enable}) movery. Zapoznać się z JOG-iem.
 
 \section{Backup}
 Kopia zapasowa składa się z dwóch części: archiwum projektu (źródła, po stronie PC inżynierskiego) oraz folderu \texttt{Boot} (to, co działa na sterowniku).
@@ -369,31 +534,7 @@ Folder \texttt{Boot} sterownika zawiera dane uruchomieniowe wgrane po aktywacji 
   \item TwinCAT przed 3.1.4026.0 --- \texttt{C:\textbackslash TwinCAT\textbackslash 3.1\textbackslash Boot}
   \item TwinCAT od 3.1.4026.0 --- \texttt{C:\textbackslash ProgramData\textbackslash Beckhoff\textbackslash TwinCAT\textbackslash 3.1\textbackslash Boot}
 \end{itemize}
-Elementy, które nas interesują:
-\begin{itemize}
-  \item \texttt{CurrentConfig.tszip} --- archiwum aktywnej konfiguracji; powstaje przy aktywacji, jeśli włączona jest opcja \textit{Auto Save to Target as Archive}.
-  \item \texttt{Plc\textbackslash Port\_xxx.bootdata} --- dane trwałe (\textit{persistent}) danego runtime'u PLC, np. \texttt{Port\_851}. Kopia poprzednia: \texttt{Port\_xxx.bootdata-old}.
-\end{itemize}
-Dane trwałe są zapisywane przy normalnym zatrzymaniu (przejście Run $\rightarrow$ Config/Stop), więc folder kopiujemy po zatrzymaniu TwinCATa. \textit{(do sprawdzenia: pełna lista plików w \texttt{Boot} --- Infosys podaje tylko lokalizację, zawartość należy potwierdzić na sterowniku)}
-
-\podrozdzial{Odczyt projektu ze sterownika}
-Gdy na PC inżynierskim nie ma źródeł, projekt można pobrać bezpośrednio ze sterownika: \textit{File} $\rightarrow$ \textit{Open} $\rightarrow$ \textit{Open Project from Target}. Wymaga to skonfigurowanej ścieżki sieciowej do targetu; po wybraniu sterownika z listy projekt jest pobierany, rozpakowywany i otwierany. Następnie zapisujemy go jako archiwum (patrz wyżej). \textit{(do sprawdzenia: czy na naszym sterowniku jest włączone zapisywanie projektu na targecie --- bez tego opcja nie zadziała)}
-
-\uwaga{Nie znaleziono w Infosys jednej procedury „backup całego folderu Boot''. Powyższy opis łączy strony o archiwach, lokalizacji \texttt{Boot} i plikach \texttt{bootdata}.}
-
-\subsection*{Dokumentacja Beckhoff (Infosys)}
-\begin{itemize}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/6818132747.html}{Archiving options}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/3692446603.html}{Command Save <solution name> as Archive\ldots}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2530721163.html}{Command Save <TwinCAT project name> as Archive\ldots}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_userinterface/3679203467.html}{Command Save <PLC project name> as archive\ldots}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/3679211915.html}{Command Open Solution from Archive}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2526225803.html}{Transferring a PLC project}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2530743691.html}{Command Open Project from Target}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_grundlagen/19006560267.html}{Boot directory}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_grundlagen/4291102603.html}{CurrentConfig.tszip}
-  \item \href{https://infosys.beckhoff.com/content/1033/tc3_grundlagen/4291095051.html}{Port\_xxx.bootdata}
-\end{itemize}
+Kopię zapasową wykonujemy, kopiując folder \texttt{Boot} do folderu, który jest naszym backupem.
 
 \section{Utworzenie projektu}
 Projekt tworzymy w TcXaeShell: \textit{File} $\rightarrow$ \textit{New} $\rightarrow$ \textit{Project}, a następnie wybieramy szablon \textbf{TwinCAT XAE Project (XML format)}.
@@ -423,7 +564,17 @@ Zaznaczamy jak na załącoznym obrazie.
   \item \textbf{Device 7 (NOV-DP-RAM)} --- odznaczone; zapewnia dostęp do pamięci sterownika, łączącej cechy RAM i ROM. Część nieulotna (NOV) zachowuje dane po wyłączeniu zasilania, a pamięć dwuportowa (DP-RAM) umożliwia dostęp do tych samych danych z dwóch stron. Opis: \href{https://infosys.beckhoff.com/content/1033/tcsystemmanager/1087918987.html}{I/O Devices} (Infosys).
 \end{itemize}
 
-\uwaga{\textbf{Informacja dodatkowa --- EtherCAT.} Kafle XPlanara komunikują się przez EtherCAT~G, czyli gigabitowy, a pozostałe urządzenia zazwyczaj przez standardowy EtherCAT 100~Mbit. W naszym projekcie na jednym EtherCAT-cie gigabitowym jest 6 kafli, dlatego są dwa EtherCAT-y podłączone tylko do XPlanara. Topologii nie rozszerzamy w oparciu o kafle XPlanara. Zasady łączenia kafli i budowy topologii opisuje instrukcja Beckhoffa: \href{https://download.beckhoff.com/download/document/motion/xplanar_ba_en.pdf}{XPlanar Operating Instructions}.}
+\uwaga{Kafle XPlanara komunikują się przez EtherCAT~G (gigabitowy), a pozostałe urządzenia zazwyczaj przez EtherCAT 100~Mbit. Zasady budowy topologii opisuje instrukcja producenta: \href{https://download.beckhoff.com/download/document/motion/xplanar_ba_en.pdf}{XPlanar Operating Instructions}.}
+
+\podrozdzial{Efekt końcowy}
+Po zeskanowaniu w drzewie \textit{I/O} $\rightarrow$ \textit{Devices} powinny być widoczne trzy urządzenia EtherCAT i urządzenie USB:
+\begin{itemize}
+  \item \textbf{Device 1 (EtherCAT)} --- moduł \texttt{EK1200} (\texttt{Term 1}),
+  \item \textbf{Device 2 (EtherCAT)} --- sześć kafelków \texttt{APS4322-7000},
+  \item \textbf{Device 3 (EtherCAT)} --- sześć kafelków \texttt{APS4322-7000},
+  \item \textbf{Device 6 (USB)} --- \texttt{Box 1 (CX2100 Power Supply)}.
+\end{itemize}
+W sumie 12 kafelków XPlanara, po 6 na każdym z dwóch EtherCAT-ów. Urządzenia odznaczone (Device 4, 5 i 7) nie pojawiają się w drzewie.
 
 \section{Configurator XPlanar}
 Configurator otwieramy z paska menu na górze okna TcXaeShell: \textit{TwinCAT} $\rightarrow$ \textit{XPlanar} $\rightarrow$ \textit{Configurator}. Pozwala zbudować stół: dodać kafelki, movery i tracki.
@@ -446,7 +597,7 @@ Pod zakładkami znajdują się tryby pracy i przyciski:
   \item \textit{Select} --- wybór obiektu z renderu stołu,
   \item \textit{Inspect} --- poruszanie się po modelu stołu,
   \item \textit{Import} --- import z konfiguracji w projekcie, a nie ze sprzętu,
-  \item \textit{Export} --- opisany w ostatnim kroku,
+  \item \textit{Export} --- exportuje konfiguracje do projektu, a nie do samego plc
   \item \textit{Reset All}.
 \end{itemize}
 W środku okna widać model 3D stołu, po lewej panel \textit{Factory Settings} i listę \textit{Created XPUs}, po prawej \textit{Component Settings} i \textit{Camera Control}, a na dole listę komunikatów \textit{Log List}.
@@ -476,15 +627,14 @@ Ważne jest, aby każdy kafelek miał przypisany odpowiedni numer BTN.
 
 \begin{figure}[H]
 \centering
-\resizebox{0.95\linewidth}{!}{%
-\begin{tikzpicture}[tile/.style={draw=bkdark,fill=bkgray,minimum width=3.3cm,minimum height=1.5cm,align=center,inner sep=2pt},>=stealth]
+\begin{tikzpicture}[tile/.style={draw=bkdark,fill=bkgray,minimum width=2.2cm,minimum height=2.2cm,align=center,inner sep=2pt,font=\small},>=stealth]
 \foreach \n/\b/\c/\r in {1/0000kxuy/0/0, 2/0000kxuq/1/0, 3/0000l4no/2/0, 4/0000l4ka/3/0,
                          5/0000l485/0/1, 6/0000l48a/1/1, 7/0000l48h/2/1, 8/0000kxux/3/1,
                          9/0000l55d/0/2, 10/0000l515/1/2, 11/0000l4nn/2/2, 12/0000l4nr/3/2}
-  \node[tile] at (\c*3.4,\r*1.6) {\textbf{\Large\n}\\[2pt]\texttt{\b}};
-\draw[->,very thick,bkorange] (-2.1,-1.0) -- (0.4,-1.0) node[right] {X};
-\draw[->,very thick,bkorange] (-2.1,-1.0) -- (-2.1,1.0) node[above] {Y};
-\end{tikzpicture}}
+  \node[tile] at (\c*2.3,\r*2.3) {\textbf{\large\n}\\[2pt]\texttt{\b}};
+\draw[->,very thick,bkorange] (-1.6,-1.6) -- (-0.1,-1.6) node[right] {X};
+\draw[->,very thick,bkorange] (-1.6,-1.6) -- (-1.6,-0.1) node[above] {Y};
+\end{tikzpicture}
 \caption{Układ kafelków: numer kafelka i jego BTN}
 \end{figure}
 
@@ -493,7 +643,7 @@ Ważne jest, aby każdy kafelek miał przypisany odpowiedni numer BTN.
   \item Otwieramy zakładkę \textit{Mover}.
   \item Dodajemy jeden mover \textbf{APM4330}.
 \end{enumerate}
-Współrzędne movera nie mają znaczenia dla pracy na fizycznej maszynie: po wykryciu movera przez XPlanar powiązuje on numery BTN z systemem. \textit{(TODO: dodawanie BTN movera.)}
+Współrzędne movera nie mają znaczenia dla pracy na fizycznej maszynie: po wykryciu movera przez XPlanar powiązuje on numery BTN z systemem. Dodawanie świeżego movera opisano w dodatku \hyperref[sec:nowymover]{\ref*{sec:nowymover}~\textit{Dodawanie świeżego movera}}.
 
 \podrozdzial{Etap 4 --- Real-Time}
 \begin{enumerate}
@@ -513,48 +663,346 @@ Współrzędne movera nie mają znaczenia dla pracy na fizycznej maszynie: po wy
   \item Sprawdzenie i pokazanie działania Package Managera po stronie Beckhoffa.
   \item Przedstawienie bibliotek.
 \end{itemize}
-\subsection*{Odpalenie moverów}
-\begin{itemize}
-  \item Movery można odpalić tylko z przechyleniem do 10 stopni w osi C.
-  \item Wspomnieć o ograniczeniu: nie znamy dokładnie, w jakiej orientacji jest mover \textit{(odnośnik do strony Beckhoffa; w dalszej części kursu nie będzie to wspominane)}.
-  \item \textbf{Z moverUI:}
-  \begin{itemize}
-    \item pokazanie, jak działa JOG,
-    \item pokazanie punktów rotacji, zmiany Z i innych możliwości movera \textit{(do sprawdzenia: czy na dużych moverach są punkty rotacji)},
-    \item pokazanie ruchu w osi Z \textit{(można też spróbować A i B, ale nie wiem po co)}.
-  \end{itemize}
-  \item Na końcu: pokazanie, że movery można enable'ować przez kod --- wytłumaczenie cyklu.
-\end{itemize}
-\textbf{Zadanie} \textit{(propozycja)}: uruchom system w symulacji (\texttt{BasicSimulation}), zaloguj się do PLC, włącz movery z kodu (\texttt{EnableMovers}), unieś jeden mover w Z na 5 mm i opuść go z powrotem; podglądaj pozycję w \texttt{P\_ActPosition} i w Configuratorze (Live View).
+\section{Odpalenie movera manualnie}\label{sec:manualnie}
+Movera można podnieść i poruszać ręcznie, bez programu PLC. Robimy to po zbudowaniu stołu w Configuratorze.
+\begin{enumerate}
+  \item Klikamy \textit{Activate Configuration}.
+  \item Z paska menu wybieramy \textit{TwinCAT} $\rightarrow$ \textit{MC3} $\rightarrow$ \textit{XPlanar Environment View}. Otwiera się okno ze stołem i moverami.
+\end{enumerate}
+\zrzutEkranu[\linewidth]{02-konfiguracja/uruchomienie/xplanar-environment-ui-jog.png}{XPlanar Environment View --- movery na stole i panel sterowania (\textit{Basic Controls})}
+\begin{enumerate}
+  \setcounter{enumi}{2}
+  \item Po lewej stronie widać movery, każdy z numerem BTN, pozycją $X$, $Y$ i stanem (\textit{State}).
+  \item W panelu po prawej, w polu \textit{Selected Mover}, wybieramy movera, którym chcemy sterować.
+  \item Klikamy \textit{Enable}. Mover powinien wstać, czyli unieść się nad kafelki.
+  \item Teraz możemy sterować moverem za pomocą \textit{Mover Jog Dialog}: strzałkami przy osiach $X$, $Y$ i $C$ albo wpisując pozycję docelową w polu \textit{Target Position} i klikając przycisk obok.
+\end{enumerate}
 
-\begin{itemize}
-  \item \textbf{Lewitacja:} funkcje do kontroli w osi Z (\texttt{MoveZ}, zakres w konfiguracji osi: od -1 do 10 mm) \textit{(przeniesione z zagadnienia 3)}.
-  \item Metoda do usuwania i dodawania moverów + wytłumaczenie, po co jest potrzebna \textit{(przeniesione z zagadnienia 3)}.
-  \item Pokazanie, jak to działa dla \textbf{2 wariantów bibliotek}:
-  \begin{itemize}
-    \item \texttt{Tc3\_XPlanarUtility} --- ogólnie dostępna,
-    \item \texttt{Tc3\_XPlanarStandard} --- poza repozytorium Beckhoffa, udostępniana na prośbę.
-  \end{itemize}
-\end{itemize}
 \subsection*{Materiały do przekazania}
 \begin{itemize}
   \item Do tego etapu: GitHub, nagranie oraz docs w PDF.
+  \item W repozytorium, w folderze \texttt{topics}, każde zagadnienie ma kod na początek (\texttt{start}) i na koniec (\texttt{solution}), w wersjach \texttt{hardware} (stanowisko ze sterownikiem) i \texttt{simulation} (symulacja na PC). Dla zagadnienia 1 jest to po prostu demo. Zagadnienie 2 ma tylko koniec (\texttt{solution}): projekt z konfiguracją bez programu PLC, który można otworzyć i sterować JOG-iem. Start zagadnienia 3 to koniec zagadnienia 2. Start zagadnienia 4 to rozwiązanie zagadnienia 3 (ruch w 6 DoF) bez metody \texttt{Execute6DoF}; rozwiązania zagadnienia 4 są w \texttt{solution/exercise-1} i \texttt{solution/exercise-2}.
 \end{itemize}
 
 \subsection*{Dokumentacja Beckhoff (Infosys)}
+\podpodrozdzial{Backup}
+\begin{itemize}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/6818132747.html}{Archiving options}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/3692446603.html}{Command Save <solution name> as Archive\ldots}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2530721163.html}{Command Save <TwinCAT project name> as Archive\ldots}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_userinterface/3679203467.html}{Command Save <PLC project name> as archive\ldots}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/3679211915.html}{Command Open Solution from Archive}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2526225803.html}{Transferring a PLC project}
+  \item \href{https://infosys.beckhoff.com/content/1033/tc3_grundlagen/19006560267.html}{Boot directory}
+\end{itemize}
+\podpodrozdzial{Środowisko i symulacja}
 \begin{itemize}
   \item \href{https://infosys.beckhoff.com/content/1033/tc3_installation/6162675979.html}{Installing TwinCAT 3 Engineering and Runtime}
   \item \href{https://infosys.beckhoff.com/content/1033/tc3_userinterface/2867291659.html}{Information bar (stan systemu TwinCAT)}
   \item \href{https://infosys.beckhoff.com/content/1033/tc3_plc_intro/2953964811.html}{Command Activate configuration}
   \item \href{https://infosys.beckhoff.com/content/1033/xts_software/10484022667.html}{Activating simulation mode}
   \item \href{https://infosys.beckhoff.com/content/1033/xts_software/11288921739.html}{Parameter (Init) --- OperationMode}
-  \item \href{https://infosys.beckhoff.com/content/1033/tf5890_tc3_xplanar/19457544715.html}{TwinCAT 3 XPlanar Utility}
-  \item \href{https://infosys.beckhoff.com/content/1033/tf5890_tc3_xplanar/index.html}{TF5890 TwinCAT 3 XPlanar (XPlanar Processing Unit)}
 \end{itemize}
 
 \chapter{Ruch wysterowany}
 \textit{Ćwiczenie: \textbf{ruch w 6 stopniach swobody (6 DoF)}}
 
+\section{Zadania}
+\podrozdzial{Zadanie 1}
+Napisać kod, który automatycznie stawia movery w stan \textit{enable}.
+\podrozdzial{Zadanie 2}
+Napisać automatyczną, cykliczną jazdę, np.\ jeden mover wykonuje ruch $\pm$100~mm w osi X. Zaplanowany ruch musi wykorzystać wszystkie stopnie swobody (X, Y, Z, A, B i C).
+
+\section{Odpalanie moverów przy pomocy PLC}\label{sec:programplc}
+Program PLC włącza (\textit{enable}) movery. Piszemy go w języku ST w pustym projekcie \texttt{XPlanarPusty}, z biblioteką \texttt{Tc3\_XPlanarStandard}.
+
+\podrozdzial{Utworzenie projektu PLC}
+\begin{enumerate}
+  \item W Solution Explorerze klikamy prawym przyciskiem \texttt{PLC} i wybieramy \textit{Add New Item\ldots}.
+\end{enumerate}
+\zrzutEkranu[0.55\linewidth]{02-konfiguracja/program-plc/plc-menu-add-new-item.png}{Menu kontekstowe \texttt{PLC} --- \textit{Add New Item}}
+\begin{enumerate}
+  \setcounter{enumi}{1}
+  \item W oknie wybieramy \textit{Standard PLC Project} (szablon z zadaniem i programem), wpisujemy nazwę (domyślnie \texttt{Untitled1}) i klikamy \textit{Add}.
+\end{enumerate}
+\zrzutEkranu[0.8\linewidth]{02-konfiguracja/program-plc/plc-dialog-standard-plc-project.png}{Okno \textit{Add New Item} --- \textit{Standard PLC Project}}
+\begin{enumerate}
+  \setcounter{enumi}{2}
+  \item W drzewie pojawia się projekt PLC z elementami:
+  \begin{itemize}
+    \item \textit{References} --- biblioteki (domyślnie \texttt{Tc2\_Standard}, \texttt{Tc2\_System}, \texttt{Tc3\_Module}),
+    \item \textit{DUTs}, \textit{GVLs}, \textit{POUs}, \textit{VISUs} --- typy danych, zmienne globalne, programy i wizualizacje,
+    \item \texttt{PlcTask} --- zadanie, w którym działa program,
+    \item instancja projektu (\texttt{Untitled1 Instance}).
+  \end{itemize}
+\end{enumerate}
+\zrzutEkranu[0.4\linewidth]{02-konfiguracja/program-plc/plc-solution-explorer-nowy-projekt.png}{Solution Explorer --- nowy projekt PLC}
+\uwaga{Zadanie \texttt{PlcTask} nie może pracować na rdzeniu zadań XPlanar (\texttt{SYSTEM} $\rightarrow$ \texttt{Real-Time}).}
+
+\podrozdzial{Dodanie bibliotek}
+\begin{enumerate}
+  \item Klikamy dwukrotnie \textit{References}. Otwiera się \textit{Library Manager}. Klikamy \textit{Add Library}.
+\end{enumerate}
+\zrzutEkranu[0.8\linewidth]{02-konfiguracja/program-plc/plc-library-manager-add-library.png}{\textit{Library Manager} --- przycisk \textit{Add Library}}
+\begin{enumerate}
+  \setcounter{enumi}{1}
+  \item W polu wyszukiwania wpisujemy \texttt{stand}, wybieramy \texttt{Tc3\_XPlanarStandard} i klikamy \textit{OK}. Biblioteka musi być wcześniej wgrana do repozytorium bibliotek (dodatek \hyperref[sec:instalacja]{\ref*{sec:instalacja}}).
+\end{enumerate}
+\zrzutEkranu[0.65\linewidth]{02-konfiguracja/program-plc/plc-add-library-xplanarstandard.png}{Dodawanie biblioteki \texttt{Tc3\_XPlanarStandard}}
+\begin{enumerate}
+  \setcounter{enumi}{2}
+  \item Tak samo dodajemy \texttt{Tc3\_Physics} (wyszukiwanie: \texttt{phys}).
+\end{enumerate}
+\zrzutEkranu[0.6\linewidth]{02-konfiguracja/program-plc/plc-add-library-physics.png}{Dodawanie biblioteki \texttt{Tc3\_Physics}}
+\begin{enumerate}
+  \setcounter{enumi}{3}
+  \item Tak samo dodajemy \texttt{Tc3\_XPlanarUtility} (wyszukiwanie: \texttt{utili}).
+\end{enumerate}
+\zrzutEkranu[0.65\linewidth]{02-konfiguracja/program-plc/plc-add-library-xplanarutility.png}{Dodawanie biblioteki \texttt{Tc3\_XPlanarUtility}}
+Po dodaniu bibliotek \textit{Library Manager} i \textit{References} wyglądają jak niżej.
+\zrzutEkranu[\linewidth]{02-konfiguracja/program-plc/plc-library-manager-po-dodaniu.png}{\textit{Library Manager} i \textit{References} po dodaniu bibliotek}
+\textbf{Liczba moverów.} Biblioteka \texttt{Tc3\_XPlanarStandard} domyślnie przewiduje 20 moverów, a nasz stół ma 4. W programie powstaje wtedy 20 obiektów \texttt{fbXPlanarMover[1..20]} i system próbuje obsłużyć 20 moverów, co kończy się błędem. Dlatego w \textit{Library Managerze} klikamy \textit{Library Parameters\ldots} i ustawiamy \texttt{maxNumMover} oraz \texttt{moverCount} na 4. Po zmianie budujemy projekt ponownie i sprawdzamy w widoku zmiennych, że tablica \texttt{fbXPlanarMover} ma 4 elementy.
+\zrzutEkranu[\linewidth]{02-konfiguracja/program-plc/plc-library-parameters-maxnummover.png}{\textit{Library Parameters} --- \texttt{moverCount} i \texttt{maxNumMover} ustawione na 4 (domyślnie \texttt{maxNumMover} wynosi 20)}
+
+\podrozdzial{Okno programu ST}
+Program tworzymy jako blok funkcyjny. Klikamy prawym przyciskiem \texttt{POUs}, wybieramy \textit{Add} $\rightarrow$ \textit{POU\ldots}, wpisujemy nazwę \texttt{FB\_MotionSystem}, jako typ wybieramy \textit{Function Block}, a jako język \textit{Structured Text (ST)}. W drzewie jest już \texttt{MAIN (PRG)} --- program główny.
+\zrzutEkranu[0.8\linewidth]{02-konfiguracja/program-plc/plc-menu-add-pou.png}{Menu kontekstowe \texttt{POUs} --- \textit{Add} $\rightarrow$ \textit{POU}}
+\zrzutEkranu[\linewidth]{02-konfiguracja/program-plc/plc-okno-st-fb-motionsystem.png}{Edytor ST --- blok \texttt{FB\_MotionSystem}: u góry deklaracja zmiennych, u dołu kod}
+Okno edytora ma dwie części:
+\begin{itemize}
+  \item \textbf{część górna} --- deklaracja zmiennych. Zmienne wejściowe (\texttt{VAR\_INPUT}), wyjściowe (\texttt{VAR\_OUTPUT}) i lokalne (\texttt{VAR}) kończą się słowem \texttt{END\_VAR},
+  \item \textbf{część dolna} --- kod. Dla nowego bloku jest pusta; w niej piszemy program. Po lewej są numery linii.
+\end{itemize}
+Gwiazdka przy nazwie karty (\texttt{FB\_MotionSystem*}) oznacza niezapisane zmiany.
+
+\podrozdzial{Kod z biblioteką Standard}
+W części deklaracji bloku \texttt{FB\_MotionSystem} wpisujemy:
+{\footnotesize
+\begin{verbatim}
+FUNCTION_BLOCK FB_MotionSystem
+VAR
+    fbXPlanarSystem   : FB_XPlanarSystem;
+    fbXPlanarMover    : ARRAY[1..maxNumMover] OF FB_XPlanarMoverStandard;
+    nStartupSequence  : UDINT;
+    nStartingSequence : UDINT;
+END_VAR
+\end{verbatim}}
+\texttt{FB\_XPlanarSystem} zarządza całym systemem, a każdy mover jest osobnym obiektem \texttt{FB\_XPlanarMoverStandard}. Tablice zaczynają się od indeksu 1.
+
+Do bloku \texttt{FB\_MotionSystem} dodajemy trzy metody. Metody tworzymy \textbf{wewnątrz bloku}, a nie osobno w \texttt{POUs}: klikamy prawym przyciskiem \texttt{FB\_MotionSystem}, wybieramy \textit{Add} $\rightarrow$ \textit{Method\ldots}, wpisujemy nazwę (\texttt{Cycle}, \texttt{Startup}, \texttt{Starting}) i język \textit{Structured Text (ST)}.
+\zrzutEkranu[0.7\linewidth]{02-konfiguracja/program-plc/plc-menu-add-method.png}{Menu kontekstowe \texttt{FB\_MotionSystem} --- \textit{Add} $\rightarrow$ \textit{Method}}
+Po dodaniu wszystkich elementów folder \texttt{POUs} wygląda jak na rysunku.
+\zrzutEkranu[0.45\linewidth]{02-konfiguracja/program-plc/plc-folder-pous-efekt-koncowy.png}{Folder \texttt{POUs} po dodaniu bloku \texttt{FB\_MotionSystem} (FB) z metodami \texttt{Cycle}, \texttt{Starting}, \texttt{Startup} oraz programu \texttt{MAIN} (PRG)}
+Za co odpowiadają poszczególne elementy:
+\begin{itemize}
+  \item \texttt{FB\_MotionSystem} --- blok funkcyjny; przechowuje system XPlanar i obiekty czterech moverów,
+  \item \texttt{Cycle} --- odświeża stan systemu i moverów oraz przekazuje do nich polecenia; musi być wywoływana w każdym cyklu PLC,
+  \item \texttt{Startup} --- przekazuje obiekty moverów systemowi (\texttt{SetMoverStandard}); zwraca \texttt{TRUE}, gdy skończy,
+  \item \texttt{Starting} --- włącza (\textit{enable}) movery: wysyła \texttt{EnableMovers()} i czeka na wynik (\texttt{Done} lub \texttt{Error}); zwraca \texttt{TRUE}, gdy movery są włączone,
+  \item \texttt{MAIN} --- program główny; wywołuje po kolei \texttt{Startup} i \texttt{Starting}, a w każdym cyklu \texttt{Cycle}.
+\end{itemize}
+Każda metoda ma w deklaracji lokalną zmienną \texttt{i : UDINT} (licznik pętli), \texttt{Starting} dodatkowo wejście \texttt{bReset}.
+
+\textbf{\texttt{Cycle}} (bez typu zwracanego). Wywołujemy ją w każdym cyklu PLC; bez niej polecenia nie dotrą do systemu, a stan moverów się nie odświeży:
+{\footnotesize
+\begin{verbatim}
+fbXPlanarSystem.Cycle();
+FOR i := 1 TO moverCount DO
+    fbXPlanarMover[i].Cycle();
+END_FOR
+\end{verbatim}}
+\textbf{\texttt{Startup : BOOL}}. Przekazuje obiekty moverów systemowi. Zwraca \texttt{TRUE}, gdy skończy:
+{\footnotesize
+\begin{verbatim}
+CASE nStartupSequence OF
+    0:  nStartupSequence := 1;
+    1:  FOR i := 1 TO moverCount DO
+            fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
+        END_FOR
+        nStartupSequence := 30;
+    30: Startup := TRUE;
+END_CASE
+\end{verbatim}}
+\textbf{\texttt{Starting : BOOL}}, z wejściem \texttt{bReset : BOOL} w \texttt{VAR\_INPUT}. Włącza (\textit{enable}) wszystkie movery. Polecenie wysyłamy metodą \texttt{EnableMovers()}, a jego wynik sprawdzamy we właściwości \texttt{P\_EnableMovers} (\texttt{Done} lub \texttt{Error}):
+{\footnotesize
+\begin{verbatim}
+IF bReset THEN
+    Starting := FALSE;
+    nStartingSequence := 0;
+END_IF
+CASE nStartingSequence OF
+    0:  nStartingSequence := 50;
+    50: IF fbXPlanarSystem.EnableMovers() THEN
+            nStartingSequence := 51;
+        END_IF
+    51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
+            nStartingSequence := 80;
+        ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+            nStartingSequence := 90;   // błąd enable
+        END_IF
+    80: Starting := TRUE;
+END_CASE
+\end{verbatim}}
+W programie \texttt{MAIN} wywołujemy bloki po kolei:
+{\footnotesize
+\begin{verbatim}
+PROGRAM MAIN
+VAR
+    fbMotionSystem : FB_MotionSystem;
+    nState         : UDINT;
+END_VAR
+
+CASE nState OF
+    0:  nState := 1;
+    1:  IF fbMotionSystem.Startup() THEN nState := 30; END_IF
+    30: IF fbMotionSystem.Starting(bReset := FALSE) THEN
+            nState := 40;
+        END_IF
+    40: ;   // movery są włączone (enable)
+END_CASE
+
+fbMotionSystem.Cycle();
+\end{verbatim}}
+
+\podrozdzial{Kod do skopiowania}
+Poniżej jest cały kod w kolejności: \texttt{MAIN}, potem \texttt{FB\_MotionSystem} i jego metody. Dla każdego elementu zmienne wklejamy do części deklaracji (u góry okna ST), a kod do części dolnej.
+
+\podpodrozdzial{MAIN (PRG)}
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+PROGRAM MAIN
+VAR
+    fbMotionSystem : FB_MotionSystem;
+    nState         : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\footnotesize
+\begin{verbatim}
+CASE nState OF
+    0:  nState := 1;
+    1:  IF fbMotionSystem.Startup() THEN
+            nState := 30;
+        END_IF
+    30: IF fbMotionSystem.Starting(bReset := FALSE) THEN
+            nState := 40;
+        END_IF
+    40: ;   // movery sa wlaczone (enable)
+END_CASE
+
+fbMotionSystem.Cycle();
+\end{verbatim}}
+
+\podpodrozdzial{FB\_MotionSystem (FB)}
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+FUNCTION_BLOCK FB_MotionSystem
+VAR
+    fbXPlanarSystem   : FB_XPlanarSystem;
+    fbXPlanarMover    : ARRAY[1..maxNumMover] OF FB_XPlanarMoverStandard;
+    nStartupSequence  : UDINT;
+    nStartingSequence : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:} brak --- cała logika bloku jest w jego metodach.
+
+\podpodrozdzial{Metoda Cycle}
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+METHOD Cycle
+VAR
+    i : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\footnotesize
+\begin{verbatim}
+fbXPlanarSystem.Cycle();
+FOR i := 1 TO moverCount DO
+    fbXPlanarMover[i].Cycle();
+END_FOR
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Startup}
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+METHOD Startup : BOOL
+VAR
+    i : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\footnotesize
+\begin{verbatim}
+CASE nStartupSequence OF
+    0:  nStartupSequence := 1;
+    1:  FOR i := 1 TO moverCount DO
+            fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
+        END_FOR
+        nStartupSequence := 30;
+    30: Startup := TRUE;
+END_CASE
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Starting}
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+METHOD Starting : BOOL
+VAR_INPUT
+    bReset : BOOL;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\footnotesize
+\begin{verbatim}
+IF bReset THEN
+    Starting := FALSE;
+    nStartingSequence := 0;
+END_IF
+CASE nStartingSequence OF
+    0:  nStartingSequence := 50;
+    50: IF fbXPlanarSystem.EnableMovers() THEN
+            nStartingSequence := 51;
+        END_IF
+    51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
+            nStartingSequence := 80;
+        ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+            nStartingSequence := 90;   // blad enable
+        END_IF
+    80: Starting := TRUE;
+END_CASE
+\end{verbatim}}
+
+\podrozdzial{Linkowanie osi}\label{sec:linkowanie}
+Linkowanie wykonujemy po stronie MOTION, w \textit{Axes}, a nie w PLC. \textbf{Link} łączy zmienną PLC z osią: dzięki niemu polecenia z PLC (\texttt{PLCTOMC}) trafiają do osi, a stan osi (\texttt{MCTOPLC}) wraca do PLC. Bez linku movery nie reagują, a program kończy się błędem.
+
+Każda oś w \textit{MOTION} $\rightarrow$ \textit{XPlanar MC Project} $\rightarrow$ \textit{Axes} ma cztery gałęzie. \texttt{IoToMc} i \texttt{McToIo} to wymiana danych z moverem w obiekcie XPlanar, ustawiona przez Configurator. \texttt{PlcToMc} i \texttt{McToPlc} to wymiana danych z PLC; te gałęzie uzupełniamy, linkując oś.
+\zrzutEkranu[0.4\linewidth]{02-konfiguracja/program-plc/motion-axes-po-linkowaniu.png}{MOTION --- osie moverów; zlinkowana oś \texttt{0000kyte} ma w gałęziach zmienne \texttt{STD}}
+\begin{enumerate}
+  \item Zapisujemy projekt i budujemy PLC (\textit{Build}), żeby zmienne się pojawiły.
+  \item W \textit{Axes} klikamy pierwszą oś (\texttt{0000kyte}) i przechodzimy na zakładkę \textit{Settings}. Pole \textit{Link To I/O\ldots} pokazuje powiązanie osi z moverem w obiekcie XPlanar --- zostawiamy je bez zmian. Klikamy \textit{Link To PLC\ldots}.
+  \item W oknie wyboru zaznaczamy zmienną \texttt{MAIN.fbMotionSystem.fbXPlanarMover[1].stMoverRef} i klikamy \textit{OK}. Jeden link łączy oba kierunki naraz. Na liście są cztery zmienne, bo ustawiliśmy 4 movery w parametrach biblioteki.
+\end{enumerate}
+\zrzutEkranu[0.7\linewidth]{02-konfiguracja/program-plc/axes-settings-link-to-plc.png}{Oś \texttt{0000kyte} --- zakładka \textit{Settings}, \textit{Link To PLC} i okno wyboru zmiennej}
+\begin{enumerate}
+  \setcounter{enumi}{3}
+  \item To samo robimy dla pozostałych osi: kolejna oś z \texttt{fbXPlanarMover[2]}, następna z \texttt{[3]}, ostatnia z \texttt{[4]}. Każdy element tablicy linkujemy raz.
+\end{enumerate}
+
+\podrozdzial{Uruchomienie programu}
+\begin{enumerate}
+  \item Zapisujemy projekt (\textit{Ctrl+S}) i budujemy PLC (\textit{Build}).
+  \item Linkujemy osie --- patrz \hyperref[sec:linkowanie]{\textit{Linkowanie osi}}.
+  \item Klikamy \textit{Activate Configuration}, logujemy się do PLC (\textit{Login}) i uruchamiamy program (\textit{Start}).
+  \item W \textit{XPlanar Environment View} movery powinny przejść w stan \textit{enabled} i unieść się nad kafelki, bez klikania \textit{Enable} w oknie.
+\end{enumerate}
+
+\section{Ruch w sześciu stopniach swobody}
 \subsection*{Start}
 \begin{itemize}
   \item Z GitHuba, z brancha 3, pobrać działający projekt albo kontynuować kolejny.
@@ -581,6 +1029,60 @@ B (przechył wokół Y) & \texttt{MoveB} & zakres $\pm$6$^\circ$ \\
   \item **A i B nie są w \texttt{MoveToPosition}** --- zadaje się je osobnymi komendami \texttt{MoveA} / \texttt{MoveB} (parametry: pozycja docelowa w stopniach, prędkość, przyspieszenie, opóźnienie, jerk), tak samo jak \texttt{MoveZ}.
   \item Zastosowanie przechyłu: np. kompensacja przechyłu przy płynach, ustawienie narzędzia pod kątem.
 \end{itemize}
+\podrozdzial{Kod: ruch jednego movera w 6 DoF}
+Do bloku \texttt{FB\_MotionSystem} dodajemy metodę \texttt{Execute6DoF}, którą piszemy samodzielnie. Ma ona wykonać na stałe zaprogramowaną sekwencję dla pierwszego movera (\texttt{fbXPlanarMover[1]}), z użyciem wszystkich sześciu stopni swobody:
+\begin{enumerate}
+  \item zapamiętanie pozycji startowej movera,
+  \item dojazd do środka stołu (X = 480~mm, Y = 360~mm) komendą \texttt{MoveToPosition},
+  \item podniesienie w osi Z na 4~mm (\texttt{MoveZ}),
+  \item obrót w osi C o $+90^\circ$ (\texttt{MoveC}); środek stołu leży na siatce punktów obrotu (co 120~mm), więc obrót jest tam możliwy,
+  \item opuszczenie w osi Z na normalną wysokość,
+  \item przechył w osi A, a potem w osi B (\texttt{MoveA}, \texttt{MoveB}; zakres $\pm6^\circ$, używamy $5^\circ$),
+  \item powrót A, B i C do zera,
+  \item powrót do zapisanej wcześniej pozycji startowej (\texttt{MoveToPosition}).
+\end{enumerate}
+Komenda \texttt{MoveC} używa typu \texttt{ST\_MoveCOptions} z biblioteki \texttt{Tc3\_Mc3PlanarMotion}. Dodajemy ją do \textit{References} tak samo jak pozostałe biblioteki (\textit{Add Library}, wyszukiwanie: \texttt{Mc3Planar}). Pozycję startową movera można wybrać dowolnie, ale mover musi być włączony (\texttt{Starting}).
+\uwaga{Komenda \texttt{MoveToPosition} jest przestarzała (\textit{obsolete}). Jej następcą jest \texttt{MoveToPositionExt}.}
+
+\podpodrozdzial{Funkcje użyte w ruchu}
+Do ruchu używamy poleceń obiektu movera (\texttt{FB\_XPlanarMoverStandard}). Każde polecenie wysyłamy raz, a potem czekamy na jego wynik we właściwości \texttt{P\_}\textit{nazwa polecenia}: \texttt{Done} (zakończone) lub \texttt{Error} (błąd).
+\begin{itemize}
+  \item \texttt{MoveToPosition} --- ruch w płaszczyźnie (X, Y, C): dojazd do środka stołu i powrót do pozycji startowej. Wynik: \texttt{P\_MoveToPosition}.
+  \item \texttt{MoveZ} --- zmiana wysokości (oś Z). Wynik: \texttt{P\_MoveZ}.
+  \item \texttt{MoveC} --- obrót w osi C, możliwy tylko w punktach obrotu; wymaga opcji typu \texttt{ST\_MoveCOptions} (liczba dodatkowych obrotów i kierunek). Wynik: \texttt{P\_MoveC}.
+  \item \texttt{MoveA}, \texttt{MoveB} --- przechył wokół osi X i Y. Wyniki: \texttt{P\_MoveA}, \texttt{P\_MoveB}.
+\end{itemize}
+Każde polecenie przyjmuje: opis do logu, pozycję docelową (w milimetrach lub stopniach), prędkość, przyspieszenie, opóźnienie i szarpnięcie.
+
+Pomocniczo używamy:
+\begin{itemize}
+  \item \texttt{P\_ActPosition} --- odczyt aktualnej pozycji movera (\texttt{x}, \texttt{y}, \texttt{c}), np.\ do zapamiętania pozycji startowej,
+  \item \texttt{PositionXYC} i metody \texttt{SetValuesXYC(x, y, c)} --- zapis pozycji w płaszczyźnie dla \texttt{MoveToPosition}.
+\end{itemize}
+
+\podpodrozdzial{MAIN --- wywołanie sekwencji}
+Zmienne bez zmian. W kodzie zastępujemy stan 40 i dodajemy stan 50, który po zakończeniu sekwencji uruchamia ją od nowa (ruch cykliczny):
+{\footnotesize
+\begin{verbatim}
+CASE nState OF
+    0:  nState := 1;
+    1:  IF fbMotionSystem.Startup() THEN
+            nState := 30;
+        END_IF
+    30: IF fbMotionSystem.Starting(bReset := FALSE) THEN
+            nState := 40;
+        END_IF
+    40: IF fbMotionSystem.Execute6DoF(bReset := FALSE) THEN
+            nState := 50;
+        END_IF
+    50: fbMotionSystem.Execute6DoF(bReset := TRUE);   // od nowa
+        nState := 40;
+END_CASE
+
+fbMotionSystem.Cycle();
+\end{verbatim}}
+Gotowy projekt z tym kodem jest w repozytorium w folderze \texttt{topics/03-motion/solution-6dof/simulation}.
+
 \subsection*{Zadanie}
 Wykonaj ruch 4 moverów w tył i w przód w osi Y.
 
@@ -590,60 +1092,554 @@ Wykonaj ruch 4 moverów w tył i w przód w osi Y.
   \item \textit{(Rozszerzenie 6 DoF --- do decyzji: w punktach końcowych podnieść movery w Z i przechylić w A/B.)}
 \end{itemize}
 
+\subsection*{Pozostałe punkty}
+\begin{itemize}
+  \item \textbf{Lewitacja:} funkcje do kontroli w osi Z (\texttt{MoveZ}, zakres w konfiguracji osi: od -1 do 10 mm) \textit{(przeniesione z zagadnienia 3)}.
+  \item Metoda do usuwania i dodawania moverów + wytłumaczenie, po co jest potrzebna \textit{(przeniesione z zagadnienia 3)}.
+  \item Pokazanie, jak to działa dla \textbf{2 wariantów bibliotek}:
+  \begin{itemize}
+    \item \texttt{Tc3\_XPlanarUtility} --- ogólnie dostępna,
+    \item \texttt{Tc3\_XPlanarStandard} --- poza repozytorium Beckhoffa, udostępniana na prośbę.
+  \end{itemize}
+\end{itemize}
+
 \subsection*{Dokumentacja Beckhoff (Infosys)}
+\podpodrozdzial{Ruch moverów}
 \begin{itemize}
   \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9335871883.html}{Limits and options of the motion commands}
   \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/13424733067.html}{Example: Activating a Planar part position and moving a Planar mover}
   \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9334645515.html}{Example: Creating and moving a Planar mover with External Setpoint Generation}
 \end{itemize}
+\podpodrozdzial{Biblioteki XPlanar}
+\begin{itemize}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5890_tc3_xplanar/19457544715.html}{TwinCAT 3 XPlanar Utility}
+  \item \href{https://infosys.beckhoff.com/content/1033/tf5890_tc3_xplanar/index.html}{TF5890 TwinCAT 3 XPlanar (XPlanar Processing Unit)}
+\end{itemize}
 
 \chapter{Tracki i omijanie kolizji}
 \textit{Ćwiczenie: \textbf{omijanie kolizji} (tracki jako podstawa)}
 
-\subsection*{Tracki}
-\textbf{Start}
+\section{Zadania}
+\podrozdzial{Zadanie 1}
+Stworzyć track. Za pomocą \textit{Motion UI} dołączyć do niego 4 movery i poruszać nimi po tracku (\textit{Jog On Track}), a na koniec zdjąć je z tracka (\textit{Leave Track}).
+\podrozdzial{Zadanie 2}
+Na podstawie kodu startowego stworzyć 3 tracki (zgodnie z instrukcją), zlinkować grupę i tracki oraz dopisać kod, w którym 4 movery jeżdżą po tych trackach w kółko.
 
-\begin{itemize}
-  \item Pobieramy z GitHuba \textit{(do sprawdzenia: czy da się to dodać)} wersję kodu, w której jest dodany cały blok Motion, Mover Preparation itd.
-  \item Student powinien się zaznajomić, co dokładnie dają te bloki.
-\end{itemize}
-\textbf{Koncept tracków}
+\section{Kod startowy}
+Pracujemy na projekcie z folderu \texttt{topics/04-tracks/start/simulation}. Jest to rozwiązanie z rozdziału 3 (ruch w 6 DoF) bez metody \texttt{Execute6DoF}: program PLC tylko włącza (\textit{enable}) movery, tracków jeszcze nie ma. Rozwiązania zadań są w folderach \texttt{topics/04-tracks/solution/exercise-1} i \texttt{exercise-2}. W części 1 nie piszemy żadnego kodu. Rozwiązanie części 1 (zamknięty prostokątny track \texttt{Loop}) jest opisane krok po kroku w tej instrukcji, a w \texttt{exercise-1} leży projekt z gotowym trackiem. Rozwiązanie części 2 (trzy tracki i kod) jest w \texttt{exercise-2}.
 
-\begin{itemize}
-  \item Pokazanie konceptu tracków poprzez dokumentację --- jak go dodać.
-  \item Przedstawienie ograniczeń (produkt nie jest jeszcze w 100\% dopracowany).
-  \item Skupienie się na razie na \textbf{liniach}.
-  \item Zlinkowanie tracków.
-  \item \textbf{Group} --- deklarujemy już tutaj, bo tracki zawsze dodaje się do grupy (\texttt{EnableGroup} $\rightarrow$ \texttt{AddEnvironmentToGroup} $\rightarrow$ \texttt{EnableTracks} $\rightarrow$ \texttt{AddTracksToGroup} $\rightarrow$ \texttt{EnableMovers} $\rightarrow$ \texttt{AddMoversToGroup}). Szczegóły działania grupy --- poniżej, w części o kolizjach.
-\end{itemize}
-\textbf{Pokaz w UI}
+\section{Część 1 --- track w UI}\label{sec:track-ui}
+\podrozdzial{Dodanie tracka w Configuratorze}
+\begin{enumerate}
+  \item Otwieramy Configurator: \textit{TwinCAT} $\rightarrow$ \textit{XPlanar} $\rightarrow$ \textit{Configurator} i importujemy istniejącą konfigurację projektu.
+  \item W \textit{Factory Settings} wybieramy \textit{Part} oraz ustawiamy siatkę: \textit{Snap to Grid} (wyłączona albo jej rozmiar w mm) i \textit{Show Snap Points} (pokazanie punktów siatki).
+  \item W \textit{Created Tracks} przyciskiem \textit{+} dodajemy nowy track (przycisk \textit{--} usuwa zaznaczony). Klikamy go i w \textit{Track Settings}, w polu \textit{Name}, nadajemy mu nazwę \texttt{Loop}.
+  \item Rysujemy track z elementów: punktów (\textit{Point}), odcinków (\textit{Line}) i łuków (\textit{Circle}).
+  \item Jeśli mover ma jeździć w kółko, oznaczamy track jako zamknięty: klikamy sam track (jego nazwę w \textit{Created Tracks}, nie pojedynczą linię) i po prawej stronie, w \textit{Track Settings}, zaznaczamy \textit{Closed Track}. W tym samym panelu można też połączyć track z innymi (\textit{Start from Track}, \textit{End at Track}), wyczyścić go (\textit{Clear Track}) lub usunąć (\textit{Delete Track}).
+\zrzutEkranu[0.4\linewidth]{04-tracki/configurator/configurator-track-settings-closed-track.png}{Configurator --- \textit{Track Settings}, zaznaczone \textit{Closed Track}}
+  \item Klikamy \textit{Validate Tracks}, a potem \textit{Export}. Track pojawia się w drzewie projektu w \textit{MOTION} $\rightarrow$ \textit{Groups} $\rightarrow$ \texttt{Loop}.
+\end{enumerate}
+\zrzutEkranu[0.4\linewidth]{04-tracki/configurator/configurator-factory-settings-created-tracks.png}{Configurator --- \textit{Factory Settings} i lista \textit{Created Tracks}}
 
-\begin{itemize}
-  \item Jak wejść na track.
-  \item Dlaczego \textbf{keep orientation} jest ważne.
-  \item JOG po tracku.
-  \item Metoda \textbf{recovery}, która pozwala dołączyć do tracku \textit{(powiedzieć o ograniczeniach --- czy jest w stanie bezproblemowo nie uderzyć w inne movery)}.
-\end{itemize}
-\subsection*{Omijanie kolizji --- Group}
-\begin{itemize}
-  \item \textbf{Group} --- jak działa; odesłanie do linku Beckhoffa.
-  \item Environment jako granica obszaru ruchu.
-  \item Pokazanie na zasadzie kolejki \textit{(do sprawdzenia: czy nie trzeba kolejnego brancha na GitHubie, by pokazać kolejkowanie)} --- \texttt{gap}, \texttt{P\_IsQueuing}.
-  \item Błąd \textbf{33158} (Collision Avoidance odrzuciło ruch) i odczyt \texttt{stInfo} --- który obiekt zablokował.
-  \item Strefa wspólna --- materiał z rozdziału 08 pracy.
-\end{itemize}
-\subsection*{Zadania}
-\textbf{Zadanie 1 --- jeden track, dwa movery:}
+\textbf{Kolejność odcinków.} Odcinki definiujemy po kolei, w kierunku jazdy: każdy następny zaczyna się tam, gdzie skończył się poprzedni. Ważne jest, aby kolejne linie były dobrze zdefiniowane --- odcinek dodany w złej kolejności albo w złym kierunku psuje cały track.
 
-\begin{itemize}
-  \item Pokazanie, że na tracka można wejść \textbf{ręcznie} (z UI).
-  \item Zapisanie kodu dla jednego tracka (budowa geometrii, linkowanie, dodanie do Group), dołączenie do niego 2 moverów i wysterowanie jazdy w kółko --- jak w docsach Beckhoffa.
-\end{itemize}
-\textbf{Zadanie 2 --- dwa tracki z punktem przecięcia:}
+\textbf{Miejsce na wygładzenie.} Narożników nie łączymy w jednym punkcie. Każdy odcinek skracamy o około 30~mm z obu stron, a przejście (łuk) między odcinkami system wylicza sam (interpolacja).
 
+\textbf{Przykład --- track prostokątny.} Track przechodzi przez środki kafelków (X = 360 i 600~mm, Y = 120 i 600~mm), a każdy odcinek jest skrócony o 30~mm z obu stron:
+\begin{enumerate}
+  \item Line --- [360, 150] $\rightarrow$ [360, 570],
+  \item Line --- [390, 600] $\rightarrow$ [570, 600],
+  \item Line --- [600, 570] $\rightarrow$ [600, 150],
+  \item Line --- [570, 120] $\rightarrow$ [390, 120].
+\end{enumerate}
+Track eksportujemy jako zamknięty: wtedy przejście z końca odcinka 4 na początek odcinka 1 system wylicza sam i mover może jeździć w kółko.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.012cm,y=0.012cm,>=stealth]
+  % kafelki 4x3 po 240 mm
+  \foreach \i in {0,...,3} \foreach \j in {0,...,2}
+    \draw[bkdark!40,fill=bkgray] (\i*240,\j*240) rectangle ++(240,240);
+  % srodki kafelkow
+  \foreach \i in {0,...,3} \foreach \j in {0,...,2}
+    \fill[bkdark!50] (120+\i*240,120+\j*240) circle (6);
+  % przejscia wyliczane automatycznie
+  \draw[bkorange,dashed,thick] (360,570) .. controls (360,600) .. (390,600);
+  \draw[bkorange,dashed,thick] (570,600) .. controls (600,600) .. (600,570);
+  \draw[bkorange,dashed,thick] (600,150) .. controls (600,120) .. (570,120);
+  \draw[bkorange,dashed,thick] (390,120) .. controls (360,120) .. (360,150);
+  % odcinki tracka
+  \draw[->,bkorange,line width=1.6pt] (360,150) -- (360,570) node[midway,left,font=\small\color{bkdark}] {1};
+  \draw[->,bkorange,line width=1.6pt] (390,600) -- (570,600) node[midway,above,font=\small\color{bkdark}] {2};
+  \draw[->,bkorange,line width=1.6pt] (600,570) -- (600,150) node[midway,right,font=\small\color{bkdark}] {3};
+  \draw[->,bkorange,line width=1.6pt] (570,120) -- (390,120) node[midway,below,font=\small\color{bkdark}] {4};
+  % osie
+  \draw[->,thick,bkdark] (-60,-60) -- (90,-60) node[right] {X};
+  \draw[->,thick,bkdark] (-60,-60) -- (-60,90) node[above] {Y};
+\end{tikzpicture}
+\caption{Track prostokątny na środkach kafelków: odcinki 1--4 (linia ciągła) i przejścia wyliczane przez system (linia przerywana)}
+\end{figure}
+
+\uwaga{\textit{Validate Tracks} nie wykrywa błędów interpolacji na przejściach między odcinkami.}
+
+\podrozdzial{Linkowanie}
+Po eksporcie sam track powinien być już zlinkowany --- nie trzeba niczego łączyć ręcznie. Sprawdzamy to w drzewie projektu: \textit{MOTION} $\rightarrow$ \textit{Groups} $\rightarrow$ \texttt{Loop} $\rightarrow$ \texttt{McToPlc} --- połączona zmienna jest tam widoczna.
+
+\podrozdzial{Ruch movera po tracku}
+\begin{enumerate}
+  \item Klikamy \textit{Activate Configuration}, logujemy się do PLC i uruchamiamy program --- movery zostają włączone.
+  \item Otwieramy \textit{TwinCAT} $\rightarrow$ \textit{MC3} $\rightarrow$ \textit{XPlanar Environment View} i w lewym górnym rogu zaznaczamy \textit{Show Tracks}. Track \texttt{Loop} pojawia się na stole; linią przerywaną widać przejścia między odcinkami.
+\end{enumerate}
+\zrzutEkranu[0.9\linewidth]{04-tracki/environment-view/environment-view-show-tracks.png}{XPlanar Environment View --- movery i track \texttt{Loop} (zaznaczone \textit{Show Tracks})}
+\begin{enumerate}
+  \setcounter{enumi}{2}
+  \item Panel \textit{Basic Controls} można dowolnie dostosować: przyciskiem \textit{...} w jego prawym górnym rogu dodajemy i usuwamy karty. Do pracy z trackiem dodajemy karty z \textit{Track Motion}: \textit{Join Track}, \textit{Leave Track} i \textit{Jog On Track}.
+\end{enumerate}
+\zrzutEkranu[0.8\linewidth]{04-tracki/environment-view/basic-controls-menu-track-motion.png}{\textit{Basic Controls} --- menu dodawania kart, \textit{Track Motion}}
+\begin{enumerate}
+  \setcounter{enumi}{3}
+  \item Włączamy track. Z poziomu \textit{XPlanar Environment View} nie da się tego zrobić, więc w drzewie projektu klikamy dwukrotnie \textit{MOTION} $\rightarrow$ \textit{Groups} $\rightarrow$ \texttt{Loop}, przechodzimy na zakładkę \textit{Motion UI} i w \textit{Enable Dialog} przełączamy \textit{Enable}. Status tracka zmienia się na \textit{Enabled}. Bez włączonego tracka mover nie dołączy do niego, a TwinCAT nie zgłasza błędu.
+\zrzutEkranu[\linewidth]{04-tracki/environment-view/track-loop-motion-ui-enable.png}{Track \texttt{Loop} --- zakładka \textit{Motion UI}, track włączony (\textit{Enabled}); w drzewie widać jego zmienne w \texttt{McToPlc}}
+  \item W \textit{General Information} wybieramy movera (\textit{Selected Mover}).
+  \item W karcie \textit{Join Track} wybieramy track \texttt{Loop}, zaznaczamy \textit{Use Orientation} i klikamy \textit{Join Track}. Mover sam dojeżdża na track. Tak samo dołączamy kolejne movery --- na jednym tracku może być kilka moverów.
+  \item W karcie \textit{Jog On Track} najpierw wybieramy track (bez tego karta nie działa), potem odstęp (\textit{Gap}), tryb odstępu (\textit{Gap Mode}) i prędkość. Strzałkami przesuwamy wybranego movera po tracku.
+  \item Kartą \textit{Leave Track} mover zjeżdża z tracka do podanej pozycji X, Y. Tu również zaznaczamy \textit{Use Orientation} --- bez tej opcji NC może odrzucić ruch.
+\end{enumerate}
+\zrzutEkranu[0.8\linewidth]{04-tracki/environment-view/basic-controls-karty-track.png}{Karty \textit{Join Track}, \textit{Leave Track} i \textit{Jog On Track}}
+
+\textbf{Use Orientation.} Przy dołączaniu do tracka najlepiej zaznaczyć \textit{Use Orientation}. Bez tej opcji mover korzysta z domyślnej interpolacji, która jest mało wygodna: jeśli wynika z niej obrót w osi C, mover go wykona. Często mover zahacza wtedy o inny obiekt albo się zatrzymuje, a system unikania kolizji blokuje ruch moverów.
+
+\textbf{Dlaczego movery na tracku się nie zderzają.} Każdy mover na tracku utrzymuje minimalny odstęp \texttt{Gap} od movera przed nim i za nim (liczony od środka do środka movera, więc trzeba doliczyć jego szerokość). Gdy mover przed nim stoi albo jedzie wolniej, mover za nim zwalnia i czeka --- ustawia się w kolejce. Dzięki temu \texttt{Gap} służy do kolejkowania moverów, np.\ przed stacją. Sposób pilnowania odstępu wybiera \textit{Gap Mode}:
 \begin{itemize}
-  \item 2 movery jadące na \textbf{oddzielnych trackach}, które przechodzą przez jeden punkt przecięcia (łatwe do zrobienia).
-  \item Obserwacja zatrzymania, kolejkowania i wznowienia przy kolizji w punkcie przecięcia.
+  \item \textbf{Standard1D} (domyślny) --- odstęp mierzony wzdłuż tracka; rośnie z prędkością, więc łańcuch moverów się rozciąga,
+  \item \textbf{Fast1D} --- system ingeruje w ruch jak najpóźniej, więc odstępy są mniejsze, a łańcuch moverów jedzie szybciej,
+  \item \textbf{Standard2D} --- jak Standard1D, ale liczona jest rzeczywista odległość między obrysami moverów,
+  \item \textbf{Fast2D} --- jak Fast1D dla odległości 2D; wymaga dużo obliczeń.
+\end{itemize}
+Tryby 2D mają obecnie problemy z wysterowaniem --- patrz dodatek \hyperref[sec:gapmode2d]{\ref*{sec:gapmode2d}~\textit{Gap Mode 2D --- komentarz autora}}.
+
+\section{Część 2 --- trzy tracki i cztery movery}\label{sec:track-kod}
+\zadanie{Zadanie 2}{Na podstawie kodu startowego stworzyć 3 tracki (zgodnie z instrukcją), zlinkować grupę i tracki oraz dopisać kod, w którym 4 movery jeżdżą po tych trackach w kółko.}
+
+\podrozdzial{Projekt sieci tracków}
+Sieć składa się z trzech tracków:
+\begin{itemize}
+  \item \texttt{Main} --- track główny (środkowy), jedzie w prawo,
+  \item \texttt{Top} --- track górny, jedzie w lewo,
+  \item \texttt{Bottom} --- track dolny, jedzie w lewo.
+\end{itemize}
+Każdy z trzech tracków to jedna linia prosta. Końce i początki tracków łączymy relacjami (\textit{Start from Track}, \textit{End at Track}) --- przejścia między liniami system tworzy sam, jako gładkie krzywe. Na końcu tracka \texttt{Main} zaczynają się oba tracki \texttt{Top} i \texttt{Bottom} --- powstaje rozgałęzienie. Każdy z nich jedzie w przeciwną stronę niż \texttt{Main} i wraca na jego początek. Tam movery z obu tracków próbują wjechać na \texttt{Main} --- o tym, który mover wjedzie pierwszy, decyduje unikanie kolizji. To jest problem, który pokazuje zadanie.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.012cm,y=0.012cm,>=stealth]
+  \foreach \i in {0,...,3} \foreach \j in {0,...,2}
+    \draw[bkdark!40,fill=bkgray] (\i*240,\j*240) rectangle ++(240,240);
+  % Main
+  \draw[->,bkorange,line width=1.8pt] (270,360) -- (690,360) node[midway,above,font=\small\color{bkdark}] {Main};
+  % Top
+  \draw[->,bkblue,line width=1.4pt] (690,600) -- (270,600) node[midway,above,font=\small\color{bkdark}] {Top};
+  % Bottom
+  \draw[->,green!50!black,line width=1.4pt] (690,120) -- (270,120) node[midway,below,font=\small\color{bkdark}] {Bottom};
+  % przejscia tworzone przez system (relacje)
+  \draw[dashed,bkdark!70,line width=1pt] (690,360) .. controls (780,360) and (780,600) .. (690,600);
+  \draw[dashed,bkdark!70,line width=1pt] (690,360) .. controls (780,360) and (780,120) .. (690,120);
+  \draw[dashed,bkdark!70,line width=1pt] (270,600) .. controls (180,600) and (180,360) .. (270,360);
+  \draw[dashed,bkdark!70,line width=1pt] (270,120) .. controls (180,120) and (180,360) .. (270,360);
+  % wezly
+  \fill[bkdark] (690,360) circle (9) node[below left=2pt,font=\scriptsize] {rozgałęzienie};
+  \fill[bkdark] (270,360) circle (9);
+  \node[font=\scriptsize,bkdark] at (330,330) {połączenie};
+  % osie
+  \draw[->,thick,bkdark] (-60,-60) -- (90,-60) node[right] {X};
+  \draw[->,thick,bkdark] (-60,-60) -- (-60,90) node[above] {Y};
+\end{tikzpicture}
+\caption{Sieć tracków: \texttt{Main} (pomarańczowy), \texttt{Top} (niebieski) i \texttt{Bottom} (zielony); linią przerywaną zaznaczono przejścia tworzone przez system na podstawie relacji}
+\end{figure}
+
+\podrozdzial{Geometria tracków}
+Każdy track to jedna linia prosta, skrócona o 30~mm z obu stron, tak jak w części 1. Każdy track musi być oddalony co najmniej 120~mm od granicy stołu --- w tym projekcie skrajne linie (Y = 120 i 600~mm) leżą dokładnie 120~mm od krawędzi stołu $960 \times 720$~mm. Współrzędne w milimetrach:
+
+\begin{center}\small
+\begin{tabular}{@{}llp{9cm}@{}}
+\toprule
+\textbf{Track} & \textbf{Element} & \textbf{Geometria} \\
+\midrule
+\texttt{Main} & Line & [270, 360] $\rightarrow$ [690, 360] \\
+\midrule[0.3pt]
+\texttt{Top} & Line & [690, 600] $\rightarrow$ [270, 600] \\
+\midrule[0.3pt]
+\texttt{Bottom} & Line & [690, 120] $\rightarrow$ [270, 120] \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\podrozdzial{Relacje między trackami}
+Relacje ustawiamy w \textit{Track Settings} tracków \texttt{Top} i \texttt{Bottom}:
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Track} & \textbf{Start from Track} & \textbf{End at Track} \\
+\midrule
+\texttt{Main} & --- & --- \\
+\texttt{Top} & \texttt{Main} & \texttt{Main} \\
+\texttt{Bottom} & \texttt{Main} & \texttt{Main} \\
+\bottomrule
+\end{tabular}
+\end{center}
+Żaden z tracków nie ma zaznaczonego \textit{Closed Track} --- pętlę tworzą połączenia między trackami.
+
+\podrozdzial{Przygotowanie projektu}
+\begin{enumerate}
+  \item W \textit{Configuratorze} tworzymy tracki \texttt{Main}, \texttt{Top} i \texttt{Bottom} (w tej kolejności) według tabel powyżej, klikamy \textit{Validate Tracks} i \textit{Export}. Tracki pojawią się w \textit{MOTION} $\rightarrow$ \textit{Groups}.
+  \item W \textit{Library Parameters} biblioteki \texttt{Tc3\_XPlanarStandard} ustawiamy \texttt{maxTrackCount} = 3 (tak jak \texttt{maxNumMover}).
+  \item Po zbudowaniu PLC linkujemy grupę, środowisko i tracki: \textit{MOTION} $\rightarrow$ \textit{Groups} $\rightarrow$ obiekt $\rightarrow$ \textit{Settings} $\rightarrow$ \textit{Link To PLC\ldots}:
+  \begin{itemize}
+    \item \texttt{XPlanar} $\rightarrow$ \texttt{MAIN.fbMotionSystem.fbXPlanarSystem.group},
+    \item \texttt{Environment} $\rightarrow$ \texttt{MAIN.fbMotionSystem.fbXPlanarSystem.environment},
+    \item \texttt{Main} $\rightarrow$ \texttt{MAIN.fbMotionSystem.fbTrackStandard[1].stTrackRef}, \texttt{Top} $\rightarrow$ \texttt{[2]}, \texttt{Bottom} $\rightarrow$ \texttt{[3]}.
+  \end{itemize}
+  Movery linkujemy jak w rozdziale 3. Po poprawnym linkowaniu każdy obiekt w \textit{Groups} ma pod sobą \texttt{McToPlc} $\rightarrow$ \texttt{STD}.
+  \item Aktywujemy konfigurację i uruchamiamy PLC. Tracki włącza kod (\texttt{EnableTracks}), więc nie trzeba ich włączać w \textit{Motion UI}.
+\end{enumerate}
+\zrzutEkranu[0.4\linewidth]{04-tracki/plc/motion-groups-linkowanie.png}{\textit{MOTION} $\rightarrow$ \textit{Groups} po linkowaniu --- grupa \texttt{XPlanar}, \texttt{Environment} i tracki \texttt{Main}, \texttt{Bottom}, \texttt{Top} połączone z PLC (\texttt{McToPlc})}
+\uwaga{Grupa i środowisko nie są linkowane automatycznie. Brak linkowania powoduje błąd 33093 w metodzie \texttt{EnableGroup}.}
+\uwaga{Indeks tracka w tablicy \texttt{fbTrackStandard} musi odpowiadać linkowaniu (1 = \texttt{Main}, 2 = \texttt{Top}, 3 = \texttt{Bottom}).}
+
+\podrozdzial{Jak działa program}
+Program ma cztery metody w \texttt{FB\_MotionSystem}. \texttt{Startup} czeka na inicjalizację systemu XPlanar i rejestruje w nim movery i tracki. \texttt{Starting} działa jak \texttt{Resetting} i \texttt{Prepare} w projekcie demo: resetuje movery i tracki, włącza grupę, granice stołu, tracki i movery, dodaje je do grupy, a na końcu dołącza movery do tracków. \texttt{Execute} prowadzi ciągłą jazdę. Movery 1--2 (górna połowa stołu) jeżdżą pętlą \texttt{Main} $\rightarrow$ \texttt{Top} $\rightarrow$ \texttt{Main}, a movery 3--4 pętlą \texttt{Main} $\rightarrow$ \texttt{Bottom} $\rightarrow$ \texttt{Main}. Na początku tracka \texttt{Main} system unikania kolizji wpuszcza movery z obu pętli po kolei. Gdy któryś krok startu zgłosi błąd, program staje w kroku 900, a zmienne \texttt{nErrorStep} (krok, w którym był błąd) i \texttt{nErrorID} (kod błędu) pokazują przyczynę.
+
+\podpodrozdzial{MAIN (PRG)}
+Wywołuje po kolei \texttt{Startup} i \texttt{Starting}, a potem w każdym cyklu \texttt{Execute} i \texttt{Cycle}.
+
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+PROGRAM MAIN
+VAR
+    fbMotionSystem : FB_MotionSystem;
+    nState         : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\footnotesize
+\begin{verbatim}
+CASE nState OF
+    0:  nState := 1;
+    1:  IF fbMotionSystem.Startup() THEN
+            nState := 30;
+        END_IF
+    30: IF fbMotionSystem.Starting(bReset := FALSE) THEN
+            nState := 40;
+        END_IF
+    40: fbMotionSystem.Execute();   // ciagla jazda w petlach
+END_CASE
+
+fbMotionSystem.Cycle();
+\end{verbatim}}
+
+\podpodrozdzial{FB\_MotionSystem (FB)}
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+FUNCTION_BLOCK FB_MotionSystem
+VAR
+    fbXPlanarSystem   : FB_XPlanarSystem;
+    fbXPlanarMover    : ARRAY[1..maxNumMover] OF FB_XPlanarMoverStandard;
+    fbTrackStandard   : ARRAY[1..maxTrackCount] OF FB_TrackStandard;  // 1 Main, 2 Top, 3 Bottom
+    nLoop             : ARRAY[1..maxNumMover] OF UDINT;  // tor movera: 2 = Top, 3 = Bottom
+    nStep             : ARRAY[1..maxNumMover] OF UDINT;  // krok ruchu kazdego movera
+    nStartupSequence  : UDINT;
+    nStartingSequence : UDINT;
+    nErrorID          : UDINT;
+    nErrorStep        : UDINT;   // krok, w ktorym wystapil blad
+END_VAR
+\end{verbatim}}
+\textbf{Kod:} brak --- cała logika jest w metodach.
+
+\podpodrozdzial{Metoda Cycle}
+Odświeża system, movery i trzy tracki; wywoływana w każdym cyklu PLC.
+
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+METHOD Cycle
+VAR
+    i : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\footnotesize
+\begin{verbatim}
+fbXPlanarSystem.Cycle();
+FOR i := 1 TO moverCount DO
+    fbXPlanarMover[i].Cycle();
+END_FOR
+FOR i := 1 TO maxTrackCount DO
+    fbTrackStandard[i].Cycle();
+END_FOR
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Startup}
+Czeka, aż system XPlanar się zainicjalizuje (\texttt{P\_SystemInitialized}), jak w demo, i przekazuje systemowi movery i tracki (\texttt{SetMoverStandard}, \texttt{SetTrackStandard}).
+
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+METHOD Startup : BOOL
+VAR
+    i : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\footnotesize
+\begin{verbatim}
+CASE nStartupSequence OF
+    0:  nStartupSequence := 1;
+    1:  // czekamy, az system XPlanar sie zainicjalizuje (jak w demo)
+        IF fbXPlanarSystem.P_SystemInitialized THEN
+            nStartupSequence := 2;
+        END_IF
+    2:  FOR i := 1 TO moverCount DO
+            fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
+        END_FOR
+        FOR i := 1 TO maxTrackCount DO
+            fbXPlanarSystem.SetTrackStandard(i, fbTrackStandard[i]);
+        END_FOR
+        nStartupSequence := 30;
+    30: Startup := TRUE;
+END_CASE
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Starting}
+Działa jak metody \texttt{Resetting} i \texttt{Prepare} w projekcie demo. Najpierw resetuje movery i tracki (\texttt{ResetMovers}, \texttt{ResetTracks}). Potem uruchamia system: grupa, granice stołu, tracki, movery, dodanie wszystkiego do grupy. Na końcu dzieli movery: te w górnej połowie stołu (Y > 360~mm) jeżdżą pętlą \texttt{Top} + \texttt{Main}, te w dolnej --- pętlą \texttt{Bottom} + \texttt{Main}. Każdy mover dołącza do swojego toru komendą \texttt{JoinTrack} z \textit{Use Orientation}.
+
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+METHOD Starting : BOOL
+VAR_INPUT
+    bReset : BOOL;
+END_VAR
+VAR
+    i : UDINT;
+END_VAR
+VAR_INST
+    stJoinOptions : ST_JoinTrackOptions;
+    bJoined       : BOOL;
+    bError        : BOOL;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\footnotesize
+\begin{verbatim}
+IF bReset THEN
+    Starting := FALSE;
+    nStartingSequence := 0;
+END_IF
+CASE nStartingSequence OF
+    0:  IF NOT bReset THEN
+            nStartingSequence := 102;
+        END_IF
+
+    // --- Resetting (jak w demo): reset moverow i trackow ---
+    102: IF fbXPlanarSystem.ResetMovers() THEN
+            nStartingSequence := 103;
+        END_IF
+    103: IF fbXPlanarSystem.P_ResetMovers.Done THEN
+            nStartingSequence := 104;
+        ELSIF fbXPlanarSystem.P_ResetMovers.Error THEN
+            nErrorID := fbXPlanarSystem.P_ResetMovers.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+    104: IF fbXPlanarSystem.ResetTracks() THEN
+            nStartingSequence := 105;
+        END_IF
+    105: IF fbXPlanarSystem.P_ResetTracks.Done THEN
+            nStartingSequence := 10;
+        ELSIF fbXPlanarSystem.P_ResetTracks.Error THEN
+            nErrorID := fbXPlanarSystem.P_ResetTracks.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    // --- Prepare (jak w demo) ---
+    10: // wlaczenie grupy (unikanie kolizji)
+        IF fbXPlanarSystem.EnableGroup() THEN
+            nStartingSequence := 11;
+        END_IF
+    11: IF fbXPlanarSystem.P_EnableGroup.Done THEN
+            nStartingSequence := 20;
+        ELSIF fbXPlanarSystem.P_EnableGroup.Error THEN
+            nErrorID := fbXPlanarSystem.P_EnableGroup.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    20: // granice stolu do grupy
+        IF fbXPlanarSystem.AddEnvironmentToGroup() THEN
+            nStartingSequence := 21;
+        END_IF
+    21: IF fbXPlanarSystem.P_AddEnviromentToGroup.Done THEN
+            nStartingSequence := 30;
+        ELSIF fbXPlanarSystem.P_AddEnviromentToGroup.Error THEN
+            nErrorID := fbXPlanarSystem.P_AddEnviromentToGroup.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    30: // wlaczenie trackow
+        IF fbXPlanarSystem.EnableTracks() THEN
+            nStartingSequence := 31;
+        END_IF
+    31: IF fbXPlanarSystem.P_EnableTracks.Done THEN
+            nStartingSequence := 40;
+        ELSIF fbXPlanarSystem.P_EnableTracks.Error THEN
+            nErrorID := fbXPlanarSystem.P_EnableTracks.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    40: // tracki do grupy
+        IF fbXPlanarSystem.AddTracksToGroup() THEN
+            nStartingSequence := 41;
+        END_IF
+    41: IF fbXPlanarSystem.P_AddTracksToGroup.Done THEN
+            nStartingSequence := 50;
+        ELSIF fbXPlanarSystem.P_AddTracksToGroup.Error THEN
+            nErrorID := fbXPlanarSystem.P_AddTracksToGroup.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    50: // wlaczenie moverow
+        IF fbXPlanarSystem.EnableMovers() THEN
+            nStartingSequence := 51;
+        END_IF
+    51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
+            nStartingSequence := 60;
+        ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+            nErrorID := fbXPlanarSystem.P_EnableMovers.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    60: // movery do grupy
+        IF fbXPlanarSystem.AddMoversToGroup() THEN
+            nStartingSequence := 61;
+        END_IF
+    61: IF fbXPlanarSystem.P_AddMoversToGroup.Done THEN
+            nStartingSequence := 70;
+        ELSIF fbXPlanarSystem.P_AddMoversToGroup.Error THEN
+            nErrorID := fbXPlanarSystem.P_AddMoversToGroup.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    70: // podzial: movery w gornej polowie stolu -> Top, w dolnej -> Bottom
+        FOR i := 1 TO moverCount DO
+            IF fbXPlanarMover[i].P_ActPosition.y > 360 THEN
+                nLoop[i] := 2;
+            ELSE
+                nLoop[i] := 3;
+            END_IF
+            nStep[i] := 0;
+        END_FOR
+        stJoinOptions.useOrientation := TRUE;
+        FOR i := 1 TO moverCount DO
+            fbXPlanarMover[i].JoinTrack('Join loop', fbTrackStandard[nLoop[i]],
+                250, 1250, 12500, stJoinOptions);
+        END_FOR
+        nStartingSequence := 71;
+    71: bJoined := TRUE;
+        bError := FALSE;
+        FOR i := 1 TO moverCount DO
+            bJoined := bJoined AND fbXPlanarMover[i].P_JoinTrack.Done;
+            bError := bError OR fbXPlanarMover[i].P_JoinTrack.Error;
+        END_FOR
+        IF bJoined THEN
+            nStartingSequence := 80;
+        ELSIF bError THEN
+            FOR i := 1 TO moverCount DO
+                IF fbXPlanarMover[i].P_JoinTrack.Error THEN
+                    nErrorID := fbXPlanarMover[i].P_JoinTrack.ErrorID;
+                END_IF
+            END_FOR
+            nErrorStep := 71;
+            nStartingSequence := 900;
+        END_IF
+
+    80: Starting := TRUE;
+
+    900: ;   // blad: nErrorID
+END_CASE
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Execute}
+Ciągła jazda bez stacji. Każdy mover ma własny krok w tablicy \texttt{nStep}: na zmianę dostaje cel na końcu swojego toru i na końcu \texttt{Main}. Nowy cel wysyłany jest od razu, gdy mover wjedzie na kolejny track (\texttt{P\_LastKnownTrackOID} równe \texttt{P\_OID} tracka), więc mover nie zatrzymuje się na końcach tracków. Wybór toru na rozgałęzieniu wynika z tracka docelowego w \texttt{MoveOnTrack}, a w punkcie połączenia unikanie kolizji ustawia movery w kolejce z odstępem \texttt{fGap}.
+
+\textbf{Zmienne:}
+{\footnotesize
+\begin{verbatim}
+METHOD Execute
+VAR
+    i : UDINT;
+END_VAR
+VAR_INST
+    fVelo : LREAL := 500;    // predkosc [mm/s]
+    fAcc  : LREAL := 1250;   // przyspieszenie [mm/s2]
+    fJerk : LREAL := 12500;  // szarpniecie [mm/s3]
+    fGap  : LREAL := 200;    // odstep srodek-srodek [mm]
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\footnotesize
+\begin{verbatim}
+FOR i := 1 TO moverCount DO
+    CASE nStep[i] OF
+        0:  // cel: koniec toru movera (Top albo Bottom), przez rozgalezienie na koncu Main
+            fbXPlanarMover[i].MoveOnTrack('To loop', fbTrackStandard[nLoop[i]],
+                fbTrackStandard[nLoop[i]].GetLength(), fVelo, fAcc, fJerk, fGap,
+                MC_DIRECTION.mcDirectionPositive);
+            nStep[i] := 1;
+
+        1:  // mover jest na swoim torze -> od razu nowy cel: koniec Main
+            IF fbXPlanarMover[i].P_LastKnownTrackOID = fbTrackStandard[nLoop[i]].P_OID THEN
+                fbXPlanarMover[i].MoveOnTrack('To main', fbTrackStandard[1],
+                    fbTrackStandard[1].GetLength(), fVelo, fAcc, fJerk, fGap,
+                    MC_DIRECTION.mcDirectionPositive);
+                nStep[i] := 2;
+            ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+                nStep[i] := 900;
+            END_IF
+
+        2:  // mover wjechal na Main -> znowu cel na jego torze
+            IF fbXPlanarMover[i].P_LastKnownTrackOID = fbTrackStandard[1].P_OID THEN
+                nStep[i] := 0;
+            ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+                nStep[i] := 900;
+            END_IF
+
+        900: ;   // blad ruchu movera
+    END_CASE
+END_FOR
+\end{verbatim}}
+
+
+\podrozdzial{Group --- ochrona przed kolizjami}
+\textbf{Group} (grupa unikania kolizji, \textit{Collision Avoidance}) to obiekt w MOTION, który przed wykonaniem każdej komendy ruchu sprawdza, czy ruch nie spowoduje kolizji. Do grupy dodajemy movery, \textbf{Environment} (granice stołu) i tracki. Bez grupy movery mogą się zderzyć albo zjechać ze stołu.
+
+Odstęp między moverami na tracku (\texttt{Gap}, \textit{Gap Mode}) opisano w części 1. Grupa dokłada do tego ochronę w ruchu swobodnym (2D), granice stołu oraz kolizje między moverami na trackach i poza nimi.
+
+\podrozdzial{Łączenie tracków i ograniczenia}
+\begin{itemize}
+  \item Mover przechodzi na inny track tylko z \textbf{końca} jednego tracka na \textbf{początek} drugiego.
+  \item Dokumentacja jest niespójna co do liczby połączeń jednego końca tracka. Przykład Beckhoffa \textit{Following a Planar mover through a Track Network} łączy jednak jeden koniec tracka z początkami dwóch innych, więc rozgałęzienie jest możliwe.
+  \item Połączenie (\textit{Start from Track}, \textit{End at Track}) samo tworzy gładkie przejście między trackami. Dlatego tracki, które się łączą, nie rysują własnych łuków przy połączeniu --- inaczej przejścia się dublują i geometria w \textit{Environment View} wygląda inaczej niż w \textit{Configuratorze}.
+  \item Gdy w jednym punkcie łączą się więcej niż dwa tracki, powstaje zwrotnica (\textit{switch}).
+  \item Skrzyżowanie tracków bez zwrotnicy oraz tracki biegnące zbyt blisko siebie nie są chronione przez unikanie kolizji.
+  \item Track nie może zaczynać się i kończyć w tym samym punkcie; do zamknięcia tracka w pętlę służy osobna opcja (\textit{close the loop}).
+  \item Kolejny odcinek nie może zaczynać się w tym samym punkcie, w którym kończy się poprzedni. \textit{(do sprawdzenia: nazwa opcji, którą można wyłączyć to ograniczenie)}
 \end{itemize}
 
 \subsection*{Dokumentacja Beckhoff (Infosys)}
@@ -659,19 +1655,1250 @@ Wykonaj ruch 4 moverów w tył i w przód w osi Y.
 \chapter{Dynamiczne trasowanie moverów --- stacje}
 \textit{Ćwiczenie: \textbf{dynamiczne trasowanie moverów} (najtrudniejsze)}
 
+\section{Zadania}
+\podrozdzial{Zadanie 1}
+Na podstawie kodu początkowego (\textit{link do dodania}), tak jak opisano w tym rozdziale, zbudować układ trzech tracków i pięciu stacji i napisać program, w którym 4 movery wykonują procesy na stacjach tak samo jak w demo (stacje 1, 2 i 3 --- obrót movera, rozjazd i łączenie, dynamiczny wybór stacji procesowej).
+\podrozdzial{Zadanie 2}
+Dodać kolejną stację (około [240, 120]~mm), która wykonuje zadany ruch w sześciu stopniach swobody.
+
+\section{Stacje jako wyższy poziom abstrakcji}
+Do tej pory sterowaliśmy ruchem na poziomie \textbf{współrzędnych i tracków}: ``jedź na pozycję 548~mm na tracku 1''. \textbf{Stacja} jest wyższym poziomem abstrakcji: to nazwane miejsce na stole, z którym wiąże się określone zachowanie movera. Mover nie jedzie już do współrzędnych, tylko \textbf{do stacji} (``jedź do stacji 2''), a to, gdzie ta stacja leży i jak się do niej dojeżdża, jest zapisane w jednym miejscu --- w tabeli stacji.
+
+\podrozdzial{Do czego można używać stacji}
 \begin{itemize}
-  \item Stacje jako punkty decyzyjne --- mover po obsłudze dostaje kolejny cel w zależności od stanu systemu.
-  \item Wzorzec ze starter kitu: \texttt{FB\_Station\_01..03} (stacje procesowe, wybór następnej stacji), \texttt{FB\_Station\_04\_SW\_Separate} (zwrotnica 1$\rightarrow$2), \texttt{FB\_Station\_05\_SW\_Merge} (zwrotnica 2$\rightarrow$1 z priorytetem).
-  \item Listy kolejek stacji (\texttt{FB\_List}), \texttt{P\_ProcessRequest} / \texttt{P\_ProcessClearance}.
-  \item \texttt{FB\_MoverTarget} --- przydział najbliższego movera do pozycji.
+  \item \textbf{Stacje procesowe} --- miejsce, w którym mover zatrzymuje się na czas obróbki (np. dozowanie, montaż, kontrola jakości, pakowanie). W naszym projekcie mover obraca się tam o 90$^\circ$ albo 180$^\circ$, symulując proces.
+  \item \textbf{Rozdzielenie (rozjazd)} --- punkt, w którym strumień moverów rozdziela się na kilka tracków. Stacja kieruje każdego movera na ten track, który wybrał routing.
+  \item \textbf{Łączenie} --- punkt, w którym kilka tracków łączy się w jeden. Stacja pilnuje, żeby w punkt łączenia wjeżdżał jeden mover naraz.
+  \item \textbf{Bufory i kolejki}, stacje załadunku i rozładunku, stanowiska przezbrojenia --- ta sama zasada: mover ma cel (stację), a nie współrzędne.
 \end{itemize}
-\textbf{Zadanie} \textit{(propozycja)}: na torach z zagadnienia 3 dodać 2 stacje i zwrotnicę; movery cyklicznie trafiają do wolnej stacji.
+
+\podrozdzial{Dlaczego warto ich używać}
+\begin{itemize}
+  \item \textbf{Geometria jest oddzielona od logiki.} Położenie stacji zapisujemy raz (współrzędne X, Y i track). Gdy zmieniamy układ stołu, poprawiamy tabelę stacji, a automat ruchu zostaje bez zmian.
+  \item \textbf{Program czyta się jak opis procesu.} Zamiast serii ruchów po współrzędnych mamy sekwencję ``stacja 1 $\rightarrow$ rozjazd $\rightarrow$ stacja 2 lub 3 $\rightarrow$ łączenie''.
+  \item \textbf{Decyzje o trasie są w jednym miejscu.} Wybór stacji robi jedna metoda (\texttt{SelectStation}), więc zachowanie całego układu zmieniamy bez ruszania automatu ruchu.
+  \item \textbf{Łatwo rozbudować układ.} Nowa stacja to nowy wiersz w tabeli i nowe zachowanie, a nie przepisywanie ruchów.
+  \item \textbf{Kolizjami zajmuje się grupa.} Program mówi tylko, dokąd mover ma jechać. Omijanie kolizji, kolejkowanie przed zajętą stacją i odstępy zapewnia \textit{Group} (rozdział 4).
+\end{itemize}
+
+\podrozdzial{Jak działa routing}
+\textbf{Routing} to wybór trasy movera. W \textbf{routingu statycznym} trasa jest zawsze taka sama (np. 1 $\rightarrow$ 2 $\rightarrow$ 5). W \textbf{routingu dynamicznym} cel zależy od stanu systemu w chwili decyzji, np. od tego, która stacja jest wolna, ile moverów już do niej jedzie albo jaki priorytet ma mover.
+
+U nas decyzja zapada w jednym miejscu: gdy mover skończy obróbkę na stacji 1, program pyta \texttt{FB\_Routing.SelectStation}, do której stacji procesowej (2 czy 3) ma jechać. Dalej:
+\begin{enumerate}
+  \item \texttt{SelectStation} wybiera stację według trybu \texttt{eMode} i zwiększa licznik \texttt{nAssigned} tej stacji (ile moverów jedzie do niej, czeka w kolejce albo jest w niej obsługiwanych).
+  \item Mover dojeżdża do rozjazdu (stacja 4). Stacja 4 wysyła go komendą \texttt{MoveOnTrack} na track wybranej stacji. Rozgałęzienie wybiera system, bo cel leży na innym tracku niż mover.
+  \item Mover jedzie do stacji, obraca się (proces) i po obróbce zwalnia licznik (\texttt{Release}).
+  \item Przed punktem łączenia (stacja 5) mover prosi o zgodę (\texttt{RequestMerge}). Dostaje ją tylko wtedy, gdy żaden inny mover nie jest właśnie w punkcie łączenia. Po wjechaniu na track 1 oddaje zgodę (\texttt{ReleaseMerge}) i wraca do stacji 1.
+\end{enumerate}
+Tryb routingu wybieramy zmienną \texttt{fbRouting.eMode} (typ \texttt{E\_RoutingMode}). Zmienić ją można w trakcie pracy programu (online):
+\begin{center}\small
+\begin{tabular}{@{}lp{10cm}@{}}
+\toprule
+\textbf{Tryb} & \textbf{Co robi} \\
+\midrule
+\texttt{Alternate} (0) & Naprzemiennie stacja 2, 3, 2, 3 (zachowanie jak w demo). Pierwszy cel zależy od numeru movera. Gdy stacja 2 jest zajęta, a 3 wolna, mover jedzie do 3. \\
+\texttt{ByMover} (1) & Każdy mover ma stałą stację: parzyste do 2, nieparzyste do 3. \\
+\texttt{FreeStation} (2) & Pierwsza wolna stacja; gdy obie zajęte, naprzemiennie. \\
+\texttt{ShortestQueue} (3) & Stacja, do której jedzie mniej moverów (remis $\rightarrow$ stacja 2). \\
+\texttt{Priority} (4) & Mover z priorytetem (movery 1 i 3) jedzie do stacji 2, pozostałe do 3. Gdy preferowana stacja ma kolejkę, a druga jest wolna, mover jedzie do drugiej. \\
+\texttt{Random} (5) & Losowo. \\
+\bottomrule
+\end{tabular}
+\end{center}
+Dodanie nowego zachowania to nowa wartość w \texttt{E\_RoutingMode} i nowa gałąź w \texttt{CASE} metody \texttt{SelectStation} --- bez zmian w automacie ruchu.
+
+\section{Układ tracków i stacji}
+Układ jest taki sam jak w projekcie demo (Starter Kit). Składa się z trzech tracków i sześciu stacji (stacja 6 to zadanie 2). Stół ma wymiary $960 \times 720$~mm.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.012cm,y=0.012cm,>=stealth,font=\small]
+  \foreach \i in {0,...,3} \foreach \j in {0,...,2}
+    \draw[bkdark!40,fill=bkgray] (\i*240,\j*240) rectangle ++(240,240);
+  % Track 1 (lewa petla)
+  \draw[bkorange,line width=1.6pt] (480,120) -- (240,120);
+  \draw[bkorange,line width=1.6pt] (240,120) .. controls (150,120) and (120,150) .. (120,240);
+  \draw[bkorange,line width=1.6pt] (120,240) -- (120,480);
+  \draw[bkorange,line width=1.6pt] (120,480) .. controls (120,570) and (150,600) .. (240,600);
+  \draw[->,bkorange,line width=1.6pt] (240,600) -- (480,600);
+  % Track 3 (prawa petla)
+  \draw[green!50!black,line width=1.6pt] (480,600) -- (720,600);
+  \draw[green!50!black,line width=1.6pt] (720,600) .. controls (810,600) and (840,570) .. (840,480);
+  \draw[green!50!black,line width=1.6pt] (840,480) -- (840,240);
+  \draw[green!50!black,line width=1.6pt] (840,240) .. controls (840,150) and (810,120) .. (720,120);
+  \draw[->,green!50!black,line width=1.6pt] (720,120) -- (480,120);
+  % Track 2 (srodek)
+  \draw[->,bkblue,line width=1.6pt] (600,480) -- (600,240);
+  % przejscia rozjazd / laczenie
+  \draw[dashed,bkdark!70,line width=1pt] (480,600) .. controls (540,600) and (600,540) .. (600,480);
+  \draw[dashed,bkdark!70,line width=1pt] (600,240) .. controls (600,180) and (540,120) .. (480,120);
+  % stacje
+  \node[circle,fill=bkdark,text=white,inner sep=2pt] at (120,360) {1};
+  \node[circle,fill=bkdark,text=white,inner sep=2pt] at (600,360) {2};
+  \node[circle,fill=bkdark,text=white,inner sep=2pt] at (840,360) {3};
+  \node[circle,fill=bkdark,text=white,inner sep=2pt] at (480,600) {4};
+  \node[circle,fill=bkdark,text=white,inner sep=2pt] at (480,120) {5};
+  \node[circle,fill=bkdark,text=white,inner sep=2pt] at (240,120) {6};
+  \node[font=\scriptsize,bkorange!80!black] at (300,75) {Track 1};
+  \node[font=\scriptsize,bkblue] at (665,480) {Track 2};
+  \node[font=\scriptsize,green!50!black] at (780,75) {Track 3};
+  \draw[->,thick,bkdark] (-60,-60) -- (90,-60) node[right] {X};
+  \draw[->,thick,bkdark] (-60,-60) -- (-60,90) node[above] {Y};
+\end{tikzpicture}
+\caption{Układ tracków i stacji: 1, 2, 3 --- stacje procesowe, 4 --- rozdzielenie (rozjazd), 5 --- łączenie, 6 --- ruch w 6 DoF. Linią przerywaną zaznaczono przejścia tworzone przez system}
+\end{figure}
+
+\podrozdzial{Gdzie leżą stacje}
+\begin{center}\small
+\begin{tabular}{@{}clll@{}}
+\toprule
+\textbf{Stacja} & \textbf{Rola} & \textbf{Track} & \textbf{Położenie X, Y [mm]} \\
+\midrule
+1 & proces (obrót +90$^\circ$) & 1 & [120, 360] \\
+2 & proces (obrót 180$^\circ$) & 2 & [600, 360] \\
+3 & proces (obrót 180$^\circ$) & 3 & [840, 360] \\
+4 & rozdzielenie (rozjazd) & koniec tracka 1 & [480, 600] \\
+5 & łączenie & początek tracka 1 & [480, 120] \\
+6 & proces: ruch w 6 DoF (Z, C, A, B) & 1 & [240, 120] \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\podrozdzial{Gdzie położyć tracki --- punkty}
+Każdy track składa się z odcinków prostych (\texttt{Line\_Start} $\rightarrow$ \texttt{Line\_End}). Naroża między odcinkami wylicza system, dlatego odcinki nie łączą się w jednym punkcie (zostaje odstęp ok.~30~mm). Każdy track jest oddalony co najmniej 120~mm od krawędzi stołu. Współrzędne w milimetrach:
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Track} & \textbf{Odcinek} & \textbf{Punkty} \\
+\midrule
+\texttt{Track 1} & 1 & [480, 120] $\rightarrow$ [240, 120] \\
+ & 2 & [120, 240] $\rightarrow$ [120, 480] \\
+ & 3 & [240, 600] $\rightarrow$ [480, 600] \\
+\midrule[0.3pt]
+\texttt{Track 2} & 1 & [600, 480] $\rightarrow$ [600, 240] \\
+\midrule[0.3pt]
+\texttt{Track 3} & 1 & [480, 600] $\rightarrow$ [720, 600] \\
+ & 2 & [840, 480] $\rightarrow$ [840, 240] \\
+ & 3 & [720, 120] $\rightarrow$ [480, 120] \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\podrozdzial{Punkty połączenia tracków}
+Tracki łączymy relacjami \textit{Start from Track} (początek tracka dołącza do końca innego tracka) i \textit{End at Track} (koniec tracka dołącza do początku innego tracka). W punktach połączenia system sam tworzy gładkie przejścia (linia przerywana na rysunku):
+\begin{center}\small
+\begin{tabular}{@{}lllp{6cm}@{}}
+\toprule
+\textbf{Track} & \textbf{Start from Track} & \textbf{End at Track} & \textbf{Punkt} \\
+\midrule
+\texttt{Track 1} & --- & --- & --- \\
+\texttt{Track 2} & \texttt{Track 1} & \texttt{Track 1} & rozjazd [480, 600], łączenie [480, 120] \\
+\texttt{Track 3} & \texttt{Track 1} & \texttt{Track 1} & rozjazd [480, 600], łączenie [480, 120] \\
+\bottomrule
+\end{tabular}
+\end{center}
+Tracki 2 i 3 zaczynają się więc na końcu tracka 1 (stacja 4, rozjazd) i kończą na jego początku (stacja 5, łączenie). Żaden track nie ma zaznaczonego \textit{Closed Track}. Pętlę tworzą połączenia.
+
+\section{Przygotowanie projektu}
+Projekt budujemy na bazie projektu z rozdziału 4 (4 movery, \texttt{maxNumMover} = 4). Różnice:
+\begin{enumerate}
+  \item \texttt{maxTrackCount} = 3 w \textit{Library Parameters} biblioteki \texttt{Tc3\_XPlanarStandard}.
+  \item W \textit{MOTION} $\rightarrow$ \textit{Groups} są obiekty \texttt{XPlanar}, \texttt{Environment} oraz \texttt{Track1}, \texttt{Track2} i \texttt{Track3}. Obiekty tracków są \textbf{puste} (bez geometrii z \textit{Configuratora}) --- geometrię buduje kod (metoda \texttt{BuildTrack}), tak jak w projekcie demo.
+  \item Linkowanie przez \textit{Link To PLC\ldots}:
+  \begin{itemize}
+    \item \texttt{XPlanar} $\rightarrow$ \texttt{MAIN.fbMotionSystem.fbXPlanarSystem.group},
+    \item \texttt{Environment} $\rightarrow$ \texttt{MAIN.fbMotionSystem.fbXPlanarSystem.environment},
+    \item \texttt{Track1} $\rightarrow$ \texttt{MAIN.fbMotionSystem.fbTrackStandard[1].stTrackRef}, \texttt{Track2} $\rightarrow$ \texttt{[2]}, \texttt{Track3} $\rightarrow$ \texttt{[3]},
+    \item osie moverów $\rightarrow$ \texttt{fbXPlanarMover[n].stMoverRef}.
+  \end{itemize}
+\end{enumerate}
+\uwaga{Indeks tracka w tablicy \texttt{fbTrackStandard} musi odpowiadać linkowaniu (1 = \texttt{Track1}, 2 = \texttt{Track2}, 3 = \texttt{Track3}).}
+
+\podrozdzial{Rozmieszczenie plików}
+Kod dzielimy na pliki w folderach \texttt{DUTs} (typy danych) i \texttt{POUs} (bloki programu). Metody dodajemy prawym przyciskiem na bloku funkcyjnym (\textit{Add} $\rightarrow$ \textit{Method}).
+\zrzutEkranu[0.4\linewidth]{05-stacje/projekt-poup-struktura.png}{Folder \texttt{POUs}: \texttt{FB\_MotionSystem} z metodami \texttt{BuildTrack}, \texttt{Cycle}, \texttt{Execute}, \texttt{InitStations}, \texttt{Process6DoF}, \texttt{Starting}, \texttt{Startup}; \texttt{FB\_Routing} z metodami \texttt{Release}, \texttt{ReleaseMerge}, \texttt{RequestMerge}, \texttt{Reset}, \texttt{SelectStation}; program \texttt{MAIN}}
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Folder} & \textbf{Plik} & \textbf{Zawartość} \\
+\midrule
+\texttt{DUTs} & \texttt{E\_RoutingMode} & wyliczenie trybów routingu \\
+\texttt{DUTs} & \texttt{ST\_Station} & dane jednej stacji (track, położenie) \\
+\texttt{POUs} & \texttt{FB\_Routing} & wybór stacji procesowej i zgoda na łączenie \\
+\texttt{POUs} & \texttt{FB\_MotionSystem} & budowa tracków, start systemu, automat ruchu \\
+\texttt{POUs} & \texttt{MAIN} & wywołanie sekwencji \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Kod}
+\podrozdzial{Typy danych (DUTs)}
+\podpodrozdzial{E\_RoutingMode}
+Wyliczenie trybów routingu. Używa go \texttt{FB\_Routing}, a przełączamy je z zewnątrz (zmienna \texttt{fbRouting.eMode}).
+{\scriptsize
+\begin{verbatim}
+{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE E_RoutingMode :
+(
+    Alternate     := 0, // naprzemiennie stacja 2, 3, 2, 3 (zachowanie demo)
+    ByMover       := 1, // kazdy mover ma swoja stala stacje
+    FreeStation   := 2, // wolna stacja, a gdy obie zajete - naprzemiennie
+    ShortestQueue := 3, // stacja, do ktorej jedzie mniej moverow
+    Priority      := 4, // movery z priorytetem jada do stacji 2, reszta do 3
+    Random        := 5  // losowo
+);
+END_TYPE
+\end{verbatim}}
+\podpodrozdzial{ST\_Station}
+Dane jednej stacji: track, na którym leży, jej położenie X, Y i odległości liczone wzdłuż tracka. Tabelę stacji (\texttt{aStation}) wypełnia \texttt{InitStations}, a czyta \texttt{Execute}.
+{\scriptsize
+\begin{verbatim}
+TYPE ST_Station :
+STRUCT
+    nTrack          : UDINT;    // track, na ktorym lezy stacja
+    fX              : LREAL;    // polozenie stacji [mm]
+    fY              : LREAL;
+    fSendAwayDist   : LREAL;    // o ile za stacja mover dostaje cel po obrobce [mm]
+    fPosOnTrack     : LREAL;    // polozenie stacji wzdluz tracka [mm]
+    fSendAway       : LREAL;    // cel po obrobce wzdluz tracka [mm]
+END_STRUCT
+END_TYPE
+\end{verbatim}}
+\podrozdzial{MAIN (PRG)}
+Program czeka na koniec \texttt{Startup} i \texttt{Starting}, a potem w każdym cyklu wywołuje \texttt{Execute} (ruch) i \texttt{Cycle} (odświeżenie systemu). Komunikuje się tylko z \texttt{FB\_MotionSystem}.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+PROGRAM MAIN
+VAR
+    fbMotionSystem  : FB_MotionSystem;
+    nState          : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+CASE nState OF
+    0:  nState := 1;
+    1:  IF fbMotionSystem.Startup() THEN
+            nState := 30;
+        END_IF
+    30: IF fbMotionSystem.Starting(bReset := FALSE) THEN
+            nState := 40;
+        END_IF
+    40: fbMotionSystem.Execute();   // movery jezdza miedzy stacjami
+END_CASE
+
+fbMotionSystem.Cycle();
+\end{verbatim}}
+
+\podrozdzial{FB\_MotionSystem (FB)}
+Główny blok: zawiera system XPlanar, movery, tracki, routing, tabelę stacji i stan każdego movera. Cała logika jest w jego metodach.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+FUNCTION_BLOCK FB_MotionSystem
+VAR
+    fbXPlanarSystem     : FB_XPlanarSystem;
+    fbXPlanarMover      : ARRAY[1..maxNumMover] OF FB_XPlanarMoverStandard;
+    fbTrackStandard     : ARRAY[1..maxTrackCount] OF FB_TrackStandard;  // tracki jak w demo: 1, 2,
+            3
+    fbRouting           : FB_Routing;
+    // Stacje: 1, 2, 3 - procesowe, 4 - rozdzielenie (rozjazd), 5 - laczenie, 6 - ruch w 6 DoF
+    aStation            : ARRAY[1..6] OF ST_Station;
+    // Stan kazdego movera
+    nStep               : ARRAY[1..maxNumMover] OF UDINT;
+    nDest               : ARRAY[1..maxNumMover] OF UDINT;   // stacja procesowa,
+            do ktorej jedzie mover
+    nLastDest           : ARRAY[1..maxNumMover] OF UDINT;
+    nLap                : ARRAY[1..maxNumMover] OF UDINT;   // ile okrazen wykonal mover
+    nSub                : ARRAY[1..maxNumMover] OF UDINT;   // podkrok ruchu w 6 DoF (stacja 6)
+    bSkipS1             : ARRAY[1..maxNumMover] OF BOOL;    // mover po starcie jest juz za stacja 1
+    nStartupSequence    : UDINT;
+    nStartingSequence   : UDINT;
+    nTrackToBuild       : UDINT;
+    nErrorID            : UDINT;
+    nErrorStep          : UDINT;
+END_VAR
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Cycle}
+Odświeża system XPlanar, wszystkie movery i tracki; musi być wywoływana w każdym cyklu PLC. Wywołuje ją \texttt{MAIN}, a ona wywołuje metody \texttt{Cycle} obiektów biblioteki.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD Cycle
+VAR
+    i : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+fbXPlanarSystem.Cycle();
+FOR i := 1 TO moverCount DO
+    fbXPlanarMover[i].Cycle();
+END_FOR
+FOR i := 1 TO maxTrackCount DO
+    fbTrackStandard[i].Cycle();
+END_FOR
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Startup}
+Czeka, aż system XPlanar się zainicjalizuje, rejestruje w nim movery i tracki (\texttt{SetMoverStandard}, \texttt{SetTrackStandard}), a potem buduje tracki 1, 2 i 3, wywołując \texttt{BuildTrack}. Zwraca TRUE do \texttt{MAIN}, gdy tracki są gotowe.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD Startup : BOOL
+VAR
+    i : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+CASE nStartupSequence OF
+    0:  nStartupSequence := 1;
+    1:  // czekamy na inicjalizacje systemu XPlanar
+        IF fbXPlanarSystem.P_SystemInitialized THEN
+            nStartupSequence := 2;
+        END_IF
+    2:  // przekazanie moverow i trackow systemowi
+        FOR i := 1 TO moverCount DO
+            fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
+        END_FOR
+        FOR i := 1 TO maxTrackCount DO
+            fbXPlanarSystem.SetTrackStandard(i, fbTrackStandard[i]);
+        END_FOR
+        nTrackToBuild := 1;
+        nStartupSequence := 10;
+    10: // budowa trackow 1, 2, 3 (track 1 musi byc pierwszy)
+        IF BuildTrack(nTrackToBuild) THEN
+            IF nTrackToBuild < maxTrackCount THEN
+                nTrackToBuild := nTrackToBuild + 1;
+            ELSE
+                nStartupSequence := 20;
+            END_IF
+        END_IF
+    20: nStartupSequence := 30;
+    30: Startup := TRUE;
+END_CASE
+\end{verbatim}}
+
+\podpodrozdzial{Metoda BuildTrack}
+Buduje jeden track z punktów (tabela \texttt{FB\_TrackTable}), ustawia relacje \textit{Start from Track}/\textit{End at Track} do tracka 1, sprawdza tabelę i wywołuje \texttt{BuildTrackExt}. Jest wywoływana z \texttt{Startup}; przy błędzie zapisuje \texttt{nErrorID} i \texttt{nErrorStep}.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD BuildTrack : BOOL
+VAR_INPUT
+    nTrack  : UDINT;
+END_VAR
+VAR_INST
+    fbTrackTable    : FB_TrackTable;
+    nBuildStep      : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+CASE nBuildStep OF
+    0:  // pusta tablica punktow
+        IF fbTrackTable.ClearTrackTable() THEN
+            nBuildStep := 10;
+        END_IF
+
+    10: // punkty tracka (linie: Line_Start -> Line_End; naroza wylicza system)
+        CASE nTrack OF
+            1:  // lewa petla: dol -> lewy bok -> gora; tu leza stacje 1 i 5
+                fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 480.0, 120.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 240.0, 120.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 120.0, 240.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 120.0, 480.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 240.0, 600.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 480.0, 600.0,
+                        0.0);
+            2:  // srodkowy odcinek: stacja 2
+                fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 600.0, 480.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 600.0, 240.0,
+                        0.0);
+            3:  // prawa petla: stacja 3
+                fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 480.0, 600.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 720.0, 600.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 840.0, 480.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 840.0, 240.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_Start, E_PointOption.none, 720.0, 120.0,
+                        0.0);
+                fbTrackTable.AddPoint(E_PointType.Line_End,   E_PointOption.none, 480.0, 120.0,
+                        0.0);
+        END_CASE
+        // relacje: tracki 2 i 3 zaczynaja sie na koncu tracka 1 (rozjazd) i koncza na jego
+                poczatku (laczenie)
+        IF nTrack > 1 THEN
+            fbTrackTable.P_StartFromTrack := fbTrackStandard[1];
+            fbTrackTable.P_EndAtTrack     := fbTrackStandard[1];
+        END_IF
+        fbTrackTable.P_CloseTheLoop := FALSE;
+        nBuildStep := 20;
+
+    20: // sprawdzenie tablicy
+        IF fbTrackTable.CheckTrackTable() <> 0 THEN
+            IF fbTrackTable.P_TrackTableCheckResult THEN
+                nBuildStep := 30;
+            ELSE
+                nErrorStep := 20 + nTrack * 1000;
+                nBuildStep := 900;
+            END_IF
+        END_IF
+
+    30: // budowa tracka
+        IF fbTrackStandard[nTrack].BuildTrackExt(fbTrackTable) THEN
+            nBuildStep := 31;
+        END_IF
+    31: IF fbTrackStandard[nTrack].P_BuildTrackExt.Done THEN
+            nBuildStep := 100;
+        ELSIF fbTrackStandard[nTrack].P_BuildTrackExt.Error THEN
+            nErrorID := fbTrackStandard[nTrack].P_BuildTrackExt.ErrorID;
+            nErrorStep := 31 + nTrack * 1000;
+            nBuildStep := 900;
+        END_IF
+
+    100: BuildTrack := TRUE;
+        nBuildStep := 0;
+
+    900: ;  // blad budowy tracka: nErrorID, nErrorStep
+END_CASE
+\end{verbatim}}
+
+\podpodrozdzial{Metoda InitStations}
+Wypełnia tabelę stacji \texttt{aStation}: dla każdej stacji liczy jej położenie wzdłuż tracka i punkt, do którego mover jedzie po obróbce. Wywołuje ją \texttt{Starting} na końcu, gdy tracki są zbudowane; dane czyta \texttt{Execute}.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD InitStations
+VAR
+    k       : UDINT;
+    fPos    : PositionXYC;
+    fLen    : LREAL;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+// Polozenia stacji jak w demo (X, Y [mm]); polozenie na tracku liczy system.
+aStation[1].nTrack := 1;  aStation[1].fX := 120.0;  aStation[1].fY := 360.0;
+        aStation[1].fSendAwayDist := 300.0;   // proces 1
+aStation[2].nTrack := 2;  aStation[2].fX := 600.0;  aStation[2].fY := 360.0;
+        aStation[2].fSendAwayDist := 5.0; // proces 2
+aStation[3].nTrack := 3;  aStation[3].fX := 840.0;  aStation[3].fY := 360.0;
+        aStation[3].fSendAwayDist := 5.0; // proces 3
+aStation[5].nTrack := 1;  aStation[5].fX := 480.0;  aStation[5].fY := 120.0;
+        aStation[5].fSendAwayDist := 300.0;   // laczenie
+aStation[6].nTrack := 1;  aStation[6].fX := 240.0;  aStation[6].fY := 120.0;
+        aStation[6].fSendAwayDist := 5.0; // ruch w 6 DoF
+
+FOR k := 1 TO 6 DO
+    IF k <> 4 THEN
+        fPos.SetValuesXYC(aStation[k].fX, aStation[k].fY, 0.0);
+        aStation[k].fPosOnTrack := fbTrackStandard[aStation[k].nTrack].GetTrackPositionAt(fPos);
+        fLen := fbTrackStandard[aStation[k].nTrack].GetLength();
+        aStation[k].fSendAway := aStation[k].fPosOnTrack + aStation[k].fSendAwayDist;
+        IF aStation[k].fSendAway > fLen THEN
+            aStation[k].fSendAway := fLen;
+        END_IF
+    END_IF
+END_FOR
+
+// Stacja 4 (rozdzielenie) to rozjazd na koncu tracka 1: tam rozjazd kieruje movera na track 2 albo
+        3
+aStation[4].nTrack := 1;
+aStation[4].fX := 480.0;
+aStation[4].fY := 600.0;
+aStation[4].fSendAwayDist := 300.0; // zasieg [mm]: w tej odleglosci od rozjazdu stacja 4 przejmuje
+        movera
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Starting}
+Uruchamia system: reset moverów i trackow, włączenie grupy i środowiska, włączenie trackow i moverów, dodanie ich do grupy i dołączenie moverów do tracka 1 (\texttt{JoinTrack}). Na końcu ustawia stan początkowy moverów (\texttt{nStep}), zeruje \texttt{fbRouting} i wywołuje \texttt{InitStations}; przy błędzie zapisuje \texttt{nErrorID} i \texttt{nErrorStep}.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD Starting : BOOL
+VAR_INPUT
+    bReset : BOOL;
+END_VAR
+VAR_INST
+    stJoinOptions   : ST_JoinTrackOptions;
+    nJoin           : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+IF bReset THEN
+    Starting := FALSE;
+    nStartingSequence := 0;
+END_IF
+CASE nStartingSequence OF
+    0:  IF NOT bReset THEN
+            nStartingSequence := 102;
+        END_IF
+
+    // --- Resetting (jak w demo): reset moverow i trackow ---
+    102: IF fbXPlanarSystem.ResetMovers() THEN
+            nStartingSequence := 103;
+        END_IF
+    103: IF fbXPlanarSystem.P_ResetMovers.Done THEN
+            nStartingSequence := 104;
+        ELSIF fbXPlanarSystem.P_ResetMovers.Error THEN
+            nErrorID := fbXPlanarSystem.P_ResetMovers.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+    104: IF fbXPlanarSystem.ResetTracks() THEN
+            nStartingSequence := 105;
+        END_IF
+    105: IF fbXPlanarSystem.P_ResetTracks.Done THEN
+            nStartingSequence := 10;
+        ELSIF fbXPlanarSystem.P_ResetTracks.Error THEN
+            nErrorID := fbXPlanarSystem.P_ResetTracks.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    // --- Prepare (jak w demo) ---
+    10: // wlaczenie grupy (unikanie kolizji)
+        IF fbXPlanarSystem.EnableGroup() THEN
+            nStartingSequence := 11;
+        END_IF
+    11: IF fbXPlanarSystem.P_EnableGroup.Done THEN
+            nStartingSequence := 20;
+        ELSIF fbXPlanarSystem.P_EnableGroup.Error THEN
+            nErrorID := fbXPlanarSystem.P_EnableGroup.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    20: // granice stolu do grupy
+        IF fbXPlanarSystem.AddEnvironmentToGroup() THEN
+            nStartingSequence := 21;
+        END_IF
+    21: IF fbXPlanarSystem.P_AddEnviromentToGroup.Done THEN
+            nStartingSequence := 30;
+        ELSIF fbXPlanarSystem.P_AddEnviromentToGroup.Error THEN
+            nErrorID := fbXPlanarSystem.P_AddEnviromentToGroup.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    30: // wlaczenie trackow
+        IF fbXPlanarSystem.EnableTracks() THEN
+            nStartingSequence := 31;
+        END_IF
+    31: IF fbXPlanarSystem.P_EnableTracks.Done THEN
+            nStartingSequence := 40;
+        ELSIF fbXPlanarSystem.P_EnableTracks.Error THEN
+            nErrorID := fbXPlanarSystem.P_EnableTracks.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    40: // tracki do grupy
+        IF fbXPlanarSystem.AddTracksToGroup() THEN
+            nStartingSequence := 41;
+        END_IF
+    41: IF fbXPlanarSystem.P_AddTracksToGroup.Done THEN
+            nStartingSequence := 50;
+        ELSIF fbXPlanarSystem.P_AddTracksToGroup.Error THEN
+            nErrorID := fbXPlanarSystem.P_AddTracksToGroup.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    50: // wlaczenie moverow
+        IF fbXPlanarSystem.EnableMovers() THEN
+            nStartingSequence := 51;
+        END_IF
+    51: IF fbXPlanarSystem.P_EnableMovers.Done THEN
+            nStartingSequence := 60;
+        ELSIF fbXPlanarSystem.P_EnableMovers.Error THEN
+            nErrorID := fbXPlanarSystem.P_EnableMovers.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    60: // movery do grupy
+        IF fbXPlanarSystem.AddMoversToGroup() THEN
+            nStartingSequence := 61;
+        END_IF
+    61: IF fbXPlanarSystem.P_AddMoversToGroup.Done THEN
+            nStartingSequence := 70;
+        ELSIF fbXPlanarSystem.P_AddMoversToGroup.Error THEN
+            nErrorID := fbXPlanarSystem.P_AddMoversToGroup.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    70: // movery wjezdzaja na track 1 jeden po drugim
+        nJoin := 1;
+        stJoinOptions.useOrientation := TRUE;
+        nStartingSequence := 71;
+    71: fbXPlanarMover[nJoin].JoinTrack('Join track 1', fbTrackStandard[1], 250, 1250, 12500,
+            stJoinOptions);
+        nStartingSequence := 72;
+    72: IF fbXPlanarMover[nJoin].P_JoinTrack.Done THEN
+            IF nJoin < moverCount THEN
+                nJoin := nJoin + 1;
+                nStartingSequence := 71;
+            ELSE
+                nStartingSequence := 80;
+            END_IF
+        ELSIF fbXPlanarMover[nJoin].P_JoinTrack.Error THEN
+            nErrorID := fbXPlanarMover[nJoin].P_JoinTrack.ErrorID;
+            nErrorStep := nStartingSequence;
+            nStartingSequence := 900;
+        END_IF
+
+    80: // koniec: movery sa na tracku 1, system gotowy
+        FOR nJoin := 1 TO moverCount DO
+            nStep[nJoin] := 10;
+            nDest[nJoin] := 0;
+            nLastDest[nJoin] := 0;
+            nLap[nJoin] := 0;
+            nSub[nJoin] := 0;
+            bSkipS1[nJoin] := FALSE;
+        END_FOR
+        fbRouting.Reset();
+        // polozenia stacji liczymy dopiero teraz, gdy tracki sa zbudowane,
+                wlaczone i w grupie (jak Init stacji w demo)
+        InitStations();
+        Starting := TRUE;
+
+    900: ;  // blad: nErrorID, nErrorStep
+END_CASE
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Process6DoF}
+Wykonuje zadany ruch w sześciu stopniach swobody na stacji 6: Z w górę, obrót C o +90$^\circ$, Z w dół, przechył A i B i powrót do zera. X i Y wzdłuż tracka robi \texttt{MoveOnTrack} z \texttt{Execute}, a ta metoda (wywoływana z kroku 70) robi pozostałe osie komendami \texttt{MoveZ}, \texttt{MoveC}, \texttt{MoveA} i \texttt{MoveB}. Zwraca TRUE do \texttt{Execute}, gdy sekwencja się skończy.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD Process6DoF : BOOL
+VAR_INPUT
+    nMover  : UDINT;
+END_VAR
+VAR_INST
+    stRot   : ST_MoveCOptions;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+stRot.additionalTurns := 0;
+stRot.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionNonModulo;
+
+// Stacja 6: zadany ruch w szesciu stopniach swobody (X, Y wzdluz tracka robi MoveOnTrack, tu: Z,
+        C, A, B)
+CASE nSub[nMover] OF
+    0:  fbXPlanarMover[nMover].MoveZ('S6: Z gora', 4, 20, 100, 100, 1000);
+        nSub[nMover] := 1;
+    1:  IF fbXPlanarMover[nMover].P_MoveZ.Done THEN nSub[nMover] := 10;
+        ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN nErrorID :=
+                fbXPlanarMover[nMover].P_MoveZ.ErrorID; nSub[nMover] := 900; END_IF
+
+    10: fbXPlanarMover[nMover].MoveC('S6: C +90', 90, 720, 1800, 1800, 9000, stRot);
+        nSub[nMover] := 11;
+    11: IF fbXPlanarMover[nMover].P_MoveC.Done THEN nSub[nMover] := 20;
+        ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN nErrorID :=
+                fbXPlanarMover[nMover].P_MoveC.ErrorID; nSub[nMover] := 900; END_IF
+
+    20: fbXPlanarMover[nMover].MoveZ('S6: Z dol', 0, 20, 100, 100, 1000);
+        nSub[nMover] := 21;
+    21: IF fbXPlanarMover[nMover].P_MoveZ.Done THEN nSub[nMover] := 30;
+        ELSIF fbXPlanarMover[nMover].P_MoveZ.Error THEN nErrorID :=
+                fbXPlanarMover[nMover].P_MoveZ.ErrorID; nSub[nMover] := 900; END_IF
+
+    30: fbXPlanarMover[nMover].MoveA('S6: A przechyl', 5, 20, 100, 100, 1000);
+        nSub[nMover] := 31;
+    31: IF fbXPlanarMover[nMover].P_MoveA.Done THEN nSub[nMover] := 40;
+        ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN nErrorID :=
+                fbXPlanarMover[nMover].P_MoveA.ErrorID; nSub[nMover] := 900; END_IF
+
+    40: fbXPlanarMover[nMover].MoveB('S6: B przechyl', 5, 20, 100, 100, 1000);
+        nSub[nMover] := 41;
+    41: IF fbXPlanarMover[nMover].P_MoveB.Done THEN nSub[nMover] := 50;
+        ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN nErrorID :=
+                fbXPlanarMover[nMover].P_MoveB.ErrorID; nSub[nMover] := 900; END_IF
+
+    50: fbXPlanarMover[nMover].MoveA('S6: A powrot', 0, 20, 100, 100, 1000);
+        nSub[nMover] := 51;
+    51: IF fbXPlanarMover[nMover].P_MoveA.Done THEN nSub[nMover] := 60;
+        ELSIF fbXPlanarMover[nMover].P_MoveA.Error THEN nErrorID :=
+                fbXPlanarMover[nMover].P_MoveA.ErrorID; nSub[nMover] := 900; END_IF
+
+    60: fbXPlanarMover[nMover].MoveB('S6: B powrot', 0, 20, 100, 100, 1000);
+        nSub[nMover] := 61;
+    61: IF fbXPlanarMover[nMover].P_MoveB.Done THEN nSub[nMover] := 70;
+        ELSIF fbXPlanarMover[nMover].P_MoveB.Error THEN nErrorID :=
+                fbXPlanarMover[nMover].P_MoveB.ErrorID; nSub[nMover] := 900; END_IF
+
+    70: fbXPlanarMover[nMover].MoveC('S6: C powrot', 0, 720, 1800, 1800, 9000, stRot);
+        nSub[nMover] := 71;
+    71: IF fbXPlanarMover[nMover].P_MoveC.Done THEN nSub[nMover] := 100;
+        ELSIF fbXPlanarMover[nMover].P_MoveC.Error THEN nErrorID :=
+                fbXPlanarMover[nMover].P_MoveC.ErrorID; nSub[nMover] := 900; END_IF
+
+    100: Process6DoF := TRUE;
+        nSub[nMover] := 0;
+
+    900: ;  // blad ruchu w 6 DoF: nErrorID
+END_CASE
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Execute}
+Automat ruchu: każdy mover ma własny krok \texttt{nStep} i przechodzi po kolei stację 1, rozjazd (4), stację 2 albo 3 i łączenie (5). Po łączeniu mover jedzie do stacji 6 i wywołuje \texttt{Process6DoF}. Pyta \texttt{fbRouting}, dokąd jechać (\texttt{SelectStation}) i czy może wjechać w punkt łączenia (\texttt{RequestMerge}), a cele ruchu bierze z \texttt{aStation}. Na pierwszym okrążeniu mover, który po starcie stoi już za stacją 1, pomija ją (\texttt{bSkipS1}).
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD Execute
+VAR
+    i       : UDINT;
+    fDx     : LREAL;
+    fDy     : LREAL;
+END_VAR
+VAR_INST
+    fVelo   : LREAL := 300;     // predkosc [mm/s]
+    fAcc    : LREAL := 1000;    // przyspieszenie [mm/s2]
+    fJerk   : LREAL := 10000;   // szarpniecie [mm/s3]
+    fGap    : LREAL := 240;     // odstep miedzy moverami na tracku [mm]
+    fRotVel : LREAL := 720;     // predkosc obrotu [deg/s]
+    fRotAcc : LREAL := 1800;
+    fRotJerk: LREAL := 9000;
+    stRot   : ST_MoveCOptions;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+stRot.additionalTurns := 0;
+stRot.direction := Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionNonModulo;
+
+FOR i := 1 TO moverCount DO
+    CASE nStep[i] OF
+
+        // ---------------- STACJA 1 (proces): dojazd i obrot ----------------
+        10: // na pierwszym okrazeniu mover, ktory po starcie stoi juz za stacja 1, pomija ja
+            // (track jest otwarty, a przed nim stoja inne movery - nie moze jechac do tylu)
+            IF nLap[i] = 0 AND fbXPlanarMover[i].P_ActPosition.y > aStation[1].fY THEN
+                bSkipS1[i] := TRUE;
+                nStep[i] := 30;
+            ELSE
+                fbXPlanarMover[i].MoveOnTrack('S1: dojazd', fbTrackStandard[aStation[1].nTrack],
+                        aStation[1].fPosOnTrack,
+                    fVelo, fAcc, fJerk, fGap, Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive);
+                nStep[i] := 11;
+            END_IF
+        11: IF fbXPlanarMover[i].P_MoveOnTrack.Done THEN
+                nStep[i] := 20;
+            ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+                nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+                nStep[i] := 900;
+            END_IF
+        20: IF NOT fbXPlanarMover[i].P_MoveC.Busy THEN
+                fbXPlanarMover[i].MoveC('S1: obrot', 90.0, fRotVel, fRotAcc, fRotAcc, fRotJerk,
+                        stRot);
+                nStep[i] := 21;
+            END_IF
+        21: IF fbXPlanarMover[i].P_MoveC.Done THEN
+                nStep[i] := 30;
+            ELSIF fbXPlanarMover[i].P_MoveC.Error THEN
+                nErrorID := fbXPlanarMover[i].P_MoveC.ErrorID;
+                nStep[i] := 900;
+            END_IF
+
+        // ---------------- decyzja: dokad jedzie mover (dynamiczny routing) ----------------
+        30: nDest[i] := fbRouting.SelectStation(i, nLastDest[i]);
+            nLastDest[i] := nDest[i];
+            IF bSkipS1[i] THEN
+                // mover jest juz za stacja 1 - jedzie od razu przez rozjazd (stacja 4) do wybranej
+                        stacji
+                bSkipS1[i] := FALSE;
+                nStep[i] := 40;
+            ELSE
+                nStep[i] := 31;
+            END_IF
+
+        // po obrobce mover jedzie dalej po tracku 1 w strone rozjazdu (stacja 4)
+        31: fbXPlanarMover[i].MoveOnTrack('S1: wyjazd', fbTrackStandard[aStation[1].nTrack],
+                aStation[1].fSendAway,
+                fVelo, fAcc, fJerk, fGap, Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive);
+            nStep[i] := 32;
+        32: IF fbXPlanarMover[i].P_MoveOnTrack.Active OR fbXPlanarMover[i].P_MoveOnTrack.Done THEN
+                nStep[i] := 33;
+            ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+                nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+                nStep[i] := 900;
+            END_IF
+
+        // ---------------- STACJA 4 (rozdzielenie): przejecie movera przed rozjazdem
+                ----------------
+        33: IF fbXPlanarMover[i].P_LastKnownTrackOID = fbTrackStandard[1].P_OID THEN
+                // odleglosc movera od rozjazdu (kwadrat odleglosci, bez pierwiastka)
+                fDx := fbXPlanarMover[i].P_ActPosition.x - aStation[4].fX;
+                fDy := fbXPlanarMover[i].P_ActPosition.y - aStation[4].fY;
+                IF (fDx * fDx + fDy * fDy) < (aStation[4].fSendAwayDist *
+                        aStation[4].fSendAwayDist) THEN
+                    nStep[i] := 40;
+                END_IF
+            END_IF
+
+        // stacja 4 kieruje movera na track wybranej stacji procesowej (2 albo 3) i dalej do stacji
+        40: fbXPlanarMover[i].MoveOnTrack('S4: na stacje',
+                fbTrackStandard[aStation[nDest[i]].nTrack], aStation[nDest[i]].fPosOnTrack,
+                fVelo, fAcc, fJerk, fGap, Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive);
+            nStep[i] := 41;
+        41: IF fbXPlanarMover[i].P_MoveOnTrack.Done THEN
+                nStep[i] := 50;
+            ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+                nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+                nStep[i] := 900;
+            END_IF
+
+        // ---------------- STACJA 2 albo 3 (proces): obrot o 180 stopni ----------------
+        50: IF NOT fbXPlanarMover[i].P_MoveC.Busy THEN
+                fbXPlanarMover[i].MoveC('S2/S3: obrot', 180.0, fRotVel, fRotAcc, fRotAcc, fRotJerk,
+                        stRot);
+                nStep[i] := 51;
+            END_IF
+        51: IF fbXPlanarMover[i].P_MoveC.Done THEN
+                nStep[i] := 60;
+            ELSIF fbXPlanarMover[i].P_MoveC.Error THEN
+                nErrorID := fbXPlanarMover[i].P_MoveC.ErrorID;
+                nStep[i] := 900;
+            END_IF
+
+        // ---------------- STACJA 5 (laczenie): zgoda na wjazd w punkt laczenia ----------------
+        60: IF fbRouting.RequestMerge(i) THEN
+                // stacja procesowa zwolniona
+                fbRouting.Release(nDest[i]);
+                fbXPlanarMover[i].MoveOnTrack('S5: laczenie', fbTrackStandard[aStation[6].nTrack],
+                        aStation[6].fPosOnTrack,
+                    fVelo, fAcc, fJerk, fGap, Tc3_Mc3PlanarMotion.MC_DIRECTION.mcDirectionPositive);
+                nStep[i] := 61;
+            END_IF
+        61: IF fbXPlanarMover[i].P_LastKnownTrackOID = fbTrackStandard[aStation[5].nTrack].P_OID
+                THEN
+                // mover jest juz na tracku 1: nastepny moze wjechac w punkt laczenia
+                fbRouting.ReleaseMerge(i);
+                nLap[i] := nLap[i] + 1;
+                nStep[i] := 62;
+            ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+                nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+                nStep[i] := 900;
+            END_IF
+
+        // ---------------- STACJA 6 (ruch w 6 DoF): dojazd i sekwencja ruchow ----------------
+        62: IF fbXPlanarMover[i].P_MoveOnTrack.Done THEN
+                nSub[i] := 0;
+                nStep[i] := 70;
+            ELSIF fbXPlanarMover[i].P_MoveOnTrack.Error THEN
+                nErrorID := fbXPlanarMover[i].P_MoveOnTrack.ErrorID;
+                nStep[i] := 900;
+            END_IF
+        70: IF Process6DoF(i) THEN
+                nStep[i] := 10;     // mover wraca do stacji 1
+            END_IF
+
+        900: ;  // blad ruchu movera: nErrorID
+    END_CASE
+END_FOR
+\end{verbatim}}
+
+\podrozdzial{FB\_Routing (FB)}
+Blok routingu: pamięta tryb (\texttt{eMode}), liczniki moverów przypisanych do stacji 2 i 3 oraz zgodę na wjazd w punkt łączenia. Nie steruje ruchem: tylko odpowiada na pytania, które zadaje mu \texttt{Execute}.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+FUNCTION_BLOCK FB_Routing
+VAR
+    eMode           : E_RoutingMode := E_RoutingMode.Alternate; // zachowanie routingu - zmiana
+            online
+    // Ile moverow jest przypisanych do stacji procesowej 2 i 3
+    // (jada do niej, czekaja w kolejce albo sa w niej obslugiwane)
+    nAssigned       : ARRAY[2..3] OF DINT;
+    nMergeHolder    : UDINT;    // mover, ktory ma teraz zgode na wjazd w punkt laczenia (stacja 5)
+    nRandom         : UDINT := 12345;
+    // Priorytet movera (indeks = numer movera). > 0 = mover preferuje stacje 2
+    aPriority       : ARRAY[1..4] OF UINT := [1, 0, 1, 0];
+END_VAR
+\end{verbatim}}
+
+\podpodrozdzial{Metoda SelectStation}
+Wybiera stację procesową (2 albo 3) dla movera, który wyszedł ze stacji 1, według trybu \texttt{eMode}, i zwiększa licznik tej stacji. Wywołuje ją \texttt{Execute} (krok 30), a wynik zapisuje w \texttt{nDest}.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD SelectStation : UDINT
+VAR_INPUT
+    nMoverIndex : UDINT;    // mover, ktory wyszedl ze stacji 1
+    nLastDest   : UDINT;    // stacja, do ktorej jechal poprzednio (0 = pierwszy raz)
+END_VAR
+VAR
+    nPreferred  : UDINT;
+    nOther      : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+CASE eMode OF
+
+E_RoutingMode.Alternate:
+    // naprzemiennie: 2 -> 3 -> 2 ...
+    IF nLastDest = 2 THEN
+        SelectStation := 3;
+    ELSIF nLastDest = 3 THEN
+        SelectStation := 2;
+    ELSE
+        // pierwszy raz - tabela jak w demo
+        CASE nMoverIndex OF
+            1: SelectStation := 3;
+            2: SelectStation := 2;
+            3: SelectStation := 2;
+            4: SelectStation := 3;
+        ELSE
+            SelectStation := 2;
+        END_CASE
+    END_IF
+    // zabezpieczenie jak w demo: stacja 2 zajeta, a 3 wolna -> stacja 3
+    IF SelectStation = 2 AND nAssigned[2] > 0 AND nAssigned[3] = 0 THEN
+        SelectStation := 3;
+    END_IF
+
+E_RoutingMode.ByMover:
+    // parzyste movery -> stacja 2, nieparzyste -> stacja 3
+    IF (nMoverIndex MOD 2) = 0 THEN
+        SelectStation := 2;
+    ELSE
+        SelectStation := 3;
+    END_IF
+
+E_RoutingMode.FreeStation:
+    // pierwsza wolna stacja; gdy obie zajete - naprzemiennie
+    IF nAssigned[2] = 0 THEN
+        SelectStation := 2;
+    ELSIF nAssigned[3] = 0 THEN
+        SelectStation := 3;
+    ELSIF nLastDest = 2 THEN
+        SelectStation := 3;
+    ELSE
+        SelectStation := 2;
+    END_IF
+
+E_RoutingMode.ShortestQueue:
+    // stacja, do ktorej jedzie mniej moverow (remis -> stacja 2)
+    IF nAssigned[3] < nAssigned[2] THEN
+        SelectStation := 3;
+    ELSE
+        SelectStation := 2;
+    END_IF
+
+E_RoutingMode.Priority:
+    // mover z priorytetem preferuje stacje 2, pozostale stacje 3;
+    // gdy preferowana stacja ma kolejke (>= 2), a druga jest wolna - jedzie do drugiej
+    IF nMoverIndex >= 1 AND nMoverIndex <= 4 AND aPriority[nMoverIndex] > 0 THEN
+        nPreferred := 2;
+        nOther := 3;
+    ELSE
+        nPreferred := 3;
+        nOther := 2;
+    END_IF
+    SelectStation := nPreferred;
+    IF nAssigned[nPreferred] >= 2 AND nAssigned[nOther] = 0 THEN
+        SelectStation := nOther;
+    END_IF
+
+E_RoutingMode.Random:
+    // prosty generator liczb pseudolosowych
+    nRandom := nRandom * 1103515245 + 12345;
+    IF (SHR(nRandom, 16) AND 1) = 1 THEN
+        SelectStation := 3;
+    ELSE
+        SelectStation := 2;
+    END_IF
+
+ELSE
+    SelectStation := 2;
+END_CASE
+
+nAssigned[SelectStation] := nAssigned[SelectStation] + 1;
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Release}
+Zmniejsza licznik stacji, gdy mover ją opuszcza po obróbce. Wywołuje ją \texttt{Execute} (krok 60).
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD Release
+VAR_INPUT
+    nStation    : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+// Mover opuscil stacje procesowa.
+IF nStation >= 2 AND nStation <= 3 THEN
+    IF nAssigned[nStation] > 0 THEN
+        nAssigned[nStation] := nAssigned[nStation] - 1;
+    END_IF
+END_IF
+\end{verbatim}}
+
+\podpodrozdzial{Metoda RequestMerge}
+Daje zgodę na wjazd w punkt łączenia (stacja 5) tylko jednemu moverowi naraz; pozostałe czekają. Wywołuje ją \texttt{Execute} (krok 60), dopóki nie dostanie TRUE.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD RequestMerge : BOOL
+VAR_INPUT
+    nMover  : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+// Stacja 5 (laczenie): w punkt laczenia wjezdza jeden mover naraz.
+IF nMergeHolder = 0 OR nMergeHolder = nMover THEN
+    nMergeHolder := nMover;
+    RequestMerge := TRUE;
+END_IF
+\end{verbatim}}
+
+\podpodrozdzial{Metoda ReleaseMerge}
+Oddaje zgodę, gdy mover wjechał już na track 1, dzięki czemu może wjechać następny. Wywołuje ją \texttt{Execute} (krok 61).
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD ReleaseMerge
+VAR_INPUT
+    nMover  : UDINT;
+END_VAR
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+IF nMergeHolder = nMover THEN
+    nMergeHolder := 0;
+END_IF
+\end{verbatim}}
+
+\podpodrozdzial{Metoda Reset}
+Zeruje liczniki stacji i zgodę na łączenie. Wywołuje ją \texttt{Starting} przy każdym starcie systemu.
+
+\textbf{Zmienne:}
+{\scriptsize
+\begin{verbatim}
+METHOD Reset
+\end{verbatim}}
+\textbf{Kod:}
+{\scriptsize
+\begin{verbatim}
+nAssigned[2] := 0;
+nAssigned[3] := 0;
+nMergeHolder := 0;
+\end{verbatim}}
+
+\podrozdzial{Kroki automatu ruchu}
+\begin{center}\small
+\begin{tabular}{@{}lp{10.5cm}@{}}
+\toprule
+\textbf{Krok \texttt{nStep}} & \textbf{Co się dzieje} \\
+\midrule
+10--11 & Stacja 1: mover jedzie na pozycję stacji (pierwsze okrążenie: mover za stacją 1 pomija ją). \\
+20--21 & Stacja 1: obrót o 90$^\circ$ (proces). \\
+30 & Routing: \texttt{SelectStation} wybiera stację 2 albo 3. \\
+31--32 & Wyjazd ze stacji 1 w stronę rozjazdu. \\
+33 & Stacja 4: mover jest przejmowany, gdy zbliży się do rozjazdu (promień 300~mm). \\
+40--41 & Stacja 4: mover jedzie na track wybranej stacji i dalej do niej; rozgałęzienie wybiera system. \\
+50--51 & Stacja 2 albo 3: obrót o 180$^\circ$ (proces). \\
+60 & Stacja 5: zgoda na łączenie, zwolnienie stacji procesowej, jazda na track 1 w stronę stacji 6. \\
+61 & Mover jest na tracku 1: oddanie zgody, liczba okrążeń +1. \\
+62 & Dojazd do stacji 6. \\
+70 & Stacja 6: ruch w 6 DoF (\texttt{Process6DoF}), potem powrót do kroku 10. \\
+900 & Błąd ruchu (\texttt{nErrorID}). \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 
 \subsection*{Dokumentacja Beckhoff (Infosys)}
 \begin{itemize}
   \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9244773515.html}{TF5430 TwinCAT 3 Planar Motion --- Introduction}
   \item \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/10789602827.html}{Example: Following a Planar mover through a Track Network}
+\end{itemize}
+
+\chapter{Dodatki}
+\renewcommand{\thesection}{\Alph{section}}
+\section{Instalacja środowiska TwinCAT}\label{sec:instalacja}
+Środowisko instalujemy przez \textbf{TwinCAT Package Manager} (\texttt{TcPkg}) z pliku \texttt{setup/setup.config} z repozytorium. Plik zawiera listę pakietów i wersji z komputera referencyjnego: TwinCAT XAE 4026.27, runtime XAR 4026.18, \texttt{TF5890} XPlanar 5.1.3 oraz biblioteki. Instalacja wymaga konta \textit{myBeckhoff} i uprawnień administratora.
+
+\podrozdzial{Wyłączenie wirtualizacji}
+Runtime TwinCAT w trybie czasu rzeczywistego (\textit{Kernel Mode}, KM) nie działa przy włączonej wirtualizacji Windows. Przy aktywnym VBS \texttt{TcPkg} sam przełącza się w tryb \textit{User Mode} (UM), a instalacja sterownika EtherCAT (\texttt{TwinCAT.XAR.NdisDriver}) kończy się błędem. Dlatego wirtualizację wyłączamy przed instalacją. W PowerShellu uruchomionym jako administrator:
+\begin{verbatim}
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\
+  DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity" `
+  -Name "Enabled" -Value 0 -Type DWord
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\
+  DeviceGuard" -Name "EnableVirtualizationBasedSecurity" -Value 0 -Type DWord
+Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All -NoRestart
+Disable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+Disable-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform -NoRestart
+bcdedit /set hypervisorlaunchtype off
+\end{verbatim}
+Ścieżki rejestru wpisujemy w jednej linii. Po wykonaniu poleceń restartujemy komputer.
+\uwaga{Wyłączenie wirtualizacji wyłącza też WSL2, Docker i maszyny wirtualne Hyper-V}
+
+\podrozdzial{Instalacja TcPkg}
+\begin{enumerate}
+  \item Pobieramy \textbf{TwinCAT Package Manager} ze strony Beckhoff, wymaga to zalogowania na konto \textit{myBeckhoff}.
+  \item Uruchamiamy instalator i potwierdzamy uprawnienia administratora.
+  \item Logujemy się do feedu Beckhoff Stable. Najprościej otworzyć wersję graficzną aplikacji (\textit{TwinCAT Package Manager}, menu Start) i zalogować się w niej kontem \textit{myBeckhoff}. Można to też zrobić z wiersza poleceń --- \texttt{TcPkg} zapyta o hasło do konta:
+\begin{verbatim}
+& "C:\Program Files\Beckhoff\TcPkg\TcPkg.exe" source add `
+  -n "Beckhoff Stable Feed" `
+  -s "https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/Stable" `
+  -u "adres@email"
+\end{verbatim}
+  \item Sprawdzamy, czy feed jest zalogowany: \texttt{TcPkg source list} powinno pokazać \texttt{(Authenticated)}.
+\end{enumerate}
+
+
+\podrozdzial{Instalacja pakietów}
+\begin{enumerate}
+  \item Ustawiamy tryb runtime'u na czas rzeczywisty:
+\begin{verbatim}
+& "C:\Program Files\Beckhoff\TcPkg\TcPkg.exe" config set -n xarMode -v KM
+\end{verbatim}
+  \item Instalujemy pakiety z pliku. Polecenie uruchamiamy w PowerShellu jako administrator, w zwykłym oknie, bo \texttt{TcPkg} prosi o akceptację zastrzeżeń producenta dla pakietów XPlanar:
+\begin{verbatim}
+& "C:\Program Files\Beckhoff\TcPkg\TcPkg.exe" import `
+  -i "<repozytorium>\setup\setup.config"
+\end{verbatim}
+  \item Potwierdzamy listę pakietów i akceptujemy zastrzeżenia. Instalacja trwa kilkadziesiąt minut i kończy się komunikatem \texttt{Installation of 198/198 packages finished successfully}.
+  \item Restartujemy komputer.
+\end{enumerate}
+
+
+\podrozdzial{Biblioteka Tc3\_XPlanarStandard}
+Biblioteki \texttt{Tc3\_XPlanarStandard} (wersja 3.3.2411.0) nie ma w \texttt{TcPkg}. Kopiujemy ją ręcznie do repozytorium bibliotek:
+\begin{verbatim}
+C:\ProgramData\Beckhoff\TwinCAT\PlcEngineering\Managed Libraries\
+  Beckhoff Automation GmbH\Tc3_XPlanarStandard\3.3.2411.0\
+\end{verbatim}
+Folder zawiera pliki \texttt{Tc3\_XPlanarStandard.library}, \texttt{browsercache}, \texttt{dependencies} i \texttt{projectinfo}.
+
+\podrozdzial{Dalej}
+Po instalacji i restarcie projekt uruchamiamy w symulacji zgodnie z podrozdziałem \hyperref[sec:symulacja]{\textit{Odpalenie w symulacji}} (target \texttt{<Local>}).
+
+\section{Dodawanie świeżego movera}\label{sec:nowymover}
+Nowy mover przychodzi bez ramki (zderzaka). Ramkę trzeba zamontować, a w jej pamięci zapisać numer BTN movera. Dzięki temu system wie, który mover jest którym.
+
+\podrozdzial{Rodzaje ramek}
+\begin{itemize}
+  \item \textbf{ramka standardowa} --- pasywna, tylko osłania movera; nie przechowuje numeru BTN,
+  \item \textbf{ramka ID} (\texttt{APM9001}) --- ma w środku elektronikę zasilaną bezprzewodowo z kafelka; przechowuje numer BTN, dzięki czemu system rozpoznaje movera.
+\end{itemize}
+Do identyfikacji movera potrzebna jest ramka ID. Jeśli zamówiono ją razem z moverem, producent zapisał w niej już BTN movera. Jeśli kupiono ją osobno, ma dane domyślne i BTN trzeba zapisać samodzielnie.
+
+\podrozdzial{Montaż ramki}
+\begin{enumerate}
+  \item Przykładamy ramkę do movera tak, aby napisy na ramce miały taką samą orientację jak napisy na moverze.
+  \item Przykręcamy ramkę do movera.
+\end{enumerate}
+
+\podrozdzial{Zapisanie BTN w ramce}
+Zapis wymaga działającego systemu z prawdziwymi kafelkami, a nie symulacji: ramka komunikuje się z kafelkiem bezprzewodowo. Mover musi być wykryty, a kafelki zasilane napięciem sieciowym.
+
+\podpodrozdzial{Przygotowanie}
+\begin{enumerate}
+  \item W Configuratorze, na zakładce \textit{Mover}, ustawiamy dla movera \textit{Accessory Id} na \texttt{APM9001\_0000}. Eksportujemy konfigurację i aktywujemy ją. W obiekcie movera pole \texttt{AccessoryIDs[0]} powinno mieć wartość \texttt{APM9001\_0000}.
+  \item Na stole zostawiamy tylko jeden mover --- ten, któremu zapisujemy BTN. System uruchomi się z jednym moverem, bo domyślny tryb wykrywania dopuszcza mniej moverów, niż skonfigurowano.
+\end{enumerate}
+
+\podpodrozdzial{Zapis}
+\begin{enumerate}
+  \item Odczytujemy BTN z nadruku na moverze, np.\ \texttt{0000lcky}.
+  \item W Solution Explorerze otwieramy \texttt{SYSTEM} $\rightarrow$ \texttt{TcCOM Objects} $\rightarrow$ \texttt{XPlanar} i pierwszy obiekt movera, zakładka \textit{Init Parameter}. W polu \texttt{BtnToAssign} wpisujemy BTN. Pierwszy obiekt movera służy tu tylko jako ,,bramka'' do komunikacji z moverem, który leży na stole --- bez względu na to, który to mover w projekcie.
+  \item Klikamy wpisaną wartość prawym przyciskiem i wybieramy \textit{Download}.
+  \item Zaznaczamy \textit{Online Values} i sprawdzamy, czy wartość online (na niebiesko, w prawej kolumnie) jest taka sama jak wpisana.
+  \item Wybieramy polecenie komunikacji \texttt{WriteMoverBtn} (\texttt{MoverCommunicationCommand}), klikamy prawym przyciskiem i wybieramy \textit{Download}.
+  \item Przechodzimy na zakładkę \textit{Online Parameter} i obserwujemy \texttt{MoverCommunicationStatus}. Gdy zapis się skończy, status zmieni się na \texttt{successful}. W razie błędu przyczynę podają okno \textit{Output} i \textit{TcEventLogger}.
+\end{enumerate}
+
+\podpodrozdzial{Sprawdzenie}
+Wybieramy polecenie \texttt{GetMoverBtn} i pobieramy je tak samo (\textit{Download}). Na zakładce \textit{Online Parameter} sprawdzamy status i odczytany BTN --- powinien być taki sam jak nadruk na moverze.
+
+\section{Gap Mode 2D --- komentarz autora}\label{sec:gapmode2d}
+Tryby \textbf{Standard2D} i \textbf{Fast2D} są bardzo przydatne. Odstęp między moverami liczony jest jako rzeczywista odległość między ich obrysami, a nie wzdłuż tracka, więc można zminimalizować przestrzeń potrzebną na kolejkowanie moverów. Jednocześnie dokumentacja techniczna nie pokrywa się z rzeczywistym działaniem tej funkcji.
+
+\podrozdzial{Problem: movery o różnych wymiarach}
+Dokumentacja Beckhoffa przewiduje ustawienie wymiarów movera, gdy odbiegają od standardowych:
+\begin{itemize}
+  \item parametry \textit{Mover width} i \textit{Mover height} obiektu movera (\textit{Planar mover}, \textit{Parameter (Init)}),
+  \item parametry \textit{Maximum mover width/height} obiektu tracka (\textit{Planar track}, \textit{Parameter (Init)}).
+\end{itemize}
+W praktyce ustawienie różnych wartości szerokości i wysokości nie działa --- nie udało się tak wysterować trybów 2D. Według odpowiedzi firmy Beckhoff problem nadal występuje (stan na 08.11.2026). Beckhoff zaleca, aby parametry \textit{width} i \textit{height} były takie same, czyli aby mover miał wymiary symetryczne względem swojego środka. Przeczy to samemu istnieniu dwóch osobnych parametrów, ale na potrzeby laboratorium przyjmujemy to zalecenie.
+
+\podrozdzial{Komentarz}
+Platforma XPlanar wciąż się rozwija i część jej funkcji, w tym tryby Gap Mode 2D, nie jest jeszcze w pełni dopracowana. Opis w dokumentacji należy traktować z ostrożnością i sprawdzać działanie funkcji na stanowisku.
+
+\podrozdzial{Źródła}
+\begin{itemize}
+  \item \textit{Manual TwinCAT 3 | Planar Motion (TF5430)}, wersja 1.14.1: \textit{Planar mover} --- \textit{Parameter (Init)}, parametry \textit{Mover width} i \textit{Mover height} (s.~24),
+  \item tamże: \textit{Planar track} --- \textit{Parameter (Init)}, parametry \textit{Maximum mover width/height} (s.~57),
+  \item tamże: \textit{Limits and options of the motion commands} --- opcja \textit{GapMode}, tryby Standard2D i Fast2D (s.~52--54); \href{https://infosys.beckhoff.com/content/1033/tf5430_tc3_xplanar/9335871883.html}{wersja online (Infosys)}.
+\end{itemize}
+
+\section{Komentarze autora dla prowadzącego}\label{sec:komentarze-prowadzacy}
+Ta część jest przeznaczona dla prowadzącego i osoby sprawdzającej, a nie dla studenta.
+
+\textbf{Forma:} prowadzący pokazuje technologię wizualnie (na maszynie), nie na slajdach.
+
+\subsection*{Komentarz / zalecenia}
+\begin{itemize}
+  \item Student musi otrzymać wiedzę przed przystąpieniem do laboratorium numer 1.
+  \item Wytłumaczenie musi wystąpić \textbf{wizualnie} --- ilość wiedzy jest zbyt duża, by przedstawić ją na wykładzie, którego slajdy nie odzwierciedlają ani nie uczą realnej pracy przy maszynie.
+  \item Z doświadczenia: po zajęciach z PLC lub jakichkolwiek zajęciach z automatyki przemysłowej studenci nie dochodzą do wyjaśnienia zasady działania ani postępowania z maszyną. Typowy student nawet nie ma pojęcia, czym \textit{dokładnie} jest PLC.
+  \item Wizualne przekazanie wiedzy, co można zrobić z danym sprzętem --- choćby na podstawie PLC nie od Beckhoffa, a np. Delty/Siemensa, na realnych przykładach.
+  \item To kluczowe do efektywnego przeprowadzenia laboratoriów, ponieważ systemy Beckhoffa cechują się wysokim poziomem wejścia relatywnie do innych środowisk, jak TIA Portal czy ISPSoft.
+  \item Podkreślić, że na rok 2026 platforma XPlanar Beckhoff jest technologią jeszcze nie w 100\% dopracowaną: na razie jest rozwijana i mało jest systemów zaimplementowanych, jednakże jest to rozwiązanie bardzo rzeczowe / obiecujące \textit{(do doprecyzowania sformułowanie)}.
 \end{itemize}
 
 \end{document}

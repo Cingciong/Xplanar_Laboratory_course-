@@ -1,7 +1,6 @@
-# Konfiguracja oraz włączenie systemu — Zadanie (propozycja)
+# Topic 2 - end state
 
-**Rozwiązanie.** Rozdział 2 instrukcji.
+Configured XPlanar system, no PLC code. Activate the configuration and move a mover with JOG (*TwinCAT -> MC3 -> XPlanar Environment View*).
 
-**Treść zadania:** Uruchom system w symulacji (`BasicSimulation`), zaloguj się do PLC, włącz movery z kodu (`EnableMovers`), unieś jeden mover w Z na 5 mm i opuść go z powrotem; podglądaj pozycję w `P_ActPosition` i w Configuratorze (Live View).
-
-*Status: kod do uzupełnienia.*
+- `hardware/` - real stand (`Normal` mode, 12 tiles, 1 mover)
+- `simulation/` - PC simulation (`BasicSimulation`, 12 tiles, 4 movers)

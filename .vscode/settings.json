@@ -4,7 +4,7 @@
   "latex-workshop.latex.tools": [
     {
       "name": "pdflatex",
-      "command": "C:/Users/info/AppData/Local/Programs/MiKTeX/miktex/bin/x64/pdflatex.exe",
+      "command": "pdflatex",
       "args": ["-interaction=nonstopmode", "-file-line-error", "%DOC%.tex"]
     }
   ],

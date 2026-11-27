@@ -313,12 +313,6 @@
     <PlaceholderReference Include="Tc3_XPlanarUtility">
       <DefaultResolution>Tc3_XPlanarUtility, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc3_XPlanarUtility</Namespace>
-      <Parameters>
-        <Parameter ListName="PARAM_TCIOXPLANARENVIRONMENT" xmlns="">
-          <Key>MAXSUBTILES</Key>
-          <Value>3</Value>
-        </Parameter>
-      </Parameters>
     </PlaceholderReference>
   </ItemGroup>
   <ItemGroup>

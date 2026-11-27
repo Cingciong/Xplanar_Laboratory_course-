@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="E_RoutingMode" Id="{94b75d78-b96b-4c05-8590-07cb5764de9a}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE E_RoutingMode :
+(
+	Alternate     := 0,	// naprzemiennie stacja 2, 3, 2, 3 (zachowanie demo)
+	ByMover       := 1,	// kazdy mover ma swoja stala stacje
+	FreeStation   := 2,	// wolna stacja, a gdy obie zajete - naprzemiennie
+	ShortestQueue := 3,	// stacja, do ktorej jedzie mniej moverow
+	Priority      := 4,	// movery z priorytetem jada do stacji 2, reszta do 3
+	Random        := 5	// losowo
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

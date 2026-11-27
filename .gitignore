@@ -65,3 +65,6 @@ LineIDs.dbg.bak
 *.suo
 # Praca dyplomowa — szablon WETI (licencja: tylko użytek wewnętrzny) i tekst przed weryfikacją JSA
 thesis/
+
+# TwinCAT - lokalna kopia bibliotek (odtwarzana z zainstalowanych bibliotek)
+**/_Libraries/
