@@ -1002,6 +1002,17 @@ Każda oś w \textit{MOTION} $\rightarrow$ \textit{XPlanar MC Project} $\rightar
   \item W \textit{XPlanar Environment View} movery powinny przejść w stan \textit{enabled} i unieść się nad kafelki, bez klikania \textit{Enable} w oknie.
 \end{enumerate}
 
+\podrozdzial{Pasek online PLC --- reset i zapis zmiennych}
+Po zalogowaniu do PLC na pasku narzędzi dostępne są przyciski sterujące programem.
+\zrzutEkranu[0.45\linewidth]{03-ruch/pasek-plc/pasek-online-plc.png}{Pasek online PLC}
+\begin{itemize}
+  \item \textbf{Reset cold} \ikona{03-ruch/pasek-plc/ikona-reset-cold.png} --- zmienne wracają do wartości początkowych (zachowują się tylko zmienne \texttt{PERSISTENT}), program zostaje na sterowniku i jest zatrzymany. Po resecie klikamy \textit{Start}. Przydatne, gdy program utknął, np.\ po błędzie \textit{enable}.
+  \item \textbf{Reset origin} \ikona{03-ruch/pasek-plc/ikona-reset-origin.png} --- usuwa program ze sterownika razem ze wszystkimi zmiennymi, także \texttt{PERSISTENT}. Potem trzeba ponownie się zalogować i wgrać program.
+  \item \textbf{Write values} (\textit{Ctrl+F7}) --- jednorazowo zapisuje przygotowane wartości (\textit{Prepared value}) do zmiennych. Program może je zaraz nadpisać.
+  \item \textbf{Force values} (\textit{F7}) --- wymusza przygotowane wartości w każdym cyklu, dopóki ich nie zwolnimy (\textit{Unforce values}, \textit{Alt+F7}). Po zakończeniu testów zawsze zwalniamy wymuszone zmienne.
+\end{itemize}
+\textbf{Uwaga:} przed resetem, zapisem lub wymuszeniem wartości sprawdzamy, że stół jest wolny --- movery mogą od razu ruszyć.
+
 \section{Ruch w sześciu stopniach swobody}
 \subsection*{Start}
 \begin{itemize}

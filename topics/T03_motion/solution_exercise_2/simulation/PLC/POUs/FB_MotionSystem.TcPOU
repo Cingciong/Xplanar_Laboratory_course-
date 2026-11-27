@@ -8,6 +8,8 @@ VAR
     nStartupSequence  : UDINT;
     nStartingSequence : UDINT;
     nExecutingSequence : UDINT;
+    nErrorStep         : UDINT;    // krok, w ktorym wystapil blad
+    nErrorID           : UDINT;    // kod bledu komendy ruchu
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[]]></ST>
@@ -82,6 +84,8 @@ END_VAR
         <ST><![CDATA[IF bReset THEN
     Execute6DoF := FALSE;
     nExecutingSequence := 0;
+    nErrorStep := 0;
+    nErrorID := 0;
 END_IF
 
 CASE nExecutingSequence OF
@@ -102,6 +106,8 @@ CASE nExecutingSequence OF
     11: IF fbXPlanarMover[1].P_MoveToPosition.Done THEN
             nExecutingSequence := 20;
         ELSIF fbXPlanarMover[1].P_MoveToPosition.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveToPosition.ErrorID;
             nExecutingSequence := 900;
         END_IF
 
@@ -111,6 +117,8 @@ CASE nExecutingSequence OF
     21: IF fbXPlanarMover[1].P_MoveZ.Done THEN
             nExecutingSequence := 30;
         ELSIF fbXPlanarMover[1].P_MoveZ.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveZ.ErrorID;
             nExecutingSequence := 900;
         END_IF
 
@@ -120,6 +128,8 @@ CASE nExecutingSequence OF
     31: IF fbXPlanarMover[1].P_MoveC.Done THEN
             nExecutingSequence := 40;
         ELSIF fbXPlanarMover[1].P_MoveC.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveC.ErrorID;
             nExecutingSequence := 900;
         END_IF
 
@@ -129,6 +139,8 @@ CASE nExecutingSequence OF
     41: IF fbXPlanarMover[1].P_MoveZ.Done THEN
             nExecutingSequence := 50;
         ELSIF fbXPlanarMover[1].P_MoveZ.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveZ.ErrorID;
             nExecutingSequence := 900;
         END_IF
 
@@ -138,6 +150,8 @@ CASE nExecutingSequence OF
     51: IF fbXPlanarMover[1].P_MoveA.Done THEN
             nExecutingSequence := 60;
         ELSIF fbXPlanarMover[1].P_MoveA.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveA.ErrorID;
             nExecutingSequence := 900;
         END_IF
 
@@ -147,6 +161,8 @@ CASE nExecutingSequence OF
     61: IF fbXPlanarMover[1].P_MoveB.Done THEN
             nExecutingSequence := 70;
         ELSIF fbXPlanarMover[1].P_MoveB.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveB.ErrorID;
             nExecutingSequence := 900;
         END_IF
 
@@ -156,6 +172,8 @@ CASE nExecutingSequence OF
     71: IF fbXPlanarMover[1].P_MoveA.Done THEN
             nExecutingSequence := 80;
         ELSIF fbXPlanarMover[1].P_MoveA.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveA.ErrorID;
             nExecutingSequence := 900;
         END_IF
 
@@ -165,6 +183,8 @@ CASE nExecutingSequence OF
     81: IF fbXPlanarMover[1].P_MoveB.Done THEN
             nExecutingSequence := 90;
         ELSIF fbXPlanarMover[1].P_MoveB.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveB.ErrorID;
             nExecutingSequence := 900;
         END_IF
 
@@ -174,6 +194,8 @@ CASE nExecutingSequence OF
     91: IF fbXPlanarMover[1].P_MoveC.Done THEN
             nExecutingSequence := 100;
         ELSIF fbXPlanarMover[1].P_MoveC.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveC.ErrorID;
             nExecutingSequence := 900;
         END_IF
 
@@ -183,6 +205,8 @@ CASE nExecutingSequence OF
     101: IF fbXPlanarMover[1].P_MoveToPosition.Done THEN
             nExecutingSequence := 110;
         ELSIF fbXPlanarMover[1].P_MoveToPosition.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveToPosition.ErrorID;
             nExecutingSequence := 900;
         END_IF
 

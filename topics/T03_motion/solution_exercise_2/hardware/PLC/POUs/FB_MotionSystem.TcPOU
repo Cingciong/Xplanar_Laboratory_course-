@@ -8,6 +8,8 @@ VAR
     nStartupSequence  : UDINT;
     nStartingSequence : UDINT;
     nExecutingSequence : UDINT;
+    nErrorStep         : UDINT;    // krok, w ktorym wystapil blad
+    nErrorID           : UDINT;    // kod bledu komendy ruchu
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[]]></ST>
@@ -25,20 +27,141 @@ FOR i := 1 TO moverCount DO
 END_FOR]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Startup" Id="{ab1988d1-2b56-4e22-9706-835668cd8a23}">
-      <Declaration><![CDATA[METHOD Startup : BOOL
-VAR
-    i : UDINT;
+    <Method Name="Execute6DoF" Id="{8ce13323-1410-4b2b-b91c-3d53f634fa57}">
+      <Declaration><![CDATA[METHOD Execute6DoF : BOOL
+VAR_INPUT
+    bReset : BOOL;
+END_VAR
+VAR_INST
+    stStartPos   : PositionXYC;
+    stCenterPos  : PositionXYC;
+    stRotOptions : ST_MoveCOptions;
+	nErrorStep : UDINT;
+    nErrorID   : UDINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[CASE nStartupSequence OF
-    0:  nStartupSequence := 1;
-    1:  FOR i := 1 TO moverCount DO
-            fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
-        END_FOR
-        nStartupSequence := 30;
-    30: Startup := TRUE;
+        <ST><![CDATA[IF bReset THEN
+    Execute6DoF := FALSE;
+    nExecutingSequence := 0;
+    nErrorStep := 0;
+    nErrorID := 0;
+END_IF
+
+CASE nExecutingSequence OF
+    0:  stStartPos.SetValuesXYC(fbXPlanarMover[1].P_ActPosition.x,
+                                fbXPlanarMover[1].P_ActPosition.y,
+                                fbXPlanarMover[1].P_ActPosition.c);
+        stCenterPos.SetValuesXYC(480, 360, 0);
+        stRotOptions.additionalTurns := 0;
+        stRotOptions.direction := Tc3_Mc3PlanarMotion.MC_Direction.mcDirectionNonModulo;
+        IF NOT bReset THEN
+            nExecutingSequence := 10;
+        END_IF
+
+    10: fbXPlanarMover[1].MoveToPosition('To center', stCenterPos, 500, 1250, 1250, 12500);
+        nExecutingSequence := 11;
+    11: IF fbXPlanarMover[1].P_MoveToPosition.Done THEN
+            nExecutingSequence := 20;
+        ELSIF fbXPlanarMover[1].P_MoveToPosition.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveToPosition.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+    20: fbXPlanarMover[1].MoveZ('Z up', 4, 20, 100, 100, 1000);
+        nExecutingSequence := 21;
+    21: IF fbXPlanarMover[1].P_MoveZ.Done THEN
+            nExecutingSequence := 30;
+        ELSIF fbXPlanarMover[1].P_MoveZ.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveZ.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+    30: fbXPlanarMover[1].MoveC('C +90', 90, 720, 1800, 1800, 9000, stRotOptions);
+        nExecutingSequence := 31;
+    31: IF fbXPlanarMover[1].P_MoveC.Done THEN
+            nExecutingSequence := 50;
+        ELSIF fbXPlanarMover[1].P_MoveC.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveC.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+	40: fbXPlanarMover[1].MoveZ('Z down', 2, 20, 100, 100, 1000);
+        nExecutingSequence := 41;
+    41: IF fbXPlanarMover[1].P_MoveZ.Done THEN
+            nExecutingSequence := 100;
+        ELSIF fbXPlanarMover[1].P_MoveZ.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveZ.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+    50: fbXPlanarMover[1].MoveA('A tilt', 2, 20, 100, 100, 1000);
+        nExecutingSequence := 51;
+    51: IF fbXPlanarMover[1].P_MoveA.Done THEN
+            nExecutingSequence := 60;
+        ELSIF fbXPlanarMover[1].P_MoveA.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveA.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+    60: fbXPlanarMover[1].MoveB('B tilt', 2, 20, 100, 100, 1000);
+        nExecutingSequence := 61;
+    61: IF fbXPlanarMover[1].P_MoveB.Done THEN
+            nExecutingSequence := 70;
+        ELSIF fbXPlanarMover[1].P_MoveB.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveB.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+    70: fbXPlanarMover[1].MoveA('A back', 0, 20, 100, 100, 1000);
+        nExecutingSequence := 71;
+    71: IF fbXPlanarMover[1].P_MoveA.Done THEN
+            nExecutingSequence := 80;
+        ELSIF fbXPlanarMover[1].P_MoveA.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveA.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+    80: fbXPlanarMover[1].MoveB('B back', 0, 20, 100, 100, 1000);
+        nExecutingSequence := 81;
+    81: IF fbXPlanarMover[1].P_MoveB.Done THEN
+            nExecutingSequence := 90;
+        ELSIF fbXPlanarMover[1].P_MoveB.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveB.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+    90: fbXPlanarMover[1].MoveC('C back', 0, 720, 1800, 1800, 9000, stRotOptions);
+        nExecutingSequence := 91;
+    91: IF fbXPlanarMover[1].P_MoveC.Done THEN
+            nExecutingSequence := 40;
+        ELSIF fbXPlanarMover[1].P_MoveC.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveC.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+    100: fbXPlanarMover[1].MoveToPosition('Back to start', stStartPos, 500, 1250, 1250, 12500);
+        nExecutingSequence := 101;
+    101: IF fbXPlanarMover[1].P_MoveToPosition.Done THEN
+            nExecutingSequence := 110;
+        ELSIF fbXPlanarMover[1].P_MoveToPosition.Error THEN
+            nErrorStep := nExecutingSequence;
+            nErrorID := fbXPlanarMover[1].P_MoveToPosition.ErrorID;
+            nExecutingSequence := 900;
+        END_IF
+
+    110: Execute6DoF := TRUE;
+
+    900: ;
 END_CASE]]></ST>
       </Implementation>
     </Method>
@@ -67,129 +190,20 @@ CASE nStartingSequence OF
 END_CASE]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Execute6DoF" Id="{8ce13323-1410-4b2b-b91c-3d53f634fa57}">
-      <Declaration><![CDATA[METHOD Execute6DoF : BOOL
-VAR_INPUT
-    bReset : BOOL;
-END_VAR
-VAR_INST
-    stStartPos   : PositionXYC;
-    stCenterPos  : PositionXYC;
-    stRotOptions : ST_MoveCOptions;
+    <Method Name="Startup" Id="{ab1988d1-2b56-4e22-9706-835668cd8a23}">
+      <Declaration><![CDATA[METHOD Startup : BOOL
+VAR
+    i : UDINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF bReset THEN
-    Execute6DoF := FALSE;
-    nExecutingSequence := 0;
-END_IF
-
-CASE nExecutingSequence OF
-    0:  // zapamietaj pozycje startowa movera 1 i przygotuj punkty
-        stStartPos.SetValuesXYC(fbXPlanarMover[1].P_ActPosition.x,
-                                fbXPlanarMover[1].P_ActPosition.y,
-                                fbXPlanarMover[1].P_ActPosition.c);
-        stCenterPos.SetValuesXYC(480, 360, 0);   // srodek stolu 4x3 kafelki
-        stRotOptions.additionalTurns := 0;
-        stRotOptions.direction := Tc3_Mc3PlanarMotion.MC_Direction.mcDirectionNonModulo;
-        IF NOT bReset THEN
-            nExecutingSequence := 10;
-        END_IF
-
-    10: // dojazd do srodka stolu
-        fbXPlanarMover[1].MoveToPosition('To center', stCenterPos, 500, 1250, 1250, 12500);
-        nExecutingSequence := 11;
-    11: IF fbXPlanarMover[1].P_MoveToPosition.Done THEN
-            nExecutingSequence := 20;
-        ELSIF fbXPlanarMover[1].P_MoveToPosition.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    20: // Z w gore na 4 mm
-        fbXPlanarMover[1].MoveZ('Z up', 4, 20, 100, 100, 1000);
-        nExecutingSequence := 21;
-    21: IF fbXPlanarMover[1].P_MoveZ.Done THEN
-            nExecutingSequence := 30;
-        ELSIF fbXPlanarMover[1].P_MoveZ.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    30: // obrot w C o +90 stopni
-        fbXPlanarMover[1].MoveC('C +90', 90, 720, 1800, 1800, 9000, stRotOptions);
-        nExecutingSequence := 31;
-    31: IF fbXPlanarMover[1].P_MoveC.Done THEN
-            nExecutingSequence := 40;
-        ELSIF fbXPlanarMover[1].P_MoveC.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    40: // Z z powrotem na normalna wysokosc
-        fbXPlanarMover[1].MoveZ('Z down', 0, 20, 100, 100, 1000);
-        nExecutingSequence := 41;
-    41: IF fbXPlanarMover[1].P_MoveZ.Done THEN
-            nExecutingSequence := 50;
-        ELSIF fbXPlanarMover[1].P_MoveZ.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    50: // przechyl A
-        fbXPlanarMover[1].MoveA('A tilt', 5, 20, 100, 100, 1000);
-        nExecutingSequence := 51;
-    51: IF fbXPlanarMover[1].P_MoveA.Done THEN
-            nExecutingSequence := 60;
-        ELSIF fbXPlanarMover[1].P_MoveA.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    60: // przechyl B
-        fbXPlanarMover[1].MoveB('B tilt', 5, 20, 100, 100, 1000);
-        nExecutingSequence := 61;
-    61: IF fbXPlanarMover[1].P_MoveB.Done THEN
-            nExecutingSequence := 70;
-        ELSIF fbXPlanarMover[1].P_MoveB.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    70: // A z powrotem na 0
-        fbXPlanarMover[1].MoveA('A back', 0, 20, 100, 100, 1000);
-        nExecutingSequence := 71;
-    71: IF fbXPlanarMover[1].P_MoveA.Done THEN
-            nExecutingSequence := 80;
-        ELSIF fbXPlanarMover[1].P_MoveA.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    80: // B z powrotem na 0
-        fbXPlanarMover[1].MoveB('B back', 0, 20, 100, 100, 1000);
-        nExecutingSequence := 81;
-    81: IF fbXPlanarMover[1].P_MoveB.Done THEN
-            nExecutingSequence := 90;
-        ELSIF fbXPlanarMover[1].P_MoveB.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    90: // C z powrotem na 0
-        fbXPlanarMover[1].MoveC('C back', 0, 720, 1800, 1800, 9000, stRotOptions);
-        nExecutingSequence := 91;
-    91: IF fbXPlanarMover[1].P_MoveC.Done THEN
-            nExecutingSequence := 100;
-        ELSIF fbXPlanarMover[1].P_MoveC.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    100: // powrot do zapisanej pozycji startowej
-        fbXPlanarMover[1].MoveToPosition('Back to start', stStartPos, 500, 1250, 1250, 12500);
-        nExecutingSequence := 101;
-    101: IF fbXPlanarMover[1].P_MoveToPosition.Done THEN
-            nExecutingSequence := 110;
-        ELSIF fbXPlanarMover[1].P_MoveToPosition.Error THEN
-            nExecutingSequence := 900;
-        END_IF
-
-    110: // koniec sekwencji
-        Execute6DoF := TRUE;
-
-    900: ;   // blad ruchu --- sekwencja zatrzymana
+        <ST><![CDATA[CASE nStartupSequence OF
+    0:  nStartupSequence := 1;
+    1:  FOR i := 1 TO moverCount DO
+            fbXPlanarSystem.SetMoverStandard(i, fbXPlanarMover[i]);
+        END_FOR
+        nStartupSequence := 30;
+    30: Startup := TRUE;
 END_CASE]]></ST>
       </Implementation>
     </Method>
