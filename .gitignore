@@ -9,6 +9,11 @@ instrukcja/*.toc
 instrukcja/*.fls
 instrukcja/*.fdb_latexmk
 instrukcja/*.synctex.gz
+instrukcja/*.bbl
+instrukcja/*.blg
+instrukcja/*.lof
+instrukcja/*.lot
+instrukcja/*.xdv
 kontekst
 
 TODO.md
@@ -63,6 +68,7 @@ LineIDs.dbg.bak
 *.~u
 *.project.~u
 *.suo
+*.user
 # Praca dyplomowa — szablon WETI (licencja: tylko użytek wewnętrzny) i tekst przed weryfikacją JSA
 thesis/
 
